@@ -21,7 +21,7 @@ src/
   components/
     AwsMap.tsx        estado (modo, estilo, selección) y todo el SVG
     Titlebar.tsx      barra superior y botones de modo/estilo
-    DetailPanel.tsx   panel lateral: descripción, folds, relaciones, notas
+    DetailPanel.tsx   panel lateral: descripción, folds, relaciones
     ServiceCard.tsx   nodo rectangular (estilo "cards")
     ServiceDot.tsx    nodo punto + label (estilo "círculo")
   lib/
@@ -29,7 +29,6 @@ src/
     graph.ts          índice de servicios y resolución de relaciones
     layout.ts         los 4 layouts, curvas y cálculo de "fit"
     usePanZoom.ts     arrastre, rueda y zoom anclado al cursor
-    useNotes.ts       notas por servicio en localStorage (debounce 500ms)
   data/
     services.ts       15 categorías, 80 servicios
     relations.ts      119 relaciones servicio-a-servicio
@@ -46,7 +45,6 @@ Dos ejes independientes, combinables:
 
 ## Notas de la migración
 
-- `window.storage` (API no estándar del prototipo) pasó a `localStorage`.
 - El render imperativo con `createElementNS` es ahora JSX; los layouts siguen
   siendo funciones puras que devuelven posiciones.
 - El campo `long` del dataset es HTML de autor y se inyecta con

@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { byId, relatedIds } from "@/lib/graph";
 import type { Node } from "@/lib/types";
-import { useNotes } from "@/lib/useNotes";
 
 type Props = {
   node: Node | null;
@@ -12,7 +11,6 @@ type Props = {
 };
 
 export default function DetailPanel({ node, onSelect, onClose }: Props) {
-  const { notes, setNote } = useNotes();
   // Remount the folds on every service so they always start collapsed.
   const foldKey = node?.id ?? "none";
   const rels = node ? relatedIds(node.id) : [];
@@ -118,20 +116,10 @@ export default function DetailPanel({ node, onSelect, onClose }: Props) {
               href={node.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="mb-4 inline-block text-[.8rem] text-accent hover:underline"
+              className="inline-block text-[.8rem] text-accent hover:underline"
             >
               ↗ doc oficial
             </a>
-
-            <span className="mb-[.35rem] block text-[.72rem] uppercase tracking-[.04em] text-muted-2">
-              Tus notas
-            </span>
-            <textarea
-              value={notes[node.id] ?? ""}
-              onChange={(e) => setNote(node.id, e.target.value)}
-              placeholder="qué querés recordar de este servicio…"
-              className="min-h-20 w-full resize-y rounded-md border border-line bg-panel px-[.65rem] py-[.55rem] font-mono text-[.8rem] text-ink placeholder:text-muted-2"
-            />
           </>
         )}
       </aside>
