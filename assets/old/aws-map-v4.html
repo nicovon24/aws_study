@@ -1,0 +1,1001 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>aws-map — nico@cloud-practitioner</title>
+<style>
+  :root{
+    --bg:#0a0e14; --panel:#0f1520; --panel-2:#131a26; --line:#25313f;
+    --text:#e7ecf2; --muted:#7c8ca0; --muted-2:#4d5a6c;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--mono);height:100%;overflow:hidden;}
+  body{display:flex;flex-direction:column;height:100vh;
+    background-image:
+      radial-gradient(circle at 50% 50%, rgba(77,217,197,0.05), transparent 55%),
+      radial-gradient(circle at 85% 12%, rgba(245,166,35,0.04), transparent 45%);}
+
+  .titlebar{display:flex;align-items:center;gap:.6rem;padding:.55rem 1rem;background:var(--panel-2);border-bottom:1px solid var(--line);flex-shrink:0;z-index:20;}
+  .dot{width:11px;height:11px;border-radius:50%;}
+  .dot.r{background:#ff5f56;} .dot.y{background:#ffbd2e;} .dot.g{background:#27c93f;}
+  .titlebar .path{color:var(--muted);font-size:.8rem;margin-left:.5rem;}
+  .titlebar .cursor{display:inline-block;width:7px;height:14px;background:var(--muted-2);margin-left:2px;animation:blink 1.1s step-end infinite;vertical-align:middle;}
+  @keyframes blink{50%{opacity:0;}}
+  .modes{margin-left:auto;display:flex;gap:.35rem;}
+  .modebtn{font-family:var(--mono);font-size:.74rem;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:.4rem .7rem;cursor:pointer;}
+  .modebtn.active{color:#4DD9C5;border-color:#4DD9C5;}
+
+  .stage{flex:1;position:relative;overflow:hidden;cursor:grab;}
+  .stage:active{cursor:grabbing;}
+  svg#map{width:100%;height:100%;display:block;}
+  svg#map text{user-select:none;-webkit-user-select:none;}
+
+  /* floating hint + zoom controls, appear subtle */
+  .hint{position:absolute;left:1rem;bottom:1rem;color:var(--muted-2);font-size:.72rem;pointer-events:none;z-index:10;}
+  .zoomctl{position:absolute;right:1rem;bottom:1rem;display:flex;flex-direction:column;gap:.3rem;z-index:10;}
+  .zoomctl button{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--text);font-size:1.1rem;cursor:pointer;font-family:var(--mono);}
+  .zoomctl button:hover{border-color:var(--muted-2);}
+  .modehint{position:absolute;left:50%;top:1rem;transform:translateX(-50%);color:var(--muted-2);font-size:.72rem;pointer-events:none;z-index:10;text-align:center;}
+
+  /* Detail panel */
+  #panel{position:fixed;top:0;right:0;bottom:0;width:min(380px,92vw);background:var(--panel-2);border-left:1px solid var(--line);transform:translateX(100%);transition:transform .18s ease;z-index:60;overflow-y:auto;padding:1.2rem 1.3rem 2rem;}
+  #panel.open{transform:translateX(0);}
+  #panel .close{position:absolute;top:.9rem;right:1rem;background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;}
+  #panel .pcat{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.2rem;}
+  #panel h2{font-family:var(--sans);margin:.1rem 0 .8rem;font-size:1.3rem;}
+  #panel .desc{color:var(--muted);font-size:.86rem;line-height:1.55;margin-bottom:.8rem;}
+  #panel .long{color:#c9d3de;font-size:.84rem;line-height:1.6;margin-bottom:1rem;}
+  #panel .long strong{color:var(--pc-accent,#4DD9C5);font-weight:600;}
+  /* bloques colapsables */
+  #panel .fold{background:var(--panel);border:1px solid var(--line);border-left:2px solid var(--pc-accent,#4DD9C5);border-radius:0 6px 6px 0;margin-bottom:.55rem;overflow:hidden;}
+  #panel .fold.no{border-left-color:#FF6B6B;}
+  #panel .fold > summary{list-style:none;cursor:pointer;user-select:none;display:flex;align-items:center;gap:.45rem;
+    font-family:var(--sans);font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;
+    padding:.5rem .75rem;color:var(--pc-accent,#4DD9C5);}
+  #panel .fold.no > summary{color:#FF6B6B;}
+  #panel .fold > summary::-webkit-details-marker{display:none;}
+  #panel .fold > summary::before{content:"";width:0;height:0;flex-shrink:0;
+    border-left:5px solid currentColor;border-top:4px solid transparent;border-bottom:4px solid transparent;
+    transition:transform .15s ease;transform-origin:25% 50%;}
+  #panel .fold[open] > summary::before{transform:rotate(90deg);}
+  #panel .fold > summary:hover{background:rgba(255,255,255,.03);}
+  #panel .fold .foldbody{padding:0 .75rem .6rem;font-size:.82rem;line-height:1.55;}
+  #panel .fold ul{margin:0;padding-left:1.05rem;color:#c9d3de;}
+  #panel .fold li{margin-bottom:.22rem;}
+  #panel .concepts{margin:0;}
+  #panel .concepts dt{font-family:var(--mono);font-size:.75rem;color:var(--pc-accent,#4DD9C5);margin-top:.5rem;}
+  #panel .concepts dt:first-child{margin-top:0;}
+  #panel .concepts dd{margin:.1rem 0 0;color:var(--muted);}
+  #panel .rel{font-size:.8rem;color:var(--muted);margin-bottom:.9rem;line-height:1.7;}
+  #panel .rel .chipr{display:inline-block;font-family:var(--mono);font-size:.72rem;padding:.15rem .5rem;margin:.12rem .2rem .12rem 0;border:1px solid var(--line);border-radius:999px;color:#c9d3de;cursor:pointer;}
+  #panel .rel .chipr:hover{border-color:var(--pc-accent,#4DD9C5);color:var(--pc-accent,#4DD9C5);}
+  #panel .doclink{font-size:.8rem;color:#4DD9C5;text-decoration:none;display:inline-block;margin-bottom:1rem;}
+  #panel .doclink:hover{text-decoration:underline;}
+  #panel .notes{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--text);font-family:var(--mono);font-size:.8rem;border-radius:6px;padding:.55rem .65rem;min-height:5rem;resize:vertical;}
+  #panel .notes::placeholder{color:var(--muted-2);}
+  #panel label.lbl{font-size:.72rem;color:var(--muted-2);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:.35rem;}
+  #scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:55;display:none;}
+  #scrim.open{display:block;}
+</style>
+</head>
+<body>
+
+<div class="titlebar">
+  <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+  <span class="path">~/aws-map</span>
+  <span class="path">./study.sh --track=CLF-C02<span class="cursor"></span></span>
+  <div class="modes">
+    <button class="modebtn active" data-mode="radial">radial</button>
+    <button class="modebtn" data-mode="graph">relaciones</button>
+  </div>
+  <div class="modes" style="margin-left:.6rem;">
+    <button class="modebtn active" data-style="circle">círculo</button>
+    <button class="modebtn" data-style="cards">cards</button>
+  </div>
+</div>
+
+<div class="stage" id="stage">
+  <svg id="map"></svg>
+  <div class="modehint" id="modehint">arrastrá para mover · rueda para zoom · click en un servicio para ver detalle</div>
+  <div class="hint" id="hint"><span id="total">0</span> servicios</div>
+  <div class="zoomctl">
+    <button id="zin">+</button>
+    <button id="zout">−</button>
+    <button id="zfit" title="centrar" style="font-size:.7rem;">fit</button>
+  </div>
+</div>
+
+<div id="scrim"></div>
+<div id="panel">
+  <button class="close" id="panelClose">✕</button>
+  <div class="pcat" id="pCat"></div>
+  <h2 id="pName"></h2>
+  <div class="desc" id="pDesc"></div>
+  <div class="long" id="pLong"></div>
+  <details class="fold" id="pUse" style="display:none"><summary>Cuándo usarlo</summary>
+    <div class="foldbody"><ul id="pUseList"></ul></div></details>
+  <details class="fold no" id="pAvoid" style="display:none"><summary>Cuándo NO</summary>
+    <div class="foldbody"><ul id="pAvoidList"></ul></div></details>
+  <details class="fold" id="pConceptsBlk" style="display:none"><summary>Conceptos propios</summary>
+    <div class="foldbody"><dl class="concepts" id="pConcepts"></dl></div></details>
+  <label class="lbl" id="pRelLbl" style="display:none">Se relaciona con</label>
+  <div class="rel" id="pRel"></div>
+  <a class="doclink" id="pLink" target="_blank" rel="noopener">↗ doc oficial</a>
+  <label class="lbl">Tus notas</label>
+  <textarea class="notes" id="pNotes" placeholder="qué querés recordar de este servicio…"></textarea>
+</div>
+
+<script>
+const DATA = [
+  { cat: "Cómputo", accent: "#F5A623", items: [
+    { name: "EC2", d: "Máquinas virtuales redimensionables bajo demanda; on-demand, reserved o spot.", link: "https://aws.amazon.com/ec2/",
+      long: "<strong>Servidores virtuales</strong> bajo demanda: elegís sistema operativo, CPU, memoria y red, y en minutos tenés una máquina corriendo. Es el servicio de cómputo más antiguo y flexible de AWS, y la base sobre la que se apoyan muchos otros. Su contracara es que <strong>vos administrás el sistema operativo</strong>: parches, actualizaciones y seguridad puertas adentro corren por tu cuenta. El precio cambia radicalmente según el <strong>modelo de compra</strong> que elijas.",
+      use: ["Necesitás control total del sistema operativo: instalar software específico, tunear el kernel.", "Migrar (lift and shift) una aplicación que hoy corre en un servidor físico.", "Cargas constantes y predecibles donde Reserved o Savings Plans abaratan mucho.", "Software legado que no se puede contenerizar ni volver serverless."],
+      avoid: ["Código que corre por ráfagas cortas y esporádicas &rarr; <strong>Lambda</strong>, sin servidor ocioso que pagar.", "Ya tenés la app en Docker &rarr; <strong>ECS</strong> o <strong>EKS</strong> con <strong>Fargate</strong>.", "Solo querés subir código y que AWS resuelva el resto &rarr; <strong>Elastic Beanstalk</strong> o <strong>App Runner</strong>.", "Un VPS simple con precio fijo y predecible &rarr; <strong>Lightsail</strong>."],
+      concepts: [{t:"AMI",d:"Imagen con el sistema operativo y software desde la que se lanza la instancia."},{t:"Tipo de instancia",d:"Familia y tamaño (t3.micro, m5.large): define CPU, memoria y red."},{t:"On-Demand",d:"Pagás por segundo sin compromiso. El más caro por hora, el más flexible."},{t:"Reserved / Savings Plans",d:"Te comprometés 1 o 3 años a cambio de un descuento fuerte."},{t:"Spot",d:"Capacidad sobrante hasta 90% más barata, pero AWS te la puede quitar con 2 minutos de aviso."},{t:"Auto Scaling Group",d:"Agrega o quita instancias solo según la demanda."}] },
+    { name: "Lambda", d: "Ejecutá código sin administrar servidores; se factura por invocación y tiempo.", link: "https://aws.amazon.com/lambda/",
+      long: "Cómputo <strong>serverless</strong>: escribís una función, la conectás a un <strong>trigger</strong> (API Gateway, S3, SQS, EventBridge y más de 200 servicios) y AWS la ejecuta. No aprovisionás ni parcheás nada; la infraestructura, el escalado y la tolerancia a fallos los maneja el servicio. Cada invocación corre <strong>aislada y sin estado compartido</strong>, y escala horizontalmente sola con la demanda. Pagás por invocación y por tiempo de ejecución: sin tráfico, no pagás nada.",
+      use: ["Backend de una API serverless, detrás de API Gateway.", "Procesar un archivo apenas se sube a S3 (miniaturas, ETL, validaciones).", "Tareas programadas y automatizaciones de infraestructura.", "Consumir mensajes de SQS o eventos de EventBridge entre microservicios."],
+      avoid: ["Procesos largos: una invocación dura hasta <strong>15 minutos</strong> &rarr; <strong>ECS</strong>, <strong>Batch</strong> o <strong>EC2</strong>.", "Tráfico alto y constante: a cierto volumen sale más caro que contenedores siempre encendidos.", "Necesitás estado en memoria entre requests: cada invocación arranca limpia.", "Latencia crítica y predecible: el arranque en frío agrega demora en la primera llamada."],
+      concepts: [{t:"Handler",d:"La función que Lambda invoca; recibe el evento y devuelve la respuesta."},{t:"Trigger / Event source",d:"Lo que dispara la ejecución: S3, API Gateway, SQS, EventBridge."},{t:"Cold start",d:"Demora extra al crear un entorno de ejecución nuevo tras un período sin uso."},{t:"Timeout",d:"Máximo 15 minutos por invocación."},{t:"Layer",d:"Paquete de dependencias compartido entre varias funciones."},{t:"Concurrencia",d:"Cuántas ejecuciones simultáneas se permiten; se puede reservar o limitar."}] },
+    { name: "App Runner", d: "Desplegá apps web/containers desde el código sin infraestructura.", link: "https://aws.amazon.com/apprunner/",
+      long: "Servicio <strong>totalmente administrado</strong> para correr aplicaciones web y APIs en contenedores: conectás un repositorio de código o una imagen en ECR y App Runner se ocupa de <strong>construir, desplegar, balancear, escalar y renovar el certificado TLS</strong>. No configurás VPC, ni load balancer, ni cluster. Es lo más parecido a Heroku o Vercel dentro de AWS, y hace <strong>despliegue automático</strong> en cada push.",
+      use: ["Publicar una API o app web contenerizada sin aprender ECS ni Kubernetes.", "Prototipos y proyectos chicos donde el tiempo de setup importa más que el control fino.", "Deploy continuo desde un repo, sin armar un pipeline propio.", "Servicios que escalan a cero cuando no hay tráfico."],
+      avoid: ["Necesitás control fino de red, sidecars o afinidad entre tareas &rarr; <strong>ECS</strong> o <strong>EKS</strong>.", "Workers en segundo plano o jobs por lotes: App Runner está pensado para servicios HTTP.", "Ya tenés un cluster de contenedores andando: sumar App Runner fragmenta la operación.", "Cargas grandes y sostenidas: el costo por unidad es mayor que administrar el cluster vos."],
+      concepts: [{t:"Service",d:"La unidad que despliega App Runner: una app web con su URL HTTPS."},{t:"Source",d:"De dónde sale el código: un repo conectado o una imagen en ECR."},{t:"Auto scaling",d:"Escala por concurrencia de requests y puede bajar a cero instancias activas."}] },
+    { name: "Batch", d: "Procesamiento por lotes a escala sobre EC2/Fargate.", link: "https://aws.amazon.com/batch/",
+      long: "Servicio para correr <strong>trabajos por lotes</strong> a escala: le mandás miles de jobs a una cola y Batch decide cuánta capacidad de <strong>EC2 o Fargate</strong> levantar, en qué orden ejecutarlos y cuándo apagar todo. Se encarga de la planificación, los reintentos y las <strong>dependencias entre jobs</strong>. Encaja bien con instancias <strong>Spot</strong>: como los lotes toleran interrupciones, el ahorro puede ser enorme.",
+      use: ["Procesamiento de datos masivo: transcodificar video, renderizar, correr simulaciones.", "Trabajos científicos o financieros que corren de noche sobre cientos de núcleos.", "Pipelines donde un job depende de que termine otro.", "Cargas tolerantes a interrupción que quieras correr en Spot para abaratar."],
+      avoid: ["Servicios que responden requests en vivo &rarr; <strong>ECS</strong>, <strong>App Runner</strong> o <strong>Lambda</strong>.", "Tareas cortas y esporádicas: Lambda es más simple y directo.", "Un solo job puntual: levantar la definición de Batch es más trabajo que correrlo a mano.", "Orquestar pasos con lógica condicional compleja &rarr; <strong>Step Functions</strong>."],
+      concepts: [{t:"Job",d:"La unidad de trabajo: un contenedor que corre hasta terminar."},{t:"Job queue",d:"Cola donde esperan los jobs con su prioridad."},{t:"Compute environment",d:"El pool de capacidad (EC2 o Fargate, On-Demand o Spot) donde corren."},{t:"Array job",d:"Un job que se expande en miles de copias con distinto índice."}] },
+    { name: "Elastic Beanstalk", d: "Subís tu código y AWS gestiona despliegue, capacidad y balanceo.", link: "https://aws.amazon.com/elasticbeanstalk/",
+      long: "<strong>Plataforma como servicio (PaaS)</strong>: subís tu código en Node, Python, Java, PHP, .NET, Go o Ruby y Beanstalk aprovisiona por vos las <strong>EC2, el load balancer, el Auto Scaling Group y el monitoreo</strong>. La diferencia con App Runner es que acá los recursos son tuyos y visibles: podés entrar a las instancias y ajustar lo que quieras. Es el punto medio entre la comodidad del PaaS y el control de EC2. El servicio no cuesta nada extra: pagás solo los recursos que crea.",
+      use: ["Desplegar una app web tradicional sin armar la infraestructura a mano.", "Equipos que quieren un PaaS pero necesitan poder bajar al detalle si hace falta.", "Migrar una aplicación monolítica a AWS con poco esfuerzo inicial.", "Ver qué recursos hace falta crear para una app web: sirve para aprender la arquitectura."],
+      avoid: ["Arquitectura de microservicios en contenedores &rarr; <strong>ECS</strong> o <strong>EKS</strong>.", "Querés cero infraestructura visible &rarr; <strong>App Runner</strong> o <strong>Lambda</strong>.", "Necesitás control total desde el inicio &rarr; <strong>EC2</strong> directo con infraestructura como código.", "Sitio puramente estático &rarr; <strong>S3</strong> más <strong>CloudFront</strong>, mucho más barato."],
+      concepts: [{t:"Application / Environment",d:"La app agrupa entornos (dev, prod), cada uno con sus recursos propios."},{t:"Platform",d:"El stack preconfigurado del lenguaje elegido."},{t:"Deployment policy",d:"Cómo se actualiza: all at once, rolling, immutable o blue/green."},{t:".ebextensions",d:"Archivos de configuración para personalizar los recursos que crea."}] },
+    { name: "Lightsail", d: "VPS simplificado con precio fijo mensual.", link: "https://aws.amazon.com/lightsail/",
+      long: "<strong>Servidor privado virtual (VPS)</strong> con <strong>precio fijo mensual</strong> y una consola simplificada aparte de la de AWS. Cada plan incluye instancia, almacenamiento SSD y una cuota de transferencia, todo por un monto conocido de antemano — sin la sorpresa de la factura variable típica de AWS. Trae imágenes listas de WordPress, LAMP, Node y otras. Es la puerta de entrada más simple, pensada para competir con DigitalOcean o Linode.",
+      use: ["Un blog en WordPress, un sitio chico o un entorno de pruebas.", "Querés saber exactamente cuánto vas a pagar cada mes.", "Estás arrancando en AWS y la consola completa te resulta abrumadora.", "Proyectos personales con requisitos modestos y estables."],
+      avoid: ["El proyecto va a crecer y necesitar servicios de AWS integrados &rarr; <strong>EC2</strong> dentro de una VPC.", "Necesitás Auto Scaling, Multi-AZ o arquitecturas complejas: Lightsail no llega ahí.", "Cargas variables donde el precio fijo termina siendo más caro que pagar por uso.", "Apps contenerizadas con orquestación &rarr; <strong>ECS</strong> o <strong>App Runner</strong>."],
+      concepts: [{t:"Plan (bundle)",d:"Paquete fijo de CPU, RAM, SSD y transferencia por un precio mensual."},{t:"Blueprint",d:"Imagen preinstalada: WordPress, LAMP, Node.js, Django."},{t:"Transferencia incluida",d:"Cuota mensual de salida; pasarse se cobra aparte."},{t:"Peering con VPC",d:"Permite conectar Lightsail con recursos de tu cuenta AWS."}] },
+    { name: "Auto Scaling", d: "Ajusta automáticamente la cantidad de instancias según la demanda.", link: "https://aws.amazon.com/autoscaling/",
+      long: "Agrega o quita <strong>instancias EC2 automáticamente</strong> según la demanda real: suma capacidad cuando el tráfico crece y la retira cuando baja. Es lo que hace concreta la promesa de <strong>elasticidad</strong> de la nube — pagar solo por lo que se usa en cada momento, sin dimensionar para el pico todo el año. Además cumple una función de <strong>salud</strong>: si una instancia falla el health check, la termina y lanza otra en su lugar sin intervención humana.",
+      use: ["Sitios con picos de tráfico previsibles o repentinos.", "Mantener siempre N instancias sanas: si una muere, se reemplaza sola.", "Bajar costos de noche o los fines de semana cuando no hay carga.", "Repartir instancias entre varias Availability Zones para tolerar fallas."],
+      avoid: ["Carga constante y conocida: puede alcanzar un número fijo de instancias reservadas.", "Aplicación con estado en disco local que no tolera que la instancia desaparezca.", "Cargas serverless &rarr; <strong>Lambda</strong> y <strong>Fargate</strong> ya escalan solos.", "Escalar la base de datos: esto es para cómputo &rarr; read replicas en <strong>RDS</strong>."],
+      concepts: [{t:"Auto Scaling Group (ASG)",d:"El conjunto de instancias que se administra en bloque."},{t:"Launch template",d:"Plantilla con AMI, tipo de instancia y configuración de las nuevas."},{t:"Mínimo / Deseado / Máximo",d:"Límites entre los que se mueve la cantidad de instancias."},{t:"Scaling policy",d:"Regla de escalado: por métrica objetivo, por pasos o programada."},{t:"Escalabilidad vs elasticidad",d:"Escalar es poder crecer; ser elástico es crecer y achicarse solo."}] },
+  ]},
+  { cat: "Contenedores", accent: "#FF9F6B", items: [
+    { name: "ECS", d: "Orquestador de contenedores administrado por AWS.", link: "https://aws.amazon.com/ecs/",
+      long: "<strong>Orquestador de contenedores</strong> propio de AWS: le decís qué imagen correr, cuántas copias y con qué CPU y memoria, y ECS se ocupa de ubicarlas, reemplazar las que fallan y conectarlas al load balancer. Es <strong>bastante más simple que Kubernetes</strong> y se integra de forma nativa con IAM, CloudWatch y ELB. Corre sobre dos modos de capacidad: instancias <strong>EC2</strong> que administrás vos, o <strong>Fargate</strong>, donde no hay servidores a la vista.",
+      use: ["Desplegar microservicios en Docker sin la complejidad de Kubernetes.", "Ya estás dentro de AWS y no necesitás portabilidad entre nubes.", "Correr contenedores sin administrar servidores, combinándolo con Fargate.", "Servicios de larga duración con escalado automático detrás de un ALB."],
+      avoid: ["Necesitás portabilidad entre nubes o ya usás Kubernetes &rarr; <strong>EKS</strong>.", "Tu equipo ya domina el ecosistema de Helm, operadores y CRDs &rarr; <strong>EKS</strong>.", "Una sola app web sencilla &rarr; <strong>App Runner</strong> o <strong>Elastic Beanstalk</strong>.", "Funciones cortas dirigidas por eventos &rarr; <strong>Lambda</strong>."],
+      concepts: [{t:"Task definition",d:"La receta: qué imagen, cuánta CPU y memoria, variables de entorno, puertos."},{t:"Task",d:"Una instancia en ejecución de esa definición."},{t:"Service",d:"Mantiene N tareas corriendo, las reemplaza si mueren y las registra en el load balancer."},{t:"Cluster",d:"Agrupación lógica donde corren las tareas."},{t:"Launch type",d:"EC2 (administrás las instancias) o Fargate (no hay servidores que administrar)."}] },
+    { name: "EKS", d: "Kubernetes administrado por AWS.", link: "https://aws.amazon.com/eks/",
+      long: "<strong>Kubernetes administrado</strong>: AWS opera el plano de control (los maestros, etcd, el API server) con alta disponibilidad, y vos aportás los nodos de trabajo — EC2 o Fargate. Es <strong>Kubernetes estándar</strong>, sin modificar: tus manifiestos, charts de Helm y operadores funcionan igual que en cualquier otro cluster. Ese es su gran atractivo frente a ECS: <strong>portabilidad</strong> y todo el ecosistema de la comunidad. El costo es la complejidad operativa, que es real.",
+      use: ["Ya tenés cargas en Kubernetes y querés moverlas a AWS sin reescribirlas.", "Necesitás portabilidad entre nubes o un entorno híbrido.", "Querés usar el ecosistema Kubernetes: Helm, operadores, service mesh, CRDs.", "Equipos grandes con plataforma propia y experiencia en Kubernetes."],
+      avoid: ["Equipo chico sin experiencia en Kubernetes &rarr; <strong>ECS</strong>, mucho menos carga operativa.", "Una app simple que solo necesita estar en línea &rarr; <strong>App Runner</strong>.", "El plano de control se paga por hora aunque el cluster esté ocioso.", "No necesitás portabilidad: ECS resuelve lo mismo con menos piezas."],
+      concepts: [{t:"Control plane",d:"Los maestros de Kubernetes, administrados por AWS y facturados por hora."},{t:"Node group",d:"Conjunto de nodos EC2 donde corren tus pods."},{t:"Pod",d:"La unidad mínima de Kubernetes: uno o más contenedores que comparten red."},{t:"Fargate profile",d:"Regla que hace que ciertos pods corran sin nodos EC2."},{t:"IRSA",d:"IAM Roles for Service Accounts: da permisos de AWS a un pod puntual."}] },
+    { name: "ECR", d: "Registro privado de imágenes de contenedores.", link: "https://aws.amazon.com/ecr/",
+      long: "<strong>Registro privado de imágenes</strong> de contenedores, el equivalente a Docker Hub pero dentro de tu cuenta. Guarda las imágenes que construís y las sirve a ECS, EKS, Fargate, App Runner o Lambda. Los permisos se controlan con <strong>IAM</strong> —no con credenciales aparte— y todas las imágenes se cifran en reposo. Incluye <strong>escaneo de vulnerabilidades</strong> sobre las capas de cada imagen y reglas de ciclo de vida para borrar automáticamente las versiones viejas.",
+      use: ["Guardar las imágenes Docker de tus servicios de forma privada.", "Que ECS o EKS levanten imágenes sin salir a internet ni exponer credenciales.", "Detectar CVEs en tus imágenes antes de desplegarlas a producción.", "Limpiar solo las imágenes viejas con reglas de ciclo de vida."],
+      avoid: ["Querés publicar una imagen open source para todo el mundo &rarr; Docker Hub o ECR Public.", "No usás contenedores: no hay nada que registrar.", "Almacenar artefactos que no son imágenes (jars, zips) &rarr; <strong>S3</strong> o CodeArtifact."],
+      concepts: [{t:"Repository",d:"Contenedor de todas las versiones de una imagen."},{t:"Tag",d:"Etiqueta de versión (latest, v1.2.0) que identifica cada imagen."},{t:"Image scanning",d:"Análisis de vulnerabilidades conocidas en las capas de la imagen."},{t:"Lifecycle policy",d:"Regla que borra imágenes viejas o sin tag automáticamente."}] },
+    { name: "Fargate", d: "Cómputo serverless para contenedores: no gestionás las instancias.", link: "https://aws.amazon.com/fargate/",
+      long: "<strong>Motor de cómputo serverless para contenedores</strong>. No es un orquestador aparte: es un <strong>modo de capacidad</strong> de ECS y EKS. Con Fargate desaparecen las instancias EC2 del cluster — declarás cuánta CPU y memoria necesita cada tarea y AWS provee exactamente eso, aislado a nivel de máquina virtual. <strong>Se paga por vCPU y GB por segundo</strong> mientras la tarea corre, así que no hay capacidad ociosa; a cambio, el precio por unidad de cómputo es mayor que el de una EC2 bien aprovechada.",
+      use: ["Correr contenedores sin administrar, parchear ni dimensionar servidores.", "Cargas variables o con picos donde tener EC2 encendidas de más sale caro.", "Equipos chicos que no quieren operar un cluster de instancias.", "Aislamiento fuerte entre tareas: cada una corre en su propia microVM."],
+      avoid: ["Cargas grandes y constantes: EC2 reservada o Spot sale bastante más barato.", "Necesitás GPU o tipos de instancia específicos &rarr; nodos <strong>EC2</strong> en el cluster.", "Requerís acceso al host, montar dispositivos o usar DaemonSets.", "Contenedores que arrancan y mueren en segundos, muy seguido &rarr; <strong>Lambda</strong>."],
+      concepts: [{t:"Modo de capacidad",d:"Fargate no reemplaza a ECS ni EKS: es dónde corren sus tareas."},{t:"Task size",d:"CPU y memoria declaradas por tarea; se paga exactamente eso."},{t:"Sin acceso al host",d:"No hay servidor donde entrar: AWS lo administra por completo."},{t:"Fargate Spot",d:"Capacidad interrumpible y más barata para cargas que toleran cortes."}] },
+  ]},
+  { cat: "Almacenamiento", accent: "#4DD9C5", items: [
+    { name: "S3", d: "Almacenamiento de objetos con 11 nueves de durabilidad; clases según acceso.", link: "https://aws.amazon.com/s3/",
+      long: "Almacenamiento de <strong>objetos</strong>: guardás archivos completos (imágenes, videos, backups, logs, datasets) y los recuperás por una API HTTP, no montando un disco. Escala prácticamente sin límite y es la base de data lakes, hosting de sitios estáticos, backups y analítica. Ofrece varias <strong>clases de almacenamiento</strong> para pagar según cuán seguido accedas a cada objeto.",
+      use: ["Hosting de sitios estáticos y assets servidos por CloudFront.", "Data lake: archivos crudos que después consultás con Athena o Redshift.", "Backups y logs que se escriben una vez y se leen poco.", "Recibir uploads de usuarios desde una app web o móvil."],
+      avoid: ["Necesitás montar un filesystem y usar rutas POSIX &rarr; <strong>EFS</strong>.", "Un solo servidor necesita un disco rápido dedicado &rarr; <strong>EBS</strong>.", "Escrituras parciales dentro de un archivo: en S3 se reemplaza el objeto entero.", "Base de datos transaccional &rarr; <strong>RDS</strong> o <strong>DynamoDB</strong>."],
+      concepts: [{t:"Bucket",d:"Contenedor raíz de los objetos. Vive en una región."},{t:"Objeto / key",d:"El archivo y su nombre completo dentro del bucket."},{t:"Storage class",d:"Standard, Intelligent-Tiering, Standard-IA, One Zone-IA, Glacier: distinto costo según frecuencia de acceso."},{t:"Lifecycle policy",d:"Regla que mueve o borra objetos solos con el tiempo (ej. a Glacier a los 90 días)."},{t:"Versioning",d:"Guarda revisiones anteriores de un objeto; protege contra borrado accidental."}] },
+    { name: "EBS", d: "Volúmenes de bloque persistentes para instancias EC2.", link: "https://aws.amazon.com/ebs/",
+      long: "Almacenamiento de <strong>bloque</strong> para instancias EC2: se comporta como un disco duro conectado a la máquina. Persiste aunque reinicies la instancia. Los volúmenes se replican automáticamente dentro de <strong>una sola Availability Zone</strong>, y podés cambiar capacidad o rendimiento en caliente, sin downtime. Hay tipos <strong>SSD</strong> (cargas transaccionales) y <strong>HDD</strong> (mucho throughput secuencial).",
+      use: ["Disco raíz del sistema operativo de una EC2.", "Base de datos corriendo sobre EC2, que necesita I/O de baja latencia.", "Cualquier app que espera un disco local y no se puede reescribir.", "Backups puntuales del disco vía snapshots."],
+      avoid: ["Varias EC2 tienen que escribir los mismos archivos a la vez &rarr; <strong>EFS</strong>.", "Guardás objetos accesibles por HTTP &rarr; <strong>S3</strong>.", "Necesitás que el disco sobreviva la caída de una AZ: EBS vive en una sola AZ."],
+      concepts: [{t:"Volumen",d:"El disco en sí, que se adjunta a una instancia."},{t:"Snapshot",d:"Copia puntual del volumen, guardada aparte; restaurable en otra AZ o cuenta."},{t:"SSD vs HDD",d:"SSD (gp3, io2) para transaccional; HDD (st1, sc1) para throughput secuencial barato."},{t:"Elastic Volumes",d:"Cambiar tamaño o rendimiento del volumen sin detener la instancia."}] },
+    { name: "EFS", d: "Sistema de archivos elástico compartido entre instancias.", link: "https://aws.amazon.com/efs/",
+      long: "Sistema de archivos <strong>serverless y elástico</strong>: crece y se achica solo, sin aprovisionar capacidad. Habla el protocolo <strong>NFS</strong>, así que se monta como cualquier filesystem de red y las herramientas de Linux funcionan sin cambios. Varias instancias lo montan <strong>al mismo tiempo</strong>, con consistencia fuerte y bloqueo de archivos. Accesible desde EC2, ECS, EKS, Lambda y Fargate.",
+      use: ["Varias EC2 leen y escriben los mismos archivos simultáneamente.", "CMS o app web en cluster donde los uploads deben verse desde cualquier instancia.", "Cargas que ya usan filesystem y no se pueden migrar a una API de objetos.", "Almacenamiento compartido para contenedores ECS/EKS."],
+      avoid: ["Un solo servidor con un disco dedicado y rápido &rarr; <strong>EBS</strong>.", "Objetos accedidos por HTTP: imágenes, backups, data lake &rarr; <strong>S3</strong>, más barato.", "Filesystem de <strong>Windows</strong> (SMB) o alto rendimiento tipo Lustre &rarr; <strong>FSx</strong>. EFS no soporta EC2 Windows.", "Archivado de largo plazo con acceso muy raro &rarr; <strong>S3 Glacier</strong>."],
+      concepts: [{t:"Mount target",d:"Punto de acceso dentro de una subnet de la VPC. Sin él, la instancia no puede montar."},{t:"Regional vs One Zone",d:"Regional replica entre varias AZ y sobrevive la caída de una; One Zone es más barato pero vive en una sola."},{t:"Performance mode",d:"General Purpose es el default, para cargas sensibles a latencia."},{t:"Throughput mode",d:"Elastic escala el rendimiento solo según la actividad."},{t:"Encryption at rest",d:"Se activa al CREAR el filesystem, no después."}] },
+    { name: "FSx", d: "Sistemas de archivos administrados (Windows, Lustre, NetApp, OpenZFS).", link: "https://aws.amazon.com/fsx/",
+      long: "Familia de sistemas de archivos administrados para cuando necesitás un filesystem <strong>concreto</strong>, no uno genérico. Cuatro sabores: <strong>Windows File Server</strong> (SMB, se integra con Active Directory), <strong>Lustre</strong> (HPC y machine learning, altísimo throughput), <strong>NetApp ONTAP</strong> y <strong>OpenZFS</strong>. AWS se encarga del hardware, backups y parches.",
+      use: ["Aplicaciones Windows que necesitan recursos compartidos SMB y Active Directory.", "HPC, simulaciones o entrenamiento de ML que leen datasets enormes muy rápido (Lustre).", "Migrar un NAS on-premise de NetApp o ZFS a AWS sin cambiar la app."],
+      avoid: ["Filesystem Linux genérico y compartido &rarr; <strong>EFS</strong>, más simple y elástico.", "Objetos por HTTP &rarr; <strong>S3</strong>.", "Disco de una sola instancia &rarr; <strong>EBS</strong>."],
+      concepts: [{t:"FSx for Windows",d:"SMB nativo + integración con Active Directory."},{t:"FSx for Lustre",d:"Filesystem paralelo de alto rendimiento; se enlaza con un bucket S3."},{t:"FSx for ONTAP / OpenZFS",d:"Compatibilidad con NAS existentes: snapshots, clones, dedupe."}] },
+    { name: "S3 Glacier", d: "Almacenamiento frío de bajo costo para archivo a largo plazo.", link: "https://aws.amazon.com/s3/storage-classes/glacier/",
+      long: "Las clases de almacenamiento <strong>más baratas</strong> de S3, pensadas para datos que casi nunca se leen pero hay que conservar. El precio por GB es mucho menor que S3 Standard; a cambio, recuperar un objeto cuesta plata y puede tardar. Tres niveles: <strong>Instant Retrieval</strong> (acceso en milisegundos), <strong>Flexible Retrieval</strong> (minutos a horas) y <strong>Deep Archive</strong> (el más barato, horas).",
+      use: ["Backups que se guardan por años y ojalá nunca se lean.", "Retención por cumplimiento normativo o legal.", "Archivo histórico de logs o registros médicos/financieros.", "Destino de una lifecycle policy que baja objetos viejos desde S3 Standard."],
+      avoid: ["Los datos se leen seguido: el costo de recuperación se te come el ahorro.", "Necesitás el archivo en el acto y no podés esperar &rarr; S3 Standard o Instant Retrieval.", "Es una clase de S3, no un servicio aparte: no lo montás como disco."],
+      concepts: [{t:"Instant Retrieval",d:"Archivado con acceso en milisegundos; el más caro de los tres."},{t:"Flexible Retrieval",d:"Recuperación en minutos u horas según la urgencia que pidas."},{t:"Deep Archive",d:"El más barato; recuperación en horas. Para retención de 7-10 años."},{t:"Retrieval fee",d:"Sacar datos se cobra aparte del almacenamiento. Clave del modelo de costos."}] },
+    { name: "Storage Gateway", d: "Puente híbrido entre almacenamiento on-premise y AWS.", link: "https://aws.amazon.com/storagegateway/",
+      long: "Servicio <strong>híbrido</strong>: corrés un appliance virtual en tu datacenter que expone protocolos locales (NFS, SMB, iSCSI, VTL) mientras guarda los datos en <strong>S3, Glacier o EBS</strong> por detrás. Los servidores on-premise creen que hablan con un NAS local; en realidad escriben a AWS. Mantiene un caché local de lo más usado para que la latencia no se note.",
+      use: ["Migrar backups on-premise a la nube sin cambiar el software de backup.", "Extender la capacidad de un NAS local usando S3 como fondo infinito.", "Reemplazar una librería de cintas física por Virtual Tape Library.", "Etapa intermedia de una migración gradual a AWS."],
+      avoid: ["Todo tu stack ya corre en AWS: no hay nada on-premise que puentear.", "Migración masiva de datos por única vez &rarr; <strong>Snowball</strong> o DataSync.", "Necesitás rendimiento local puro sin dependencia de red."],
+      concepts: [{t:"File Gateway",d:"Expone NFS/SMB y guarda cada archivo como objeto en S3."},{t:"Volume Gateway",d:"Expone volúmenes iSCSI respaldados por snapshots en EBS."},{t:"Tape Gateway",d:"Emula una librería de cintas; el software de backup no se entera."},{t:"Caché local",d:"Guarda los datos calientes on-premise para bajar latencia."}] },
+  ]},
+  { cat: "Migración y transferencia", accent: "#7FD4C1", items: [
+    { name: "Snow Family", d: "Dispositivos físicos para mover datos a AWS sin usar la red.", link: "https://aws.amazon.com/snow/",
+      long: "Dispositivos <strong>físicos</strong> que AWS te envía por correo para mover grandes volúmenes de datos <strong>sin depender de la red</strong>. Copiás los datos al equipo, lo devolvés y AWS los carga a S3. La lógica es simple: transferir <strong>petabytes por internet puede tardar meses</strong>, mientras que un camión tarda días. <strong>Snowcone</strong> es el más chico (hasta 8 TB) y <strong>Snowball Edge</strong> el intermedio (decenas de TB), que además puede <strong>procesar datos en el borde</strong>, en lugares sin conectividad. Todo viaja cifrado.",
+      use: ["Migrar cientos de TB o petabytes a AWS en un plazo razonable.", "Ubicaciones con conexión lenta, cara o inexistente.", "Recolectar datos en el borde: barcos, minas, plantas industriales.", "Cuando el cálculo da que por red tardaría meses."],
+      avoid: ["Volúmenes chicos o medianos &rarr; transferir por red directamente.", "Necesitás sincronización continua, no una carga única &rarr; <strong>DataSync</strong>.", "Conexión dedicada permanente &rarr; <strong>Direct Connect</strong>.", "Los datos se necesitan en la nube ya mismo: el envío físico lleva días."],
+      concepts: [{t:"Snowcone",d:"El más pequeño y portátil; hasta 8 TB."},{t:"Snowball Edge",d:"Decenas de TB, con capacidad de cómputo para procesar en el borde."},{t:"Cifrado",d:"Los datos viajan cifrados con claves de KMS."},{t:"Cuándo conviene",d:"Regla práctica: si por red tarda semanas o meses, usá Snow."}] },
+    { name: "DMS", d: "Migra bases de datos a AWS con mínimo downtime.", link: "https://aws.amazon.com/dms/",
+      long: "<strong>Database Migration Service</strong> mueve bases de datos hacia AWS manteniendo la <strong>base de origen operativa durante la migración</strong>: primero copia los datos existentes y después replica los cambios en curso, de modo que el corte final dura minutos. Soporta migraciones <strong>homogéneas</strong> (Oracle a Oracle) y <strong>heterogéneas</strong> (Oracle a PostgreSQL); en el segundo caso se combina con la <strong>Schema Conversion Tool</strong>, que traduce esquemas y procedimientos almacenados.",
+      use: ["Migrar una base on-premise a RDS o Aurora sin parar el negocio.", "Cambiar de motor comercial (Oracle, SQL Server) a uno open source.", "Replicación continua entre dos bases para mantenerlas sincronizadas.", "Consolidar varias bases en una sola durante una migración."],
+      avoid: ["Migrar archivos o sistemas de archivos &rarr; <strong>DataSync</strong>.", "Volúmenes enormes sin buena conectividad &rarr; combinarlo con <strong>Snow Family</strong>.", "Copiar una base chica de una sola vez: un dump y restore puede ser más simple.", "Migrar la aplicación completa: DMS mueve datos, no servidores."],
+      concepts: [{t:"Instancia de replicación",d:"El servidor que ejecuta la migración."},{t:"CDC",d:"Change Data Capture: replica los cambios en vivo tras la carga inicial."},{t:"Homogénea vs heterogénea",d:"Mismo motor, o cambio de motor con conversión de esquema."},{t:"SCT",d:"Schema Conversion Tool: traduce esquemas y procedimientos entre motores."}] },
+    { name: "DataSync", d: "Transferencia automatizada de archivos hacia y desde AWS.", link: "https://aws.amazon.com/datasync/",
+      long: "Automatiza y acelera la <strong>transferencia de archivos</strong> entre almacenamiento on-premise (NFS, SMB, HDFS) y servicios de AWS como <strong>S3, EFS y FSx</strong>, o entre servicios de AWS entre sí. Usa un protocolo propio que aprovecha mucho mejor el ancho de banda que una copia común, y se encarga del <strong>cifrado, la validación de integridad y los reintentos</strong>. A diferencia de Snow Family viaja <strong>por red</strong>, y a diferencia de Storage Gateway es una transferencia y no un acceso híbrido permanente.",
+      use: ["Migrar un NAS on-premise a EFS o FSx.", "Sincronización periódica de archivos entre el datacenter y S3.", "Copiar datos entre regiones o entre cuentas de AWS.", "Enviar backups locales a S3 de forma programada."],
+      avoid: ["Petabytes con red insuficiente &rarr; <strong>Snow Family</strong>.", "Acceso híbrido permanente donde los servidores locales leen y escriben en AWS &rarr; <strong>Storage Gateway</strong>.", "Migrar bases de datos &rarr; <strong>DMS</strong>.", "Copia única y pequeña: el CLI de AWS alcanza."],
+      concepts: [{t:"Agente",d:"Máquina virtual que se instala on-premise para leer el origen."},{t:"Task",d:"Definición de origen, destino y programación de la transferencia."},{t:"Validación de integridad",d:"Verifica que lo transferido coincide con el origen."},{t:"vs Storage Gateway",d:"DataSync transfiere y termina; Storage Gateway deja un acceso permanente."}] },
+  ]},
+  { cat: "Bases de datos", accent: "#B98EF2", items: [
+    { name: "RDS", d: "Bases relacionales administradas: MySQL, Postgres, MariaDB, SQL Server, Oracle.", link: "https://aws.amazon.com/rds/",
+      long: "Bases de datos <strong>relacionales administradas</strong>: vos elegís el motor (MySQL, PostgreSQL, MariaDB, Oracle, SQL Server) y AWS se ocupa de instalar, parchear, respaldar y replicar. Seguís hablando SQL igual que siempre y tu ORM no se entera del cambio; lo que desaparece es el trabajo de administrar el servidor. Es la opción por defecto para cargas <strong>OLTP</strong>: muchas transacciones chicas, datos normalizados con relaciones entre tablas.",
+      use: ["Backend de una app web o API con datos relacionales (usuarios, pedidos, facturas).", "Migrar una base MySQL o Postgres on-premise sin reescribir la aplicación.", "Necesitás transacciones ACID, JOINs y constraints de integridad.", "Querés backups automáticos y réplicas de lectura sin scriptearlos vos."],
+      avoid: ["Consultas analíticas sobre millones de filas (OLAP) &rarr; <strong>Redshift</strong>.", "Escala masiva con acceso por clave y esquema flexible &rarr; <strong>DynamoDB</strong>.", "Querés el mismo SQL pero con más rendimiento y failover más rápido &rarr; <strong>Aurora</strong>.", "Necesitás control total del sistema operativo de la base &rarr; instalar el motor sobre <strong>EC2</strong>."],
+      concepts: [{t:"Instancia de BD",d:"El servidor administrado donde corre el motor; se elige clase de instancia (CPU/RAM)."},{t:"Multi-AZ",d:"Réplica sincrónica en otra Availability Zone que toma el control sola si falla la principal. Es alta disponibilidad, no escala lecturas."},{t:"Read replica",d:"Copia asincrónica para repartir consultas de lectura. Escala lecturas, no es failover automático."},{t:"Automated backups",d:"Respaldos diarios más logs de transacción: permiten restaurar a un punto exacto en el tiempo."},{t:"Parameter group",d:"Conjunto de parámetros de configuración del motor, editable sin tocar el sistema operativo."}] },
+    { name: "Aurora", d: "Motor relacional compatible MySQL/Postgres, más rápido que RDS estándar.", link: "https://aws.amazon.com/rds/aurora/",
+      long: "Motor relacional propio de AWS, <strong>compatible con MySQL y PostgreSQL</strong>: el mismo código, herramientas y aplicaciones funcionan sin cambios. Entrega hasta <strong>6x el throughput</strong> de MySQL o PostgreSQL estándar sobre hardware similar, gracias a un subsistema de almacenamiento distribuido que replica los datos entre varias Availability Zones y <strong>crece solo</strong> hasta 256 TiB. Forma parte de RDS, así que hereda backups, parches y monitoreo administrados.",
+      use: ["Una app que ya usa MySQL o PostgreSQL y necesita más rendimiento sin reescribirse.", "Cargas donde el failover tiene que ser rápido (segundos, no minutos).", "El volumen de datos crece de forma impredecible y no querés dimensionar discos a mano.", "Aurora Serverless v2 cuando el tráfico es intermitente y no querés pagar capacidad ociosa."],
+      avoid: ["Necesitás Oracle o SQL Server: Aurora solo habla MySQL y PostgreSQL &rarr; <strong>RDS</strong>.", "Analítica sobre grandes volúmenes &rarr; <strong>Redshift</strong>.", "Presupuesto ajustado en cargas chicas: RDS estándar suele salir más barato.", "Datos sin esquema relacional y escala por clave &rarr; <strong>DynamoDB</strong>."],
+      concepts: [{t:"Cluster volume",d:"El almacenamiento compartido que replica en varias AZ y crece solo hasta 256 TiB."},{t:"Writer / Reader",d:"Una instancia acepta escrituras; las réplicas de lectura comparten el mismo volumen."},{t:"Endpoint de cluster",d:"DNS que apunta siempre al writer actual; en un failover no hay que cambiar nada en la app."},{t:"Aurora Serverless v2",d:"Escala la capacidad de cómputo automáticamente según la carga."}] },
+    { name: "DynamoDB", d: "NoSQL serverless con latencia de milisegundos a cualquier escala.", link: "https://aws.amazon.com/dynamodb/",
+      long: "Base <strong>NoSQL serverless</strong> y distribuida, con latencia de <strong>milisegundos de un dígito a cualquier escala</strong>. No aprovisionás servidores, no hay versiones ni ventanas de mantenimiento. En modo <strong>on-demand</strong> escala sola con el tráfico y baja hasta cero: si la tabla no recibe requests, no pagás throughput. Los datos se guardan como items con atributos, sin esquema fijo más allá de la clave.",
+      use: ["Carritos de compra, sesiones, perfiles de usuario: acceso por clave, altísimo volumen.", "Backend serverless junto con Lambda y API Gateway.", "Tráfico con picos impredecibles donde aprovisionar servidores no cierra.", "IoT o telemetría: escrituras masivas con lecturas por clave conocida."],
+      avoid: ["Consultas ad-hoc con JOINs o filtros arbitrarios &rarr; <strong>RDS</strong> o <strong>Aurora</strong>.", "Reportes analíticos que recorren toda la tabla &rarr; <strong>Redshift</strong> o <strong>Athena</strong>.", "Modelás los datos sin saber de antemano los patrones de acceso: en DynamoDB el diseño arranca por las consultas.", "Necesitás transacciones complejas entre muchas entidades relacionadas."],
+      concepts: [{t:"Partition key",d:"Determina en qué partición vive el item. Elegirla mal genera puntos calientes."},{t:"Sort key",d:"Segunda parte de la clave; permite rangos y ordenamiento dentro de una partición."},{t:"On-demand vs Provisioned",d:"On-demand cobra por request y escala solo; provisioned reserva capacidad y sale más barato con tráfico estable."},{t:"GSI",d:"Índice secundario global: habilita consultar por un atributo que no es la clave principal."},{t:"DynamoDB Streams",d:"Registro de cambios de la tabla; suele disparar una Lambda ante cada modificación."}] },
+    { name: "Neptune", d: "Base de datos de grafos administrada.", link: "https://aws.amazon.com/neptune/",
+      long: "Base de datos de <strong>grafos</strong> administrada: en vez de filas y tablas, guarda <strong>nodos y relaciones</strong> como ciudadanos de primera clase. Está optimizada para consultas que recorren muchos saltos — \"amigos de amigos que también compraron X\" — que en SQL exigirían JOINs anidados carísimos. Soporta los lenguajes de consulta Gremlin, openCypher y SPARQL.",
+      use: ["Redes sociales: conexiones entre personas, recomendaciones por cercanía.", "Motores de recomendación basados en relaciones entre productos y usuarios.", "Detección de fraude: encontrar patrones de vínculos sospechosos entre cuentas.", "Grafos de conocimiento y catálogos con jerarquías profundas."],
+      avoid: ["Los datos son tabulares y las consultas simples &rarr; <strong>RDS</strong>, mucho más barato.", "Acceso por clave a alta escala &rarr; <strong>DynamoDB</strong>.", "Analítica agregada sobre columnas &rarr; <strong>Redshift</strong>.", "Tu equipo no conoce Gremlin ni Cypher: la curva de aprendizaje es real."],
+      concepts: [{t:"Nodo / Vértice",d:"La entidad del grafo: una persona, un producto, una cuenta."},{t:"Arista",d:"La relación entre dos nodos, con dirección y propiedades propias."},{t:"Gremlin / openCypher",d:"Lenguajes para recorrer el grafo, equivalentes a lo que SQL es para lo relacional."}] },
+    { name: "Redshift", d: "Data warehouse administrado para analítica (OLAP).", link: "https://aws.amazon.com/redshift/",
+      long: "<strong>Data warehouse</strong> administrado a escala de petabytes. Guarda los datos por <strong>columnas</strong> en vez de por filas, lo que hace que agregar millones de registros (sumas, promedios, agrupaciones) sea órdenes de magnitud más rápido que en una base transaccional. Es la pieza <strong>OLAP</strong> frente al OLTP de RDS: pocas consultas, pero enormes. En modo <strong>Serverless</strong> aprovisiona capacidad sola y no cobra mientras está ocioso.",
+      use: ["Reportes de business intelligence y dashboards sobre históricos grandes.", "Consolidar datos de varias fuentes para analizarlos con SQL conocido.", "Consultar un data lake de S3 sin moverlo, vía Redshift Spectrum.", "Alimentar herramientas de BI como QuickSight, Tableau o Power BI."],
+      avoid: ["Lecturas y escrituras transaccionales de la app &rarr; <strong>RDS</strong> o <strong>Aurora</strong>. Redshift no es para OLTP.", "Consultas puntuales sobre archivos en S3, sin infraestructura fija &rarr; <strong>Athena</strong>.", "Necesitás respuesta en milisegundos por clave &rarr; <strong>DynamoDB</strong>.", "El volumen de datos es chico: un Postgres alcanza y cuesta mucho menos."],
+      concepts: [{t:"Almacenamiento columnar",d:"Guarda cada columna junta; lee solo las que la consulta necesita."},{t:"OLAP vs OLTP",d:"OLAP (Redshift) analiza grandes volúmenes; OLTP (RDS) procesa transacciones del día a día."},{t:"Redshift Serverless",d:"Aprovisiona y escala solo; no cobra cuando está ocioso."},{t:"Spectrum",d:"Consulta archivos en S3 directamente, sin cargarlos al warehouse."},{t:"Distribution key",d:"Define cómo se reparten las filas entre nodos; clave para el rendimiento de los JOINs."}] },
+    { name: "ElastiCache", d: "Cache en memoria administrado (Redis/Memcached).", link: "https://aws.amazon.com/elasticache/",
+      long: "<strong>Caché en memoria</strong> administrado, compatible con <strong>Redis</strong> y <strong>Memcached</strong>. Guarda en RAM los resultados que son caros de calcular o de traer de la base, y los devuelve en <strong>microsegundos</strong>. Su función típica es sentarse delante de RDS o DynamoDB para absorber las lecturas repetidas y bajarles la carga. Redis además sirve como store de sesiones, ranking en tiempo real, colas y pub/sub.",
+      use: ["Cachear consultas caras que se repiten mucho (home de un sitio, catálogos).", "Guardar sesiones de usuario compartidas entre varias instancias de la app.", "Leaderboards, contadores y rate limiting en tiempo real (Redis).", "Bajar costo y latencia de una base que recibe la misma consulta miles de veces."],
+      avoid: ["Es tu única fuente de datos: el caché es volátil y puede perder contenido &rarr; siempre detrás de <strong>RDS</strong> o <strong>DynamoDB</strong>.", "Los datos casi nunca se releen: el caché no aporta nada.", "Solo necesitás acelerar DynamoDB &rarr; <strong>DAX</strong>, que es específico para eso.", "Necesitás persistencia garantizada y durabilidad transaccional."],
+      concepts: [{t:"Redis vs Memcached",d:"Redis tiene estructuras de datos, persistencia y réplicas; Memcached es más simple, solo clave-valor multihilo."},{t:"TTL",d:"Tiempo de vida de cada entrada; al vencer se descarta sola."},{t:"Cache hit / miss",d:"Hit: el dato estaba en memoria. Miss: hay que ir a la base y recién ahí guardarlo."},{t:"Lazy loading vs write-through",d:"Cargar al primer miss, o escribir al caché en cada actualización de la base."}] },
+  ]},
+  { cat: "Redes y CDN", accent: "#5B9EFF", items: [
+    { name: "VPC", d: "Red virtual privada y aislada donde viven tus recursos.", link: "https://aws.amazon.com/vpc/",
+      long: "Tu <strong>red virtual aislada</strong> dentro de AWS: se parece mucho a la red que operarías en tu propio datacenter, pero sobre infraestructura de AWS. Dentro de la VPC definís <strong>subnets</strong> (rangos de IP, cada una en una sola Availability Zone), <strong>route tables</strong> que deciden a dónde va el tráfico, y <strong>gateways</strong> que la conectan con el exterior. Es la base sobre la que se apoya casi todo: EC2, RDS y ELB viven adentro de una VPC.",
+      use: ["Separar recursos públicos (servidores web) de privados (bases de datos) en subnets distintas.", "Aislar ambientes: una VPC para producción y otra para desarrollo.", "Conectar con tu datacenter por VPN o Direct Connect y tratarlo como una extensión de la red.", "Controlar exactamente qué puede hablar con qué mediante security groups y ACLs."],
+      avoid: ["Servicios totalmente administrados que no necesitan red propia (S3, DynamoDB) se acceden por su API pública o por VPC endpoint.", "Para una demo mínima con una sola EC2, la VPC por defecto ya alcanza.", "No es un firewall de aplicación: para filtrar ataques HTTP &rarr; <strong>WAF</strong>."],
+      concepts: [{t:"Subnet",d:"Rango de IPs dentro de la VPC. Vive en UNA sola Availability Zone."},{t:"Subnet pública vs privada",d:"Pública: su route table apunta a un internet gateway. Privada: no tiene salida directa a internet."},{t:"Internet Gateway (IGW)",d:"Puerta de entrada y salida a internet para las subnets públicas."},{t:"NAT Gateway",d:"Deja que las subnets privadas salgan a internet sin ser alcanzables desde afuera."},{t:"Security group",d:"Firewall a nivel de instancia, con estado: si permitís la entrada, la respuesta sale sola."},{t:"VPC endpoint",d:"Acceso privado a servicios como S3 sin pasar por internet."}] },
+    { name: "Route 53", d: "DNS administrado, enrutamiento y health checks.", link: "https://aws.amazon.com/route53/",
+      long: "El <strong>DNS</strong> administrado de AWS: traduce nombres de dominio a direcciones IP, registra dominios y decide a qué destino mandar cada consulta. Más allá del DNS clásico, ofrece <strong>políticas de enrutamiento</strong> (por latencia, geolocalización, peso, failover) y <strong>health checks</strong> que sacan de rotación un endpoint caído automáticamente. El nombre viene del puerto 53, el del protocolo DNS.",
+      use: ["Apuntar tu dominio a un ELB, CloudFront o bucket S3.", "Failover automático a una región secundaria cuando la principal deja de responder.", "Mandar a cada usuario a la región más cercana por latencia o geolocalización.", "Repartir tráfico entre dos versiones de una app para un despliegue gradual."],
+      avoid: ["Distribuir contenido con baja latencia &rarr; eso lo hace <strong>CloudFront</strong>; Route 53 solo resuelve nombres.", "Balancear carga entre instancias dentro de una región &rarr; <strong>ELB</strong>.", "Tu dominio ya está en otro registrador y no querés migrarlo: alcanza con delegar los nameservers."],
+      concepts: [{t:"Hosted zone",d:"Contenedor de los registros DNS de un dominio."},{t:"Registro A / CNAME",d:"A apunta a una IP; CNAME apunta a otro nombre."},{t:"Alias record",d:"Registro propio de AWS que apunta a un recurso (ELB, CloudFront, S3) sin costo de consulta y sirve en la raíz del dominio."},{t:"Routing policy",d:"Simple, ponderada, por latencia, geolocalización o failover."},{t:"Health check",d:"Sondeo periódico; si el destino falla, deja de resolverse hacia él."}] },
+    { name: "CloudFront", d: "CDN global de AWS para entregar contenido con baja latencia.", link: "https://aws.amazon.com/cloudfront/",
+      long: "La <strong>red de distribución de contenido (CDN)</strong> de AWS: copia tu contenido en cientos de <strong>edge locations</strong> repartidas por el mundo, de modo que cada usuario lo recibe desde el punto más cercano en vez de ir hasta tu servidor de origen. Baja la latencia, reduce la carga del origen y absorbe picos de tráfico. Además termina el TLS en el borde y se integra con <strong>WAF</strong> y <strong>Shield</strong> para filtrar ataques antes de que lleguen a tu infraestructura.",
+      use: ["Servir un sitio estático alojado en S3 con dominio propio y HTTPS.", "Acelerar imágenes, videos y assets de una app con usuarios en varios países.", "Poner una capa de caché y protección delante de un ELB o una API.", "Descargar del origen el tráfico repetido de archivos grandes."],
+      avoid: ["Todos tus usuarios están en una sola región cerca del origen: el beneficio es marginal.", "Contenido único por usuario que nunca se puede cachear.", "Necesitás resolver nombres de dominio &rarr; <strong>Route 53</strong>.", "Balanceo entre instancias dentro de una región &rarr; <strong>ELB</strong>."],
+      concepts: [{t:"Edge location",d:"Punto de presencia donde se cachea el contenido, cerca del usuario final."},{t:"Origin",d:"La fuente real del contenido: un bucket S3, un ELB o un servidor propio."},{t:"TTL / invalidación",d:"Cuánto vive una copia en caché; la invalidación la borra antes de tiempo."},{t:"OAC",d:"Origin Access Control: deja que solo CloudFront lea el bucket S3, cerrándolo al público."},{t:"Cache behavior",d:"Reglas por patrón de ruta: qué cachear, por cuánto y con qué headers."}] },
+    { name: "API Gateway", d: "Publicá y asegurá APIs REST, HTTP y WebSocket.", link: "https://aws.amazon.com/api-gateway/",
+      long: "<strong>Puerta de entrada administrada</strong> para tus APIs: recibe las peticiones HTTP y las enruta a Lambda, a un servicio en ECS, a un ELB o a cualquier endpoint. Se ocupa de lo que rodea a la API sin que lo programes: <strong>autenticación</strong> (con Cognito o IAM), <strong>rate limiting</strong>, versionado por stages, validación de requests, CORS y logging. Soporta APIs REST, HTTP (más simples y baratas) y WebSocket para conexiones persistentes.",
+      use: ["Exponer funciones Lambda como una API HTTP pública: el patrón serverless clásico.", "Poner autenticación y límite de tasa delante de un backend que no los implementa.", "Manejar varios ambientes (dev, staging, prod) con stages de la misma API.", "APIs WebSocket para chat o notificaciones en tiempo real."],
+      avoid: ["Servir archivos estáticos &rarr; <strong>S3</strong> más <strong>CloudFront</strong>.", "Tráfico altísimo y constante: el costo por millón de requests puede superar al de un <strong>ELB</strong> con contenedores.", "Comunicación interna entre microservicios: suele alcanzar un load balancer interno.", "Necesitás conexiones de muy baja latencia y protocolo propio &rarr; <strong>NLB</strong>."],
+      concepts: [{t:"Stage",d:"Versión desplegada de la API (dev, prod), cada una con su URL."},{t:"Resource / Method",d:"La ruta (/usuarios) y el verbo HTTP (GET, POST) que la API expone."},{t:"Authorizer",d:"Valida el token de cada request; puede ser Cognito, IAM o una Lambda propia."},{t:"Usage plan / API key",d:"Cuotas y límite de tasa por cliente."},{t:"REST vs HTTP API",d:"HTTP API es más simple, rápida y barata; REST API tiene más funcionalidades."}] },
+    { name: "ELB", d: "Balanceador de carga elástico entre instancias/targets.", link: "https://aws.amazon.com/elasticloadbalancing/",
+      long: "<strong>Elastic Load Balancing</strong> reparte automáticamente el tráfico entrante entre varios destinos — instancias EC2, contenedores, direcciones IP o funciones Lambda — en una o más Availability Zones. Monitorea la salud de cada destino con <strong>health checks</strong> y solo manda tráfico a los que responden bien, y <strong>escala su propia capacidad</strong> según la demanda. También puede terminar el TLS, liberando a los servidores del costo de cifrar.",
+      use: ["Repartir tráfico entre varias EC2 en distintas AZ para tolerar la caída de una.", "Enrutar por ruta o por dominio hacia distintos servicios (ALB).", "Sacar de rotación automáticamente una instancia que dejó de responder.", "Terminar HTTPS en el balanceador y hablar HTTP puertas adentro."],
+      avoid: ["Un solo servidor sin necesidad de alta disponibilidad: es costo sin beneficio.", "Distribuir contenido estático globalmente &rarr; <strong>CloudFront</strong>.", "Resolver nombres de dominio o hacer failover entre regiones &rarr; <strong>Route 53</strong>.", "Backend serverless con Lambda &rarr; <strong>API Gateway</strong> suele encajar mejor."],
+      concepts: [{t:"ALB",d:"Application Load Balancer: capa 7 (HTTP/HTTPS), enruta por ruta, host o header."},{t:"NLB",d:"Network Load Balancer: capa 4 (TCP/UDP), latencia ultrabaja y millones de conexiones."},{t:"Target group",d:"Conjunto de destinos que reciben el tráfico, con su health check propio."},{t:"Health check",d:"Sondeo periódico; el destino que falla queda fuera de rotación."},{t:"Cross-zone balancing",d:"Reparte parejo entre todas las AZ, sin importar cuántos destinos tenga cada una."}] },
+    { name: "Direct Connect", d: "Conexión de red dedicada y privada entre tu datacenter y AWS.", link: "https://aws.amazon.com/directconnect/",
+      long: "Un <strong>enlace físico dedicado</strong> entre tu datacenter u oficina y AWS, que no pasa por internet. Al ser una conexión propia y no compartida, entrega <strong>ancho de banda constante y latencia predecible</strong>, algo que una VPN sobre internet no puede garantizar. Además abarata la transferencia de salida cuando movés grandes volúmenes de forma sostenida. Se contrata a través de un partner en una ubicación de Direct Connect.",
+      use: ["Arquitecturas híbridas que mueven mucho tráfico entre on-premise y AWS todos los días.", "Cargas sensibles a la latencia donde la variabilidad de internet no es aceptable.", "Requisitos regulatorios que exigen que el tráfico no viaje por internet público.", "Migraciones grandes con transferencia sostenida durante semanas o meses."],
+      avoid: ["Necesitás conectividad ya mismo: instalar un enlace físico lleva semanas &rarr; <strong>Site-to-Site VPN</strong>.", "El volumen de tráfico es bajo: el costo fijo mensual no se justifica.", "No tenés infraestructura on-premise que conectar.", "Mover datos una sola vez &rarr; <strong>Snowball</strong> o DataSync."],
+      concepts: [{t:"Ubicación de Direct Connect",d:"Datacenter físico donde tu red se interconecta con la de AWS."},{t:"Virtual Interface (VIF)",d:"Interfaz lógica sobre el enlace: privada hacia tu VPC, pública hacia servicios de AWS."},{t:"VPN como respaldo",d:"Práctica habitual: una VPN por internet queda de reserva si el enlace se cae."}] },
+  ]},
+  { cat: "Seguridad e identidad", accent: "#FF6B6B", items: [
+    { name: "IAM", d: "Usuarios, grupos, roles y permisos de acceso a recursos.", link: "https://aws.amazon.com/iam/",
+      long: "Controla <strong>quién puede hacer qué</strong> sobre cada recurso de AWS. Separa dos cosas: la <strong>autenticación</strong> (quién sos) y la <strong>autorización</strong> (qué te dejan hacer). Al crear la cuenta empezás con el <strong>root user</strong>, que puede todo — AWS recomienda fuertemente no usarlo en el día a día y crear identidades específicas. La pieza más importante son los <strong>roles</strong>: permisos temporales que asume un servicio o una persona, sin claves permanentes dando vueltas. IAM no cuesta nada.",
+      use: ["Dar a cada persona del equipo solo los permisos que su tarea necesita.", "Permitir que una EC2 o una Lambda accedan a S3 sin credenciales embebidas en el código.", "Federar el login con el proveedor de identidad de la empresa.", "Auditar qué identidad tiene acceso a qué recurso."],
+      avoid: ["Autenticar a los usuarios finales de tu aplicación &rarr; <strong>Cognito</strong>. IAM es para acceso a AWS, no para el login de tu app.", "Guardar contraseñas de bases de datos o claves de API &rarr; <strong>Secrets Manager</strong>.", "Gobernar varias cuentas a la vez &rarr; <strong>Organizations</strong> con SCPs.", "Usar el root user para tareas cotidianas: es la mala práctica número uno."],
+      concepts: [{t:"Usuario / Grupo",d:"Identidad permanente de una persona; el grupo junta usuarios con los mismos permisos."},{t:"Rol",d:"Identidad temporal que asume un servicio o persona. La forma correcta de dar permisos a EC2 o Lambda."},{t:"Policy",d:"Documento JSON que enumera acciones permitidas o denegadas sobre qué recursos."},{t:"Principio de menor privilegio",d:"Otorgar solo los permisos estrictamente necesarios."},{t:"MFA",d:"Segundo factor de autenticación; obligatorio de hecho para el root user."},{t:"Deny explícito",d:"Un Deny siempre gana sobre cualquier Allow."}] },
+    { name: "KMS", d: "Creación y gestión de claves de cifrado.", link: "https://aws.amazon.com/kms/",
+      long: "<strong>Key Management Service</strong>: crea, guarda y controla las <strong>claves de cifrado</strong> que usan los demás servicios. Las claves maestras nunca salen del servicio en texto plano y están respaldadas por módulos de hardware (HSM). Casi todo AWS se integra con KMS: activar el cifrado en un bucket S3, un volumen EBS o una base RDS es marcar una casilla y elegir la clave. Cada uso de la clave queda registrado en <strong>CloudTrail</strong>, lo que da trazabilidad completa de quién descifró qué y cuándo.",
+      use: ["Cifrar en reposo S3, EBS, RDS, DynamoDB con claves bajo tu control.", "Cumplir requisitos regulatorios que exigen gestión propia de claves.", "Auditar cada operación de cifrado y descifrado vía CloudTrail.", "Rotar claves automáticamente una vez al año, sin tocar las aplicaciones."],
+      avoid: ["Guardar contraseñas o tokens: KMS gestiona claves, no secretos &rarr; <strong>Secrets Manager</strong>.", "Cifrar volúmenes grandes de datos directamente: KMS cifra hasta 4 KB por llamada; para más se usa una clave de datos.", "El cifrado por defecto de AWS ya te alcanza y no necesitás control propio de la clave.", "Necesitás un HSM dedicado de un solo inquilino &rarr; CloudHSM."],
+      concepts: [{t:"KMS key (CMK)",d:"La clave maestra. Nunca sale de KMS en texto plano."},{t:"AWS managed vs Customer managed",d:"Las administradas por AWS son gratis y automáticas; las tuyas dan control de política y rotación."},{t:"Envelope encryption",d:"KMS cifra una clave de datos, y esa clave cifra el archivo. Así se cifran objetos grandes."},{t:"Key policy",d:"Política que define quién puede usar y administrar la clave."},{t:"Rotación automática",d:"Genera material criptográfico nuevo cada año de forma transparente."}] },
+    { name: "Cognito", d: "Autenticación, autorización y gestión de usuarios de tus apps.", link: "https://aws.amazon.com/cognito/",
+      long: "Maneja el <strong>login de los usuarios finales</strong> de tu aplicación web o móvil: registro, confirmación por mail, contraseñas, MFA, recuperación de cuenta y <strong>login social</strong> con Google, Facebook o Apple. Tiene dos piezas distintas que conviene no confundir: el <strong>User Pool</strong> es el directorio de usuarios que emite tokens JWT, y el <strong>Identity Pool</strong> canjea esos tokens por credenciales temporales de AWS para que el front acceda directo a S3 o DynamoDB.",
+      use: ["Login y registro de una app web o móvil sin construir la autenticación desde cero.", "Ofrecer inicio de sesión con Google o Apple sin implementar OAuth a mano.", "Proteger una API detrás de API Gateway validando el token de Cognito.", "Dar a una app móvil acceso temporal y acotado a recursos de AWS."],
+      avoid: ["Controlar el acceso del equipo a la consola de AWS &rarr; <strong>IAM</strong>.", "Necesitás personalizar cada detalle del flujo de autenticación: Cognito es opinado y a veces incómodo.", "Ya usás Auth0, Firebase Auth o Keycloak y funcionan bien.", "Autenticación entre servicios (machine to machine) sin usuarios humanos: suele bastar IAM."],
+      concepts: [{t:"User Pool",d:"Directorio de usuarios de tu app. Emite tokens JWT tras el login."},{t:"Identity Pool",d:"Canjea un token por credenciales temporales de AWS."},{t:"Federación",d:"Login con proveedores externos: Google, Apple, SAML corporativo."},{t:"Hosted UI",d:"Pantalla de login lista para usar, personalizable con tu marca."},{t:"JWT",d:"Token firmado que el backend valida sin consultar a Cognito en cada request."}] },
+    { name: "Shield", d: "Protección administrada contra DDoS.", link: "https://aws.amazon.com/shield/",
+      long: "Protección administrada contra ataques de <strong>denegación de servicio distribuida (DDoS)</strong>. <strong>Shield Standard</strong> viene activado y es <strong>gratuito para todas las cuentas</strong>: mitiga automáticamente los ataques más comunes de capa de red y transporte sobre CloudFront, Route 53 y ELB. <strong>Shield Advanced</strong> es un servicio pago que suma detección de ataques a nivel de aplicación, acceso a un equipo de respuesta de AWS y <strong>protección económica</strong>: si un ataque te dispara la factura por escalado, AWS te reembolsa la diferencia.",
+      use: ["Ya lo estás usando: Standard está activo por defecto y no hay que configurar nada.", "Advanced para aplicaciones críticas con exposición pública y alto riesgo.", "Cuando necesitás la garantía de que un ataque no te va a inflar la factura.", "Acceso al equipo de respuesta de AWS durante un incidente en curso."],
+      avoid: ["Filtrar peticiones HTTP maliciosas por contenido (SQL injection, bots) &rarr; <strong>WAF</strong>. Shield para inundaciones, WAF para contenido.", "Advanced tiene un costo mensual alto: para proyectos chicos, Standard alcanza.", "No reemplaza los security groups ni el diseño de red de tu VPC."],
+      concepts: [{t:"Shield Standard",d:"Gratis y siempre activo. Mitiga ataques de capa 3 y 4."},{t:"Shield Advanced",d:"Pago. Suma capa 7, métricas detalladas y equipo de respuesta."},{t:"Cost protection",d:"Reembolso de los cargos por escalado provocados por un ataque."},{t:"Capa 3/4 vs 7",d:"Red y transporte (inundaciones de paquetes) frente a aplicación (peticiones HTTP)."}] },
+    { name: "WAF", d: "Firewall de aplicaciones web, filtra tráfico malicioso HTTP.", link: "https://aws.amazon.com/waf/",
+      long: "<strong>Firewall de aplicaciones web</strong>: inspecciona cada petición HTTP y decide si permitirla, bloquearla o contarla, según reglas que mirán la IP de origen, el país, los headers, el cuerpo o la URI. Se coloca delante de <strong>CloudFront, ALB o API Gateway</strong>. Trae <strong>managed rule groups</strong> mantenidos por AWS que cubren de entrada el OWASP Top 10, bots conocidos y direcciones con mala reputación, así que no arrancás de cero.",
+      use: ["Bloquear intentos de SQL injection y cross-site scripting contra tu app.", "Limitar la tasa de peticiones por IP para frenar fuerza bruta o scraping.", "Bloquear o permitir tráfico por país cuando el negocio es regional.", "Filtrar bots automatizados que consumen recursos de la API."],
+      avoid: ["Inundaciones volumétricas de red &rarr; <strong>Shield</strong>; WAF trabaja sobre HTTP.", "Controlar tráfico entre instancias dentro de la VPC &rarr; security groups.", "Tu servicio no está expuesto a internet: no hay superficie que proteger.", "Esperar que reemplace un código seguro: es una capa más, no la única."],
+      concepts: [{t:"Web ACL",d:"El conjunto de reglas que se asocia a CloudFront, ALB o API Gateway."},{t:"Rule",d:"Condición y acción: allow, block o count."},{t:"Managed rule group",d:"Reglas mantenidas por AWS o terceros para amenazas conocidas."},{t:"Rate-based rule",d:"Bloquea una IP que supera N requests en un intervalo."},{t:"Modo count",d:"Registra sin bloquear; sirve para probar una regla antes de activarla."}] },
+    { name: "Secrets Manager", d: "Almacenamiento y rotación segura de credenciales.", link: "https://aws.amazon.com/secrets-manager/",
+      long: "Guarda <strong>secretos</strong> —contraseñas de bases de datos, claves de API, tokens— cifrados con KMS, y los entrega a la aplicación en tiempo de ejecución mediante una llamada a la API. Su diferencial es la <strong>rotación automática</strong>: puede cambiar sola la contraseña de una base RDS cada N días y actualizar el secreto sin que la app se entere ni haya downtime. El acceso se controla con IAM y cada lectura queda registrada en CloudTrail.",
+      use: ["Sacar contraseñas y claves del código, de los archivos .env y del repositorio.", "Rotar automáticamente las credenciales de RDS o Aurora.", "Compartir un secreto entre varios servicios con permisos IAM controlados.", "Auditar exactamente qué servicio leyó qué credencial y cuándo."],
+      avoid: ["Configuración que no es sensible (URLs, flags, timeouts) &rarr; <strong>Parameter Store</strong>, gratis.", "Presupuesto muy ajustado: se cobra por secreto por mes; Parameter Store estándar no cuesta nada.", "Gestionar claves de cifrado en vez de secretos &rarr; <strong>KMS</strong>.", "Certificados TLS públicos &rarr; ACM, que los emite y renueva gratis."],
+      concepts: [{t:"Secret",d:"Par clave-valor cifrado, versionado y con historial."},{t:"Rotación automática",d:"Una Lambda cambia la credencial periódicamente y actualiza el secreto."},{t:"Cifrado con KMS",d:"Cada secreto se cifra con una clave de KMS."},{t:"vs Parameter Store",d:"Secrets Manager rota y cuesta; Parameter Store es más simple y su nivel estándar es gratuito."}] },
+    { name: "CloudHSM", d: "Módulo de hardware de seguridad dedicado y de un solo inquilino.", link: "https://aws.amazon.com/cloudhsm/",
+      long: "<strong>Módulo de seguridad por hardware (HSM)</strong> dedicado: un dispositivo físico certificado <strong>FIPS 140-2 Nivel 3</strong> de uso exclusivo tuyo, dentro de tu VPC. La diferencia con KMS es el <strong>control</strong>: en CloudHSM administrás las claves vos y <strong>ni siquiera AWS puede acceder a ellas</strong>. A cambio, también sos responsable de respaldarlas: si perdés el material criptográfico, no hay forma de recuperarlo.",
+      use: ["Requisitos regulatorios que exigen HSM dedicado y certificación FIPS 140-2 Nivel 3.", "Necesitás que el proveedor de nube no tenga ninguna posibilidad de acceso a las claves.", "Migrar una infraestructura de clave pública (PKI) propia a AWS.", "Operaciones criptográficas de alto volumen con hardware dedicado."],
+      avoid: ["Para casi todos los casos &rarr; <strong>KMS</strong>: más barato, más simple y ya integrado con los demás servicios.", "Guardar contraseñas o tokens &rarr; <strong>Secrets Manager</strong>.", "Costo alto por hora y por HSM, más la operación a cargo tuyo.", "No hay recuperación posible si perdés las claves: el riesgo operativo es real."],
+      concepts: [{t:"HSM dedicado",d:"Hardware de un solo inquilino, no compartido con otros clientes."},{t:"FIPS 140-2 Nivel 3",d:"Certificación que suele ser el motivo real para elegirlo."},{t:"vs KMS",d:"KMS es multi-inquilino y administrado; CloudHSM es tuyo y lo administrás vos."}] },
+  ]},
+  { cat: "Seguridad y detección", accent: "#FF8FA3", items: [
+    { name: "GuardDuty", d: "Detección inteligente de amenazas en la cuenta.", link: "https://aws.amazon.com/guardduty/",
+      long: "Servicio de <strong>detección de amenazas</strong> que analiza continuamente los registros que ya genera tu cuenta — <strong>CloudTrail, VPC Flow Logs y consultas DNS</strong> — buscando actividad sospechosa mediante aprendizaje automático e inteligencia de amenazas. Detecta cosas como una instancia minando criptomonedas, credenciales usándose desde un país inesperado o comunicación con servidores de comando y control conocidos. Se activa <strong>con un clic y sin instalar agentes</strong>.",
+      use: ["Detección de intrusiones sin desplegar ni mantener agentes.", "Alertar cuando credenciales de IAM se usan desde ubicaciones anómalas.", "Descubrir instancias EC2 comprometidas que hacen minado o escaneo de puertos.", "Cumplimiento normativo que exige monitoreo continuo de amenazas."],
+      avoid: ["Buscar vulnerabilidades en el software de tus instancias &rarr; <strong>Inspector</strong>.", "Detectar datos sensibles guardados en S3 &rarr; <strong>Macie</strong>.", "Verificar configuración contra reglas &rarr; <strong>Config</strong>.", "Detecta pero no bloquea: la respuesta al incidente la organizás vos."],
+      concepts: [{t:"Finding",d:"Hallazgo con su nivel de severidad: bajo, medio o alto."},{t:"Fuentes de datos",d:"CloudTrail, VPC Flow Logs y logs de DNS; no requiere agentes."},{t:"Sin agentes",d:"Se habilita con un clic; no hay software que instalar en las instancias."},{t:"Integración",d:"Los hallazgos van a EventBridge o Security Hub para automatizar la respuesta."}] },
+    { name: "Inspector", d: "Escaneo automatizado de vulnerabilidades.", link: "https://aws.amazon.com/inspector/",
+      long: "Escanea de forma <strong>continua y automatizada</strong> tus instancias EC2, imágenes de contenedor en <strong>ECR</strong> y funciones <strong>Lambda</strong> buscando <strong>vulnerabilidades conocidas (CVE)</strong> y exposición de red no intencional. A diferencia de GuardDuty, que busca actividad maliciosa en curso, Inspector busca <strong>debilidades explotables</strong> antes de que alguien las use. Prioriza cada hallazgo con un puntaje de riesgo que considera si el recurso es alcanzable desde internet.",
+      use: ["Detectar paquetes desactualizados con CVE conocidos en las instancias.", "Escanear imágenes Docker en ECR antes de desplegarlas a producción.", "Encontrar instancias accesibles desde internet sin que deberían serlo.", "Cumplir requisitos de gestión de vulnerabilidades."],
+      avoid: ["Detectar un ataque en curso &rarr; <strong>GuardDuty</strong>.", "Datos sensibles en S3 &rarr; <strong>Macie</strong>.", "Vulnerabilidades en tu propio código: Inspector mira dependencias y sistema, no tu lógica.", "Configuración de recursos contra políticas &rarr; <strong>Config</strong>."],
+      concepts: [{t:"CVE",d:"Identificador público de una vulnerabilidad conocida."},{t:"Escaneo continuo",d:"Reevalúa automáticamente cuando aparece un CVE nuevo."},{t:"Puntaje de riesgo",d:"Prioriza según gravedad y exposición real a internet."},{t:"Objetivos",d:"Instancias EC2, imágenes en ECR y funciones Lambda."}] },
+    { name: "Macie", d: "Descubre y protege datos sensibles en S3.", link: "https://aws.amazon.com/macie/",
+      long: "Usa aprendizaje automático para <strong>descubrir datos sensibles</strong> guardados en <strong>S3</strong>: números de tarjeta de crédito, documentos de identidad, credenciales, claves privadas y otra <strong>información personal identificable (PII)</strong>. Además evalúa la postura de seguridad de los buckets — cuáles son públicos, cuáles no están cifrados, cuáles se comparten con otras cuentas. Responde una pregunta que ninguna otra herramienta contesta: <strong>qué hay realmente adentro de tus archivos</strong>.",
+      use: ["Descubrir que hay PII guardada en buckets que no deberían tenerla.", "Cumplimiento de GDPR, HIPAA o PCI que exige saber dónde viven los datos sensibles.", "Inventario de qué buckets son públicos o están sin cifrar.", "Auditoría previa a abrir el acceso a un bucket."],
+      avoid: ["Solo trabaja sobre <strong>S3</strong>: no analiza RDS, DynamoDB ni discos EBS.", "Detectar amenazas activas &rarr; <strong>GuardDuty</strong>.", "Vulnerabilidades de software &rarr; <strong>Inspector</strong>.", "Se cobra por volumen de datos analizados: sobre buckets enormes puede salir caro."],
+      concepts: [{t:"PII",d:"Información personal identificable: nombres, documentos, tarjetas."},{t:"Identificador de datos",d:"Patrones gestionados por AWS o definidos por vos."},{t:"Trabajo de descubrimiento",d:"Análisis programado o puntual sobre buckets seleccionados."},{t:"Postura del bucket",d:"Evalúa acceso público, cifrado y comparticiones."}] },
+    { name: "Artifact", d: "Portal de descarga de informes de cumplimiento de AWS.", link: "https://aws.amazon.com/artifact/",
+      long: "Portal de <strong>autoservicio</strong> desde donde descargás los <strong>informes de cumplimiento</strong> de AWS: SOC 1, SOC 2, SOC 3, ISO 27001, PCI DSS, FedRAMP y otros. Sirve para demostrarle a un auditor que la parte de la infraestructura que administra AWS está certificada. También permite revisar y aceptar acuerdos como el <strong>BAA de HIPAA</strong>. Es <strong>gratuito</strong>, y encaja directamente con el modelo de responsabilidad compartida: cubre la mitad de AWS, no la tuya.",
+      use: ["Un auditor pide evidencia de las certificaciones de AWS.", "Descargar el informe SOC 2 para el área de cumplimiento de tu empresa.", "Aceptar el acuerdo BAA antes de manejar datos de salud bajo HIPAA.", "Entender qué controles cubre AWS y cuáles quedan de tu lado."],
+      avoid: ["No certifica TU aplicación: solo cubre la infraestructura de AWS.", "Evaluar el cumplimiento de tus recursos &rarr; <strong>Config</strong>.", "No genera reportes propios: entrega los de AWS.", "No reemplaza tu propia auditoría ni tus controles internos."],
+      concepts: [{t:"Informe SOC",d:"Auditoría independiente de los controles de AWS."},{t:"ISO 27001",d:"Norma internacional de gestión de seguridad de la información."},{t:"BAA",d:"Acuerdo requerido para procesar datos de salud bajo HIPAA."},{t:"Gratuito",d:"Disponible en la consola sin costo."}] },
+    { name: "IAM Identity Center", d: "Inicio de sesión único para múltiples cuentas y aplicaciones.", link: "https://aws.amazon.com/iam/identity-center/",
+      long: "Antes llamado <strong>AWS SSO</strong>: da <strong>inicio de sesión único</strong> a todas las cuentas de la organización y a aplicaciones externas desde un solo portal. Se conecta con el directorio corporativo (Active Directory, Okta, Entra ID) y asigna permisos por <strong>conjuntos de permisos</strong>, en vez de crear un usuario IAM por persona en cada cuenta. Es la <strong>práctica recomendada actual</strong> para el acceso humano: las credenciales son <strong>temporales</strong>, sin claves de larga duración dando vueltas.",
+      use: ["Varias cuentas de AWS y un equipo que necesita acceder a todas.", "Integrar el login con el directorio corporativo existente.", "Eliminar usuarios IAM con credenciales permanentes.", "Dar y quitar accesos desde un solo lugar al entrar o salir alguien del equipo."],
+      avoid: ["Una sola cuenta y una sola persona: <strong>IAM</strong> alcanza.", "Autenticar usuarios finales de tu aplicación &rarr; <strong>Cognito</strong>.", "Acceso programado entre servicios: para eso son los roles de IAM.", "Requiere <strong>Organizations</strong> para aprovechar el multi-cuenta."],
+      concepts: [{t:"Permission set",d:"Conjunto de permisos que se asigna a un grupo sobre una cuenta."},{t:"Fuente de identidad",d:"Directorio propio del servicio, Active Directory o un proveedor externo."},{t:"Credenciales temporales",d:"Cada sesión obtiene credenciales que expiran solas."},{t:"Ex AWS SSO",d:"Cambió de nombre en 2022; ambos nombres aparecen en documentación."}] },
+    { name: "Control Tower", d: "Configura y gobierna un entorno multi-cuenta seguro.", link: "https://aws.amazon.com/controltower/",
+      long: "Automatiza el armado de una <strong>zona de aterrizaje (landing zone)</strong>: un entorno multi-cuenta con las buenas prácticas ya aplicadas. En pocos pasos crea la estructura de <strong>Organizations</strong>, cuentas separadas para registro y auditoría, <strong>IAM Identity Center</strong>, CloudTrail centralizado y un conjunto de <strong>controles (guardrails)</strong>. Los controles son <strong>preventivos</strong> (SCPs que impiden acciones) o <strong>de detección</strong> (reglas de Config que marcan desviaciones). Es la forma rápida de empezar bien en vez de armar todo a mano.",
+      use: ["Arrancar en AWS con una estructura multi-cuenta desde el principio.", "Aplicar políticas de gobierno de forma uniforme a todas las cuentas.", "Crear cuentas nuevas ya configuradas con la base de seguridad.", "Detectar cuentas que se desviaron de la configuración esperada."],
+      avoid: ["Una sola cuenta sin planes de crecer: es sobredimensionado.", "Ya tenés una organización compleja y personalizada: adoptarlo puede requerir reestructurar.", "Solo necesitás facturación consolidada &rarr; <strong>Organizations</strong> solo.", "Requerís control total del diseño: Control Tower es opinado."],
+      concepts: [{t:"Landing zone",d:"Entorno multi-cuenta preconfigurado con buenas prácticas."},{t:"Guardrail",d:"Control preventivo (SCP) o de detección (regla de Config)."},{t:"Account Factory",d:"Crea cuentas nuevas ya configuradas según el estándar."},{t:"Drift",d:"Desviación de una cuenta respecto de la configuración esperada."}] },
+    { name: "Personal Health Dashboard", d: "Estado de los servicios de AWS que afectan tu cuenta.", link: "https://health.aws.amazon.com/health/home",
+      long: "Muestra los eventos de AWS que <strong>afectan específicamente a tus recursos</strong>, no el estado general de la nube. Avisa de mantenimientos programados de tus instancias, degradaciones que impactan las regiones donde tenés cargas, y cambios que requieren acción de tu parte — por ejemplo un certificado por vencer. La diferencia con el <strong>Service Health Dashboard</strong> (público y global) es justamente esa: está <strong>personalizado</strong> según lo que usás.",
+      use: ["Enterarte de que una instancia tuya tiene mantenimiento programado.", "Saber si una interrupción en curso afecta tus recursos o no.", "Recibir alertas por EventBridge cuando aparece un evento que te toca.", "Anticipar cambios que exigen acción antes de una fecha límite."],
+      avoid: ["Ver el estado global de AWS &rarr; Service Health Dashboard, público.", "Monitorear tus propias aplicaciones &rarr; <strong>CloudWatch</strong>.", "No detecta problemas de tu código: informa eventos del lado de AWS."],
+      concepts: [{t:"Personal vs Service Health",d:"Personal muestra lo que te afecta a vos; Service Health es el estado público global."},{t:"Evento programado",d:"Mantenimiento o cambio con fecha anunciada sobre tus recursos."},{t:"Integración con EventBridge",d:"Permite automatizar una respuesta ante cada evento."}] },
+  ]},
+  { cat: "Administración", accent: "#6FE07A", items: [
+    { name: "CloudWatch", d: "Métricas, logs y alarmas de tus recursos.", link: "https://aws.amazon.com/cloudwatch/",
+      long: "El servicio de <strong>observabilidad</strong> de AWS: recolecta <strong>métricas</strong> (CPU, memoria, latencia, invocaciones), <strong>logs</strong> de aplicaciones y servicios, y permite definir <strong>alarmas</strong> que disparan una acción cuando un valor cruza un umbral. Casi todos los servicios publican métricas ahí sin configuración. Una alarma puede notificar por <strong>SNS</strong>, escalar un Auto Scaling Group o ejecutar una Lambda. Responde a la pregunta <strong>qué está pasando</strong> con tus recursos.",
+      use: ["Alarma que avisa cuando la CPU de una EC2 pasa el 80% por varios minutos.", "Centralizar los logs de Lambda, ECS y aplicaciones en un solo lugar.", "Disparar el escalado automático de un Auto Scaling Group según la demanda.", "Dashboards con las métricas clave del sistema para el equipo."],
+      avoid: ["Saber quién ejecutó una acción en la cuenta &rarr; <strong>CloudTrail</strong>. CloudWatch dice qué pasa, CloudTrail quién lo hizo.", "Verificar si un recurso cumple una política de configuración &rarr; <strong>Config</strong>.", "Trazar una request a través de varios microservicios &rarr; X-Ray.", "Retener logs por años sin filtrar: sale caro; conviene exportarlos a S3."],
+      concepts: [{t:"Métrica",d:"Serie temporal de un valor numérico (CPUUtilization, Invocations)."},{t:"Alarma",d:"Umbral sobre una métrica que dispara una acción al cruzarse."},{t:"Log group / stream",d:"Los logs se agrupan por recurso y dentro por flujo de ejecución."},{t:"Métrica personalizada",d:"Valores propios que tu aplicación publica en CloudWatch."},{t:"Logs Insights",d:"Lenguaje de consulta para buscar y agregar sobre los logs."}] },
+    { name: "CloudTrail", d: "Registra y audita todas las llamadas a la API.", link: "https://aws.amazon.com/cloudtrail/",
+      long: "<strong>Registro de auditoría</strong> de la cuenta: guarda cada llamada a la API de AWS con <strong>quién la hizo, cuándo, desde qué IP y con qué resultado</strong>. Da igual si vino de la consola, del CLI o de un SDK: todo queda anotado. Viene activo por defecto con los últimos 90 días de historial de eventos; para conservar más tiempo se crea un <strong>trail</strong> que deposita los registros en S3. Es la herramienta de investigación forense cuando algo cambió y nadie sabe quién fue.",
+      use: ["Averiguar quién borró un bucket o modificó un security group.", "Cumplir requisitos de auditoría y retención regulatoria.", "Detectar uso de credenciales desde ubicaciones inesperadas.", "Reconstruir la secuencia de eventos después de un incidente."],
+      avoid: ["Monitorear el rendimiento o la salud de un recurso &rarr; <strong>CloudWatch</strong>.", "Evaluar si la configuración cumple una regla &rarr; <strong>Config</strong>.", "Ver el tráfico de red dentro de la VPC &rarr; VPC Flow Logs.", "Registrar la actividad de los usuarios de tu aplicación: CloudTrail audita AWS, no tu app."],
+      concepts: [{t:"Event history",d:"Últimos 90 días de actividad, disponible sin configurar nada."},{t:"Trail",d:"Configuración que entrega los eventos a un bucket S3 para retención larga."},{t:"Management vs Data events",d:"Los de gestión (crear una instancia) vienen por defecto; los de datos (leer un objeto S3) se activan aparte y tienen costo."},{t:"Organization trail",d:"Un solo trail que cubre todas las cuentas de la organización."}] },
+    { name: "Config", d: "Rastrea configuración y evalúa cumplimiento contra reglas.", link: "https://aws.amazon.com/config/",
+      long: "Lleva un <strong>inventario y un historial de la configuración</strong> de cada recurso: qué existe, cómo está configurado y <strong>cómo fue cambiando en el tiempo</strong>. Sobre eso aplica <strong>reglas</strong> que evalúan cumplimiento — por ejemplo \"ningún bucket S3 debe ser público\" o \"todos los volúmenes EBS deben estar cifrados\" — y marca los recursos que no cumplen. Algunas reglas incluyen <strong>remediación automática</strong>: corrigen la desviación solas. Responde <strong>cómo está configurado</strong> y <strong>cumple o no</strong>.",
+      use: ["Detectar buckets S3 que quedaron públicos por error.", "Verificar continuamente que todos los discos estén cifrados.", "Ver el historial de configuración de un recurso para entender cuándo se rompió algo.", "Demostrar cumplimiento normativo con evidencia automática."],
+      avoid: ["Saber quién hizo el cambio &rarr; <strong>CloudTrail</strong>.", "Monitorear métricas de rendimiento &rarr; <strong>CloudWatch</strong>.", "Cuentas chicas con pocos recursos: se cobra por ítem de configuración registrado.", "Impedir que una acción ocurra &rarr; <strong>SCPs</strong> de Organizations o políticas de IAM; Config detecta, no bloquea."],
+      concepts: [{t:"Configuration item",d:"Foto del estado de un recurso en un momento dado."},{t:"Rule",d:"Condición de cumplimiento, gestionada por AWS o definida con una Lambda."},{t:"Conformance pack",d:"Conjunto de reglas empaquetadas para un estándar (PCI, HIPAA)."},{t:"Remediación",d:"Acción automática que corrige un recurso no conforme."}] },
+    { name: "Trusted Advisor", d: "Recomendaciones de costo, seguridad, performance y límites.", link: "https://aws.amazon.com/premiumsupport/trustedadvisor/",
+      long: "Inspecciona tu cuenta y devuelve <strong>recomendaciones concretas</strong> en cinco categorías: <strong>optimización de costos, seguridad, tolerancia a fallos, rendimiento y límites de servicio</strong>. Detecta cosas como instancias EC2 subutilizadas, buckets con permisos abiertos, ausencia de MFA en el root user o cuotas cerca del tope. Con los planes <strong>Basic y Developer</strong> solo ves un subconjunto de verificaciones; el <strong>set completo requiere Business o Enterprise</strong> — dato que suele aparecer en el examen.",
+      use: ["Revisión periódica de la cuenta buscando ahorros rápidos.", "Detectar configuraciones inseguras evidentes antes de que se conviertan en incidente.", "Anticipar que un servicio está por chocar contra su cuota.", "Identificar recursos aprovisionados y sin uso que siguen facturando."],
+      avoid: ["Es un chequeo periódico, no monitoreo en vivo &rarr; <strong>CloudWatch</strong>.", "Auditoría detallada de configuración con historial &rarr; <strong>Config</strong>.", "Análisis fino de costos por etiqueta o servicio &rarr; <strong>Cost Explorer</strong>.", "Sin plan Business o Enterprise, las verificaciones disponibles son limitadas."],
+      concepts: [{t:"5 categorías",d:"Costos, seguridad, tolerancia a fallos, rendimiento y límites de servicio."},{t:"Dependencia del plan",d:"Basic y Developer traen verificaciones básicas; el set completo es Business/Enterprise."},{t:"Service limits",d:"Avisa cuando te acercás a la cuota de un servicio."}] },
+    { name: "Organizations", d: "Gestión y facturación centralizada de múltiples cuentas.", link: "https://aws.amazon.com/organizations/",
+      long: "Agrupa <strong>varias cuentas de AWS</strong> bajo una organización con una <strong>cuenta de administración</strong> al mando. Da tres cosas: <strong>facturación consolidada</strong> (una sola factura, y los descuentos por volumen se calculan sobre el total sumado), <strong>Unidades Organizativas (OU)</strong> para agrupar cuentas por ambiente o equipo, y <strong>Service Control Policies (SCP)</strong>, que definen el techo máximo de permisos de una cuenta. Una SCP no otorga permisos: <strong>limita</strong> lo que IAM puede llegar a permitir.",
+      use: ["Separar producción, desarrollo y pruebas en cuentas distintas con aislamiento real.", "Una sola factura para toda la empresa y mejores descuentos por volumen agregado.", "Impedir por política que ninguna cuenta pueda desactivar CloudTrail o crear recursos fuera de una región.", "Crear cuentas nuevas de forma automatizada con configuración base."],
+      avoid: ["Tenés una sola cuenta y no planeás más: la organización no aporta.", "Dar permisos a usuarios: eso es <strong>IAM</strong>. Las SCP solo restringen.", "Configurar toda una zona de aterrizaje desde cero &rarr; <strong>Control Tower</strong>, que se apoya en Organizations.", "Separar costos dentro de una misma cuenta: para eso alcanzan las etiquetas."],
+      concepts: [{t:"Management account",d:"La cuenta raíz de la organización; recibe la factura consolidada."},{t:"OU",d:"Unidad Organizativa: grupo de cuentas que comparten políticas."},{t:"SCP",d:"Política que fija el máximo de permisos posibles. Restringe, nunca otorga."},{t:"Facturación consolidada",d:"Una factura para todas las cuentas, con descuentos por volumen agregado."}] },
+  ]},
+  { cat: "Analítica", accent: "#F26FA0", items: [
+    { name: "Athena", d: "Consultas SQL serverless directo sobre archivos en S3.", link: "https://aws.amazon.com/athena/",
+      long: "Consultas <strong>SQL serverless</strong> directamente sobre archivos guardados en <strong>S3</strong> — CSV, JSON, Parquet, ORC — sin cargar nada a ninguna base ni levantar infraestructura. Definís un esquema sobre los archivos y consultás. Se paga <strong>por terabyte escaneado</strong>, así que el formato importa muchísimo: guardar en <strong>Parquet</strong> comprimido y particionado puede reducir el costo de una consulta en más del 90% frente al mismo dato en CSV.",
+      use: ["Explorar logs o exports en S3 sin montar un data warehouse.", "Consultas ocasionales sobre un data lake: pagás solo lo que escaneás.", "Analizar logs de CloudTrail, ALB o CloudFront con SQL.", "Prototipar el análisis de un dataset antes de decidir si amerita Redshift."],
+      avoid: ["Consultas frecuentes y repetidas sobre los mismos datos &rarr; <strong>Redshift</strong> sale más previsible.", "Necesitás milisegundos de respuesta: Athena tarda segundos o minutos.", "Cargas transaccionales de una aplicación &rarr; <strong>RDS</strong> o <strong>DynamoDB</strong>.", "Transformaciones pesadas y complejas &rarr; <strong>EMR</strong> o AWS Glue."],
+      concepts: [{t:"Esquema al leer",d:"El esquema se define al consultar, no al guardar el archivo."},{t:"Glue Data Catalog",d:"Catálogo donde viven las definiciones de tablas que usa Athena."},{t:"Partición",d:"Organizar los archivos por fecha o categoría para escanear menos."},{t:"Parquet",d:"Formato columnar comprimido; reduce drásticamente el costo por consulta."},{t:"Costo por TB escaneado",d:"Se factura por datos leídos, no por tiempo de consulta."}] },
+    { name: "Kinesis", d: "Ingesta y procesamiento de datos en tiempo real (streaming).", link: "https://aws.amazon.com/kinesis/",
+      long: "Familia de servicios para <strong>datos en streaming</strong>: captura y procesa eventos <strong>a medida que ocurren</strong>, en vez de esperar a un proceso por lotes nocturno. <strong>Data Streams</strong> es el flujo crudo, con retención configurable y varios consumidores leyendo en paralelo. <strong>Data Firehose</strong> es la vía simple: entrega automáticamente a S3, Redshift u OpenSearch sin escribir código de consumo. Encaja de forma natural con telemetría de IoT, clickstream y logs de aplicaciones.",
+      use: ["Telemetría de dispositivos IoT que llega de forma continua.", "Clickstream de un sitio para analítica casi en tiempo real.", "Centralizar logs de muchas aplicaciones hacia S3 con Firehose.", "Detección de fraude o anomalías sobre eventos en vivo."],
+      avoid: ["Mensajes puntuales entre dos servicios &rarr; <strong>SQS</strong>, mucho más simple.", "Notificar a varios suscriptores &rarr; <strong>SNS</strong>.", "El proceso por lotes cada varias horas ya te alcanza: el streaming agrega complejidad.", "Volumen bajo de eventos: el costo fijo de los shards no se justifica."],
+      concepts: [{t:"Shard",d:"Unidad de capacidad del stream; define throughput y costo."},{t:"Producer / Consumer",d:"Quien escribe eventos y quien los lee."},{t:"Retención",d:"Los datos quedan disponibles entre 24 horas y 365 días para reprocesarse."},{t:"Firehose",d:"Entrega gestionada a S3, Redshift u OpenSearch sin código."},{t:"vs SQS",d:"Kinesis permite varios consumidores y releer el histórico; en SQS el mensaje se consume y desaparece."}] },
+    { name: "EMR", d: "Big data administrado sobre Hadoop/Spark.", link: "https://aws.amazon.com/emr/",
+      long: "<strong>Clusters administrados de big data</strong> con el ecosistema open source: <strong>Spark, Hadoop, Hive, Presto, HBase</strong>. AWS aprovisiona las instancias, instala el software y los administra; vos corrés tus jobs. Sirve para transformaciones pesadas que no entran en una consulta SQL: limpieza de datos a gran escala, ETL complejo, entrenamiento distribuido. Puede correr sobre <strong>Spot</strong> para abaratar mucho, y en modo <strong>EMR Serverless</strong> ni siquiera hay cluster que dimensionar.",
+      use: ["Procesar terabytes con Spark aplicando lógica propia en Python o Scala.", "Migrar a AWS un pipeline Hadoop o Spark que ya existe on-premise.", "ETL pesado que prepara los datos antes de cargarlos a Redshift.", "Cargas grandes tolerantes a interrupción, corriendo sobre Spot."],
+      avoid: ["Consultas SQL puntuales sobre S3 &rarr; <strong>Athena</strong>, sin cluster que administrar.", "Reportes de BI sobre datos estructurados &rarr; <strong>Redshift</strong>.", "Volúmenes chicos: administrar un cluster Spark es sobredimensionado.", "Tu equipo no conoce Spark ni Hadoop: la curva es empinada."],
+      concepts: [{t:"Cluster",d:"Conjunto de nodos: uno maestro, los core y los de tarea."},{t:"Spark / Hadoop",d:"Motores de procesamiento distribuido que EMR administra."},{t:"EMR Serverless",d:"Corre los jobs sin dimensionar ni administrar cluster."},{t:"Spot en nodos de tarea",d:"Práctica habitual para bajar el costo de forma drástica."}] },
+    { name: "QuickSight", d: "BI y dashboards interactivos.", link: "https://aws.amazon.com/quicksight/",
+      long: "Herramienta de <strong>business intelligence</strong> administrada: conecta con Redshift, RDS, Athena, S3 o archivos, y arma <strong>dashboards interactivos</strong> que se comparten con el equipo. Es <strong>serverless</strong> y se paga por usuario o por sesión, sin servidores de BI que mantener. Su motor en memoria, <strong>SPICE</strong>, guarda una copia de los datos para que los tableros respondan rápido sin golpear la base de origen en cada clic.",
+      use: ["Dashboards de negocio sobre datos que ya viven en Redshift o Athena.", "Compartir reportes con gente que no escribe SQL.", "Embeber gráficos dentro de una aplicación propia.", "Alternativa administrada a Tableau o Power BI dentro de AWS."],
+      avoid: ["Necesitás visualizaciones muy personalizadas &rarr; una librería propia sobre tus datos.", "Ya usás Tableau, Looker o Power BI y funcionan bien.", "Análisis exploratorio profundo con código &rarr; notebooks de <strong>SageMaker</strong>.", "Un solo reporte puntual: el costo por usuario no se justifica."],
+      concepts: [{t:"SPICE",d:"Motor en memoria que cachea los datos para acelerar los tableros."},{t:"Dataset",d:"La fuente de datos preparada sobre la que se construyen los análisis."},{t:"Análisis vs Dashboard",d:"El análisis es el espacio de trabajo; el dashboard es la vista publicada."},{t:"Embedded analytics",d:"Insertar tableros dentro de tu propia aplicación."}] },
+  ]},
+  { cat: "Machine Learning", accent: "#35C2E8", items: [
+    { name: "SageMaker", d: "Plataforma end-to-end para construir, entrenar y desplegar modelos.", link: "https://aws.amazon.com/sagemaker/",
+      long: "Plataforma completa de <strong>machine learning</strong>: cubre todo el ciclo, desde preparar los datos y experimentar en <strong>notebooks</strong>, hasta <strong>entrenar</strong> en instancias con GPU y <strong>desplegar</strong> el modelo como endpoint con escalado automático. Sirve tanto para quien entrena modelos propios desde cero como para quien ajusta uno preexistente. Es la opción de <strong>máximo control</strong> del catálogo de ML de AWS, y a cambio exige saber de machine learning.",
+      use: ["Entrenar un modelo propio sobre datos de tu negocio.", "Desplegar un modelo como API con escalado y versionado gestionados.", "Notebooks administrados para el equipo de datos, sin montar infraestructura.", "Pipelines de ML reproducibles: preparación, entrenamiento, evaluación, despliegue."],
+      avoid: ["Solo necesitás una capacidad ya resuelta (leer texto de una imagen, analizar sentimiento) &rarr; <strong>Rekognition</strong> o <strong>Comprehend</strong>.", "Querés usar un modelo de lenguaje grande por API &rarr; <strong>Bedrock</strong>.", "No tenés datos etiquetados ni experiencia en ML: el esfuerzo es alto.", "Las instancias con GPU son caras: dejar un endpoint encendido sin uso duele."],
+      concepts: [{t:"Notebook instance",d:"Entorno Jupyter administrado para experimentar."},{t:"Training job",d:"Ejecución de entrenamiento sobre instancias que se apagan al terminar."},{t:"Endpoint",d:"Modelo desplegado que responde inferencias en tiempo real."},{t:"Inferencia serverless",d:"Endpoint que escala a cero cuando no recibe tráfico."},{t:"JumpStart",d:"Modelos preentrenados listos para ajustar."}] },
+    { name: "Rekognition", d: "Análisis de imágenes y video con IA.", link: "https://aws.amazon.com/rekognition/",
+      long: "Análisis de <strong>imágenes y video</strong> mediante una llamada a la API, sin entrenar nada. Detecta objetos, escenas, texto dentro de imágenes, rostros y sus atributos, y modera contenido inapropiado. Es un servicio de <strong>IA preentrenada</strong>: le mandás la imagen y devuelve etiquetas con su nivel de confianza. También procesa video, siguiendo personas y objetos a lo largo del tiempo.",
+      use: ["Moderar automáticamente imágenes que suben los usuarios.", "Extraer texto de fotos de documentos o carteles.", "Buscar en un catálogo de imágenes por contenido.", "Comparar rostros para verificación de identidad."],
+      avoid: ["Necesitás detectar algo muy específico de tu dominio &rarr; entrenar un modelo propio en <strong>SageMaker</strong>.", "Análisis de texto plano &rarr; <strong>Comprehend</strong>.", "Documentos con formularios y tablas &rarr; Textract, especializado en eso.", "Reconocimiento facial: revisá las implicancias legales y de privacidad antes de usarlo."],
+      concepts: [{t:"Label detection",d:"Identifica objetos y escenas presentes en la imagen."},{t:"Confidence score",d:"Grado de certeza de cada detección; conviene fijar un umbral."},{t:"Content moderation",d:"Marca contenido explícito o inapropiado."},{t:"Face comparison",d:"Mide la similitud entre dos rostros."}] },
+    { name: "Comprehend", d: "NLP para extraer insights de texto.", link: "https://aws.amazon.com/comprehend/",
+      long: "<strong>Procesamiento de lenguaje natural</strong> por API: le pasás texto y devuelve el <strong>sentimiento</strong> (positivo, negativo, neutro), las <strong>entidades</strong> mencionadas (personas, lugares, fechas, organizaciones), las frases clave, el idioma detectado y una clasificación temática. Como Rekognition, viene preentrenado — no hay que traer datos ni entrenar. Su variante <strong>Comprehend Medical</strong> extrae información clínica de textos médicos.",
+      use: ["Analizar el sentimiento de reseñas o tickets de soporte a escala.", "Extraer nombres, fechas y organizaciones de documentos.", "Clasificar y enrutar automáticamente correos entrantes.", "Detectar y redactar información personal (PII) dentro de textos."],
+      avoid: ["Necesitás generar texto o mantener una conversación &rarr; <strong>Bedrock</strong>.", "Clasificación muy específica de tu dominio: conviene un clasificador propio.", "Traducir texto &rarr; Amazon Translate.", "Volúmenes enormes de texto: el costo por carácter se acumula rápido."],
+      concepts: [{t:"Sentiment analysis",d:"Clasifica el texto como positivo, negativo, neutro o mixto."},{t:"Entity recognition",d:"Extrae personas, lugares, fechas y organizaciones."},{t:"Key phrases",d:"Identifica los conceptos centrales del texto."},{t:"PII detection",d:"Encuentra datos personales para redactarlos o protegerlos."}] },
+    { name: "Bedrock", d: "Acceso vía API a modelos fundacionales, incluido Claude.", link: "https://aws.amazon.com/bedrock/",
+      long: "Acceso por <strong>una sola API</strong> a <strong>modelos fundacionales</strong> de varios proveedores — Anthropic (Claude), Meta, Mistral, Cohere y los Amazon Nova — sin administrar infraestructura. Es <strong>serverless</strong>: se paga por token consumido. Su valor está en que el modelo corre <strong>dentro de tu cuenta de AWS</strong>, con IAM, VPC y CloudTrail aplicando como en cualquier otro servicio, y tus datos no se usan para entrenar. Soporta RAG mediante Knowledge Bases y agentes que invocan herramientas.",
+      use: ["Sumar capacidades de IA generativa a una app sin salir del entorno AWS.", "Chatbots y asistentes sobre documentación propia usando RAG.", "Resumen, extracción o clasificación de texto a escala.", "Comparar modelos de distintos proveedores sin cambiar la integración."],
+      avoid: ["La tarea la resuelve un servicio preentrenado más barato &rarr; <strong>Comprehend</strong> o <strong>Rekognition</strong>.", "Necesitás entrenar un modelo propio desde cero &rarr; <strong>SageMaker</strong>.", "Requerís control total de los pesos del modelo y su despliegue.", "El costo por token es alto en volúmenes grandes: conviene medir antes de escalar."],
+      concepts: [{t:"Modelo fundacional",d:"Modelo grande preentrenado, utilizable sin entrenamiento adicional."},{t:"Token",d:"Unidad de facturación: fragmentos de texto de entrada y salida."},{t:"Knowledge Base",d:"RAG administrado sobre tus documentos."},{t:"Agents",d:"El modelo invoca APIs y herramientas para completar tareas."},{t:"Guardrails",d:"Filtros de contenido y temas vedados aplicados a las respuestas."}] },
+    { name: "Textract", d: "Extrae texto y datos estructurados de documentos escaneados.", link: "https://aws.amazon.com/textract/",
+      long: "Extrae <strong>texto, formularios y tablas</strong> de documentos escaneados y PDFs. Va más allá del OCR clásico: no solo lee las letras, sino que <strong>entiende la estructura</strong> — reconoce que un campo es una etiqueta y el texto de al lado su valor, y preserva filas y columnas de una tabla. Devuelve pares clave-valor listos para cargar en una base, sin escribir reglas de parseo. Cada dato viene con su <strong>nivel de confianza</strong>, lo que permite enviar a revisión humana solo lo dudoso.",
+      use: ["Digitalizar facturas, recibos o formularios en papel.", "Cargar datos de documentos de identidad a un sistema automáticamente.", "Extraer tablas de reportes en PDF para analizarlas.", "Procesar solicitudes escritas a mano en trámites o seguros."],
+      avoid: ["Detectar objetos o escenas en fotos &rarr; <strong>Rekognition</strong>.", "Analizar el significado o el sentimiento del texto &rarr; <strong>Comprehend</strong>.", "Documentos con formato muy particular de tu dominio: puede requerir ajuste.", "Se cobra por página: en volúmenes altos conviene medir el costo antes."],
+      concepts: [{t:"OCR vs Textract",d:"El OCR devuelve texto suelto; Textract devuelve estructura y relaciones."},{t:"Formularios",d:"Detecta pares etiqueta-valor dentro del documento."},{t:"Tablas",d:"Preserva filas y columnas del original."},{t:"Confianza",d:"Puntaje por dato extraído, útil para decidir qué revisar a mano."}] },
+  ]},
+  { cat: "Integración", accent: "#C9E86C", items: [
+    { name: "SQS", d: "Colas de mensajes para desacoplar componentes.", link: "https://aws.amazon.com/sqs/",
+      long: "<strong>Cola de mensajes</strong> administrada que desacopla los componentes de un sistema: el productor deja un mensaje y sigue trabajando; el consumidor lo procesa cuando puede. Si el consumidor se cae, los mensajes <strong>esperan en la cola</strong> en vez de perderse. Cada mensaje lo procesa <strong>un solo consumidor</strong> y luego se elimina. Absorbe picos de carga: mil pedidos simultáneos entran a la cola y se procesan al ritmo que el sistema aguante.",
+      use: ["Desacoplar el frontend del procesamiento pesado (envío de mails, generación de PDFs).", "Absorber picos de tráfico sin tirar abajo el backend.", "Reintentar automáticamente tareas que fallaron.", "Comunicar microservicios sin que uno dependa de que el otro esté vivo."],
+      avoid: ["Necesitás que varios servicios reciban el mismo mensaje &rarr; <strong>SNS</strong> o <strong>EventBridge</strong>.", "Querés releer el histórico de eventos: en SQS el mensaje se borra al consumirse &rarr; <strong>Kinesis</strong>.", "Enrutar por el contenido del evento con reglas &rarr; <strong>EventBridge</strong>.", "Comunicación sincrónica donde necesitás la respuesta al instante."],
+      concepts: [{t:"Standard vs FIFO",d:"Standard: máximo throughput, orden no garantizado. FIFO: orden exacto y sin duplicados, menor throughput."},{t:"Visibility timeout",d:"Tiempo en que el mensaje queda oculto mientras se procesa; si no se borra, reaparece."},{t:"Dead-letter queue",d:"Cola donde van los mensajes que fallaron N veces, para revisarlos aparte."},{t:"Long polling",d:"Espera a que llegue un mensaje en vez de consultar en vacío; abarata y reduce latencia."}] },
+    { name: "SNS", d: "Notificaciones pub/sub hacia múltiples suscriptores.", link: "https://aws.amazon.com/sns/",
+      long: "Mensajería <strong>publicación/suscripción</strong>: publicás un mensaje en un <strong>topic</strong> y llega a <strong>todos los suscriptores a la vez</strong>. Es la diferencia central con SQS, donde un mensaje va a un solo consumidor. Los suscriptores pueden ser colas SQS, funciones Lambda, endpoints HTTP, direcciones de correo o SMS. El patrón habitual es <strong>fan-out</strong>: un evento se publica una vez y varias colas lo reciben, cada una alimentando un proceso distinto.",
+      use: ["Avisar a varios sistemas a la vez de que ocurrió algo (se creó un pedido).", "Enviar alertas por mail o SMS desde alarmas de CloudWatch.", "Fan-out: un topic publica hacia varias colas SQS con procesamientos distintos.", "Notificaciones push a aplicaciones móviles."],
+      avoid: ["Un solo consumidor que procesa a su ritmo con reintentos &rarr; <strong>SQS</strong>.", "Enrutamiento por contenido o filtrado complejo &rarr; <strong>EventBridge</strong>.", "Necesitás persistencia: si un suscriptor está caído puede perder el mensaje, salvo que suscribas una cola SQS.", "Streaming continuo de alto volumen &rarr; <strong>Kinesis</strong>."],
+      concepts: [{t:"Topic",d:"Canal donde se publican los mensajes."},{t:"Suscripción",d:"Destino que recibe cada publicación: SQS, Lambda, HTTP, email, SMS."},{t:"Fan-out",d:"Un mensaje llega a muchos destinos simultáneamente."},{t:"Filter policy",d:"Filtra por atributos para que un suscriptor reciba solo lo que le interesa."},{t:"vs SQS",d:"SNS empuja a muchos; SQS retiene para uno."}] },
+    { name: "EventBridge", d: "Bus de eventos serverless para conectar servicios.", link: "https://aws.amazon.com/eventbridge/",
+      long: "<strong>Bus de eventos serverless</strong>: los servicios publican eventos y unas <strong>reglas</strong> deciden a qué destino enviarlos según el <strong>contenido</strong> del evento — no solo el topic. Recibe eventos de los propios servicios de AWS, de aplicaciones propias y de proveedores SaaS externos. También funciona como <strong>programador</strong>: ejecuta una Lambda con expresiones cron, reemplazando al viejo CloudWatch Events. Es la pieza central de las arquitecturas dirigidas por eventos.",
+      use: ["Reaccionar automáticamente a eventos de AWS (una instancia cambió de estado, se subió un objeto).", "Tareas programadas con cron sin servidor que las dispare.", "Enrutar eventos a distintos destinos según su contenido.", "Integrar eventos de servicios SaaS externos dentro de AWS."],
+      avoid: ["Cola simple de trabajo con reintentos &rarr; <strong>SQS</strong>.", "Solo necesitás avisar a varios suscriptores sin filtrar &rarr; <strong>SNS</strong>, más barato.", "Flujos con pasos, condiciones y estado &rarr; <strong>Step Functions</strong>.", "Volumen altísimo de eventos: el costo por millón se acumula."],
+      concepts: [{t:"Event bus",d:"Canal por donde circulan los eventos; el default recibe los de AWS."},{t:"Rule",d:"Patrón que filtra eventos y define a qué destino van."},{t:"Target",d:"Destino del evento: Lambda, SQS, Step Functions, API."},{t:"Schedule",d:"Regla con expresión cron o rate para ejecuciones periódicas."},{t:"Schema registry",d:"Catálogo de la estructura de los eventos que circulan."}] },
+    { name: "Step Functions", d: "Orquestación visual de flujos serverless.", link: "https://aws.amazon.com/step-functions/",
+      long: "<strong>Orquestador de flujos de trabajo</strong>: define una <strong>máquina de estados</strong> donde cada paso invoca una Lambda, un servicio de AWS o espera una acción. Maneja por vos las <strong>condiciones, ramas paralelas, reintentos, manejo de errores y esperas</strong> — nada de eso vive en el código de las funciones. Cada ejecución queda registrada paso a paso con su entrada y salida, lo que hace el debugging mucho más simple que rastrear Lambdas encadenadas a mano.",
+      use: ["Encadenar varias Lambdas con lógica condicional entre pasos.", "Procesos de negocio largos: aprobaciones, onboarding, pipelines de datos.", "Reintentos y compensación cuando un paso intermedio falla.", "Flujos que esperan una acción humana o un evento externo antes de continuar."],
+      avoid: ["Una sola función sin pasos intermedios &rarr; <strong>Lambda</strong> sola.", "Ruteo simple de eventos sin estado &rarr; <strong>EventBridge</strong>.", "Se cobra por transición de estado: flujos con muchísimos pasos y alto volumen salen caros.", "Procesamiento en streaming continuo &rarr; <strong>Kinesis</strong>."],
+      concepts: [{t:"State machine",d:"La definición del flujo: pasos, condiciones y transiciones."},{t:"Task",d:"Paso que invoca una Lambda o un servicio de AWS."},{t:"Choice / Parallel / Map",d:"Estados para ramificar, ejecutar en paralelo o iterar sobre una lista."},{t:"Standard vs Express",d:"Standard dura hasta un año y cobra por transición; Express es para alto volumen y corta duración."},{t:"Retry / Catch",d:"Reintentos y manejo de errores declarados en el flujo, no en el código."}] },
+  ]},
+  { cat: "Herramientas dev", accent: "#E0C341", items: [
+    { name: "CodeCommit", d: "Repos Git privados administrados.", link: "https://aws.amazon.com/codecommit/",
+      long: "<strong>Repositorios Git privados</strong> administrados dentro de tu cuenta de AWS. Funciona con cualquier cliente Git y el control de acceso se hace con <strong>IAM</strong>, sin usuarios ni tokens aparte. Todo se cifra en reposo y en tránsito, y no hay límite de tamaño de repositorio. En la práctica la mayoría de los equipos usa GitHub o GitLab; CodeCommit tiene sentido cuando hay <strong>requisitos regulatorios</strong> de que el código no salga del entorno AWS.",
+      use: ["Requisitos de cumplimiento que exigen mantener el código dentro de AWS.", "Controlar el acceso al repositorio con las mismas políticas de IAM del resto de la cuenta.", "Integración directa con CodePipeline sin credenciales externas.", "Entornos aislados sin acceso a internet público."],
+      avoid: ["Tu equipo ya trabaja con GitHub o GitLab: son mejores en colaboración y ecosistema.", "Necesitás pull requests ricos, Actions o integraciones de terceros.", "Proyectos open source que necesitan visibilidad pública.", "AWS dejó de aceptar nuevos clientes en CodeCommit: para proyectos nuevos conviene GitHub."],
+      concepts: [{t:"Repositorio",d:"Repo Git estándar; funciona con cualquier cliente."},{t:"Acceso por IAM",d:"Permisos gestionados con políticas, sin cuentas separadas."},{t:"Credenciales HTTPS Git",d:"Credenciales específicas generadas desde IAM para clonar."}] },
+    { name: "CodePipeline", d: "Automatización de CI/CD.", link: "https://aws.amazon.com/codepipeline/",
+      long: "<strong>Orquestador de CI/CD</strong>: define el pipeline por etapas — origen, compilación, pruebas, despliegue — y cada cambio en el repositorio lo dispara automáticamente. No compila ni despliega por sí mismo: <strong>coordina</strong> a CodeBuild, CodeDeploy, CloudFormation, ECS o Lambda, y puede integrar herramientas externas. Permite intercalar <strong>aprobaciones manuales</strong> antes de pasar a producción, y frena el pipeline si una etapa falla.",
+      use: ["Despliegue automático a staging y producción en cada merge.", "Pipelines con aprobación manual antes del paso a producción.", "Coordinar el despliegue de varios servicios en orden.", "CI/CD dentro de AWS sin depender de un runner externo."],
+      avoid: ["Ya usás GitHub Actions o GitLab CI y funcionan bien: suele haber poco que ganar.", "Pipelines simples de un proyecto chico: el setup es más pesado que un workflow de Actions.", "Necesitás una comunidad grande de acciones y plugins listos.", "Solo querés compilar y testear, sin desplegar &rarr; <strong>CodeBuild</strong> solo."],
+      concepts: [{t:"Stage",d:"Etapa del pipeline: Source, Build, Test, Deploy."},{t:"Action",d:"Tarea concreta dentro de una etapa."},{t:"Artifact",d:"Lo que produce una etapa y consume la siguiente; se guarda en S3."},{t:"Manual approval",d:"Pausa el pipeline hasta que una persona lo autorice."}] },
+    { name: "CodeBuild", d: "Compilación y testing administrado.", link: "https://aws.amazon.com/codebuild/",
+      long: "Servicio de <strong>compilación y pruebas</strong> totalmente administrado: no hay servidores de build que mantener ni actualizar. Levanta un contenedor efímero, ejecuta los pasos definidos en el archivo <strong>buildspec.yml</strong> del repositorio, guarda los artefactos y se apaga. Se factura <strong>por minuto de compilación</strong>, así que no hay costo cuando nadie compila, y escala solo si veinte builds arrancan a la vez.",
+      use: ["Compilar, testear y empaquetar la aplicación en cada commit.", "Construir imágenes Docker y publicarlas en ECR.", "Correr la suite de tests en un entorno limpio y reproducible.", "Builds paralelos sin dimensionar una flota de runners."],
+      avoid: ["Ya tenés runners de GitHub Actions o GitLab funcionando bien.", "Builds muy largos y frecuentes: el costo por minuto se acumula.", "Necesitás hardware específico o un entorno muy particular.", "Coordinar el despliegue completo &rarr; <strong>CodePipeline</strong>."],
+      concepts: [{t:"buildspec.yml",d:"Archivo en el repo que define las fases y comandos del build."},{t:"Build project",d:"Configuración: origen, imagen del entorno, variables, artefactos."},{t:"Entorno efímero",d:"Contenedor limpio por cada build; nada persiste entre ejecuciones."},{t:"Caché",d:"Guarda dependencias entre builds para acelerarlos."}] },
+    { name: "CodeDeploy", d: "Automatiza despliegues a EC2, Lambda o ECS.", link: "https://aws.amazon.com/codedeploy/",
+      long: "Automatiza el <strong>despliegue de la aplicación</strong> a instancias EC2, servidores on-premise, funciones Lambda o servicios ECS. Su aporte no es copiar archivos, sino <strong>controlar cómo se hace el cambio</strong>: desplegar de a poco, verificar la salud en cada paso y <strong>revertir automáticamente</strong> si algo falla. Soporta <strong>in-place</strong> (actualiza los servidores existentes) y <strong>blue/green</strong> (levanta un entorno nuevo y recién ahí manda el tráfico), además de despliegues canary.",
+      use: ["Despliegues sin downtime sobre una flota de instancias EC2.", "Blue/green con reversión automática si los health checks fallan.", "Canary en Lambda: mandar el 10% del tráfico a la versión nueva y observar.", "Desplegar también a servidores on-premise con el mismo flujo."],
+      avoid: ["Elastic Beanstalk o App Runner ya gestionan el despliegue por vos.", "Aplicación serverless simple: publicar la versión de Lambda alcanza.", "Kubernetes con su propia estrategia de rollout &rarr; herramientas del ecosistema.", "Solo necesitás compilar &rarr; <strong>CodeBuild</strong>."],
+      concepts: [{t:"In-place vs Blue/Green",d:"In-place actualiza los servidores actuales; blue/green crea un entorno nuevo y cambia el tráfico."},{t:"Canary / Linear",d:"Mueve el tráfico de a porcentajes en vez de todo de golpe."},{t:"appspec.yml",d:"Archivo que define los pasos y hooks del despliegue."},{t:"Rollback automático",d:"Vuelve a la versión anterior si el despliegue falla o salta una alarma."}] },
+    { name: "CloudFormation", d: "Infraestructura como código: define recursos en una plantilla.", link: "https://aws.amazon.com/cloudformation/",
+      long: "<strong>Infraestructura como código (IaC)</strong>: describís los recursos que querés en una <strong>plantilla</strong> YAML o JSON y CloudFormation los crea, actualiza y elimina en el orden correcto, resolviendo las dependencias entre ellos. La infraestructura pasa a ser <strong>versionable y reproducible</strong>: el mismo archivo levanta idéntico el ambiente de desarrollo y el de producción. Si algo falla a mitad de camino, hace <strong>rollback automático</strong> y deja todo como estaba. El servicio es gratuito: pagás solo los recursos que crea.",
+      use: ["Replicar un ambiente completo en otra región o cuenta sin trabajo manual.", "Versionar la infraestructura en Git junto al código de la aplicación.", "Eliminar todos los recursos de un proyecto de una sola vez, sin olvidos.", "Garantizar que desarrollo y producción sean realmente iguales."],
+      avoid: ["Preferís escribir la infraestructura en un lenguaje de programación &rarr; AWS CDK, que genera CloudFormation por debajo.", "Trabajás en varias nubes y querés una sola herramienta &rarr; Terraform.", "Un recurso puntual para una prueba rápida: la consola es más directa.", "Recursos creados a mano no entran solos a la plantilla: hay que importarlos."],
+      concepts: [{t:"Template",d:"Archivo YAML o JSON que describe los recursos deseados."},{t:"Stack",d:"El conjunto de recursos creados a partir de una plantilla, administrados en bloque."},{t:"Change set",d:"Vista previa de qué va a cambiar antes de aplicar una actualización."},{t:"Rollback",d:"Si la creación falla, revierte automáticamente al estado anterior."},{t:"Drift detection",d:"Detecta recursos modificados a mano fuera de la plantilla."}] },
+    { name: "Systems Manager", d: "Administración y automatización operativa de tus recursos.", link: "https://aws.amazon.com/systems-manager/",
+      long: "Conjunto de herramientas para <strong>operar la flota</strong>: aplicar parches a cientos de instancias a la vez, ejecutar comandos remotos sin abrir SSH, mantener inventario de software y guardar configuración. Dos piezas aparecen todo el tiempo: <strong>Session Manager</strong>, que da acceso de shell a una instancia <strong>sin llaves SSH, sin bastión y sin puertos abiertos</strong> (todo queda auditado en CloudTrail), y <strong>Parameter Store</strong>, que guarda parámetros de configuración y secretos — su nivel estándar es <strong>gratuito</strong>.",
+      use: ["Parchear automáticamente todas las instancias según una ventana de mantenimiento.", "Entrar a una EC2 en subnet privada sin bastión ni llaves SSH.", "Guardar configuración de la aplicación en Parameter Store sin costo.", "Ejecutar un mismo comando en cientos de instancias de una vez."],
+      avoid: ["Secretos que necesitan rotación automática &rarr; <strong>Secrets Manager</strong>.", "Requiere el agente SSM instalado; las AMI de Amazon Linux ya lo traen.", "Monitorear métricas y logs &rarr; <strong>CloudWatch</strong>.", "Crear la infraestructura desde cero &rarr; <strong>CloudFormation</strong>."],
+      concepts: [{t:"Session Manager",d:"Shell a una instancia sin SSH, sin puertos abiertos y con auditoría."},{t:"Parameter Store",d:"Almacén de configuración y secretos; nivel estándar gratuito."},{t:"Patch Manager",d:"Aplica parches de sistema operativo de forma programada."},{t:"Run Command",d:"Ejecuta comandos en muchas instancias simultáneamente."},{t:"Agente SSM",d:"Software que debe correr en la instancia para que todo esto funcione."}] },
+  ]},
+  { cat: "Costos y soporte", accent: "#9AA7C0", items: [
+    { name: "Cost Explorer", d: "Visualizá el histórico de gastos.", link: "https://aws.amazon.com/aws-cost-management/aws-cost-explorer/",
+      long: "Herramienta para <strong>analizar y visualizar el gasto</strong>: muestra hasta <strong>12 meses de histórico</strong> y proyecta los próximos meses según la tendencia. Permite filtrar y agrupar por servicio, región, cuenta o <strong>etiqueta</strong>, lo que hace posible responder \"cuánto nos costó el proyecto X\" si los recursos están bien etiquetados. También recomienda instancias reservadas o Savings Plans en función del uso real. Responde <strong>en qué se fue la plata</strong>.",
+      use: ["Encontrar qué servicio provocó el salto en la factura de este mes.", "Repartir costos por equipo o proyecto usando etiquetas.", "Ver recomendaciones de Reserved Instances o Savings Plans basadas en tu uso.", "Proyectar el gasto de los próximos meses."],
+      avoid: ["Querés que te avise al superar un umbral &rarr; <strong>Budgets</strong>. Cost Explorer analiza, no alerta.", "Estimar el costo de algo que todavía no desplegaste &rarr; <strong>Pricing Calculator</strong>.", "Necesitás el detalle línea por línea &rarr; los informes de costo y uso en S3.", "Sin etiquetas consistentes, la atribución por proyecto no funciona."],
+      concepts: [{t:"Etiquetas de asignación de costos",d:"Etiquetas activadas para agrupar el gasto por proyecto o equipo."},{t:"Granularidad",d:"Datos por mes, día o incluso hora."},{t:"Pronóstico",d:"Proyección del gasto futuro según la tendencia."},{t:"Recomendaciones",d:"Sugerencias de compromiso de uso según el consumo real."}] },
+    { name: "Budgets", d: "Alertas cuando el gasto supera un umbral.", link: "https://aws.amazon.com/aws-cost-management/aws-budgets/",
+      long: "Define <strong>presupuestos</strong> y avisa cuando el gasto —o el uso— se acerca o supera el límite. Las alertas se disparan tanto sobre el <strong>gasto real</strong> como sobre el <strong>pronosticado</strong>, lo que permite enterarse antes de que ocurra el desborde. Notifica por correo o <strong>SNS</strong>, y con <strong>Budget Actions</strong> puede ir más lejos: aplicar una política de IAM restrictiva o apagar instancias cuando se cruza el umbral. Es la red de seguridad contra la factura sorpresa.",
+      use: ["Alerta al llegar a cierto gasto mensual, imprescindible mientras aprendés.", "Presupuestos separados por equipo, proyecto o cuenta.", "Avisar cuando el consumo del Free Tier está por agotarse.", "Frenar automáticamente recursos si el gasto se dispara."],
+      avoid: ["Analizar en qué se gastó &rarr; <strong>Cost Explorer</strong>.", "Estimar antes de desplegar &rarr; <strong>Pricing Calculator</strong>.", "Esperar que corte el gasto solo: por defecto avisa, no bloquea, salvo que configures Budget Actions.", "Optimización profunda de arquitectura &rarr; <strong>Trusted Advisor</strong>."],
+      concepts: [{t:"Tipos de presupuesto",d:"De costo, de uso, de cobertura de reservas o de Savings Plans."},{t:"Alerta real vs pronosticada",d:"Avisar al superar el umbral, o al proyectar que se va a superar."},{t:"Budget Actions",d:"Acción automática al cruzar el límite: aplicar política restrictiva o detener recursos."},{t:"Umbral",d:"Porcentaje del presupuesto que dispara la notificación."}] },
+    { name: "Support Plans", d: "Basic, Developer, Business, Enterprise.", link: "https://aws.amazon.com/premiumsupport/plans/",
+      long: "Los <strong>cuatro niveles de soporte</strong> de AWS. <strong>Basic</strong> es gratuito para toda cuenta: documentación, foros y soporte solo para facturación y límites. <strong>Developer</strong> suma consultas técnicas en horario laboral por correo. <strong>Business</strong> agrega soporte <strong>24/7 por teléfono y chat</strong>, el set <strong>completo de Trusted Advisor</strong> y soporte de software de terceros. <strong>Enterprise</strong> incorpora un <strong>Technical Account Manager (TAM)</strong> dedicado y respuesta en 15 minutos para casos críticos.",
+      use: ["Basic alcanza mientras aprendés o experimentás.", "Developer para ambientes de desarrollo con consultas técnicas ocasionales.", "Business cuando ya hay cargas productivas y hace falta atención 24/7.", "Enterprise para organizaciones grandes con sistemas críticos."],
+      avoid: ["Pagar Business o Enterprise sin cargas productivas: el costo mensual es alto.", "Esperar que soporte resuelva problemas de tu código: cubren AWS, no tu aplicación.", "Basic no da soporte técnico: si necesitás ayuda con un servicio, hay que subir de plan."],
+      concepts: [{t:"Basic",d:"Gratis. Documentación, foros, soporte de facturación y aumentos de límite."},{t:"Developer",d:"Consultas técnicas por correo en horario laboral."},{t:"Business",d:"24/7 por teléfono y chat, Trusted Advisor completo, soporte de terceros."},{t:"Enterprise",d:"TAM dedicado, respuesta en 15 minutos para casos críticos."},{t:"Trusted Advisor completo",d:"Requiere Business o Enterprise. Pregunta habitual de examen."}] },
+  ]},
+  { cat: "Fundamentos", accent: "#9AA7C0", items: [
+    { name: "Shared Responsibility", d: "AWS asegura la nube; vos asegurás lo que ponés en la nube.", link: "https://aws.amazon.com/compliance/shared-responsibility-model/",
+      long: "El <strong>modelo de responsabilidad compartida</strong> define quién asegura qué. AWS es responsable de la <strong>seguridad DE la nube</strong>: datacenters, hardware, red física, virtualización y el software de los servicios administrados. Vos sos responsable de la <strong>seguridad EN la nube</strong>: tus datos, permisos de IAM, cifrado, configuración de security groups y —cuando corresponde— el sistema operativo. La frontera <strong>se mueve según el servicio</strong>: en EC2 parcheás el sistema operativo; en Lambda o S3 eso lo hace AWS.",
+      use: ["Entender qué tenés que asegurar vos antes de desplegar cualquier cosa.", "Responder auditorías señalando qué controles cubre AWS y cuáles tu equipo.", "Decidir entre servicios administrados y autogestionados según cuánta responsabilidad querés asumir.", "Es de los conceptos más preguntados en el examen CLF-C02."],
+      avoid: ["Asumir que AWS asegura tus datos y permisos: la configuración es siempre tuya.", "Creer que la frontera es fija: cambia entre IaaS, PaaS y SaaS.", "Confundirlo con cumplimiento normativo: AWS certifica su parte, vos la tuya."],
+      concepts: [{t:"Seguridad DE la nube",d:"Responsabilidad de AWS: instalaciones, hardware, red, virtualización."},{t:"Seguridad EN la nube",d:"Tu responsabilidad: datos, IAM, cifrado, configuración, sistema operativo cuando aplica."},{t:"Frontera móvil",d:"En EC2 (IaaS) asumís más; en Lambda o S3 asumís menos."},{t:"Siempre tuyo",d:"Los datos, quién accede a ellos y cómo se clasifican nunca dejan de ser tu responsabilidad."}] },
+    { name: "Well-Architected", d: "6 pilares: operación, seguridad, confiabilidad, performance, costos, sostenibilidad.", link: "https://aws.amazon.com/architecture/well-architected/",
+      long: "Marco de referencia con <strong>seis pilares</strong> para evaluar y mejorar una arquitectura: <strong>excelencia operativa</strong>, <strong>seguridad</strong>, <strong>confiabilidad</strong>, <strong>eficiencia del rendimiento</strong>, <strong>optimización de costos</strong> y <strong>sostenibilidad</strong>. Cada pilar trae principios de diseño y preguntas concretas para revisar un sistema. La <strong>Well-Architected Tool</strong> de la consola guía esa revisión y devuelve un informe con los riesgos detectados. No es una norma obligatoria: es una guía para encontrar puntos débiles antes de que exploten.",
+      use: ["Revisar una arquitectura antes de pasarla a producción.", "Encontrar riesgos que el equipo no ve por estar demasiado cerca del diseño.", "Lenguaje común para discutir trade-offs entre equipos.", "El sexto pilar, sostenibilidad, se agregó en 2021: dato de examen."],
+      avoid: ["No es una checklist de cumplimiento obligatorio ni una certificación.", "No reemplaza el diseño: es una revisión sobre algo ya pensado.", "Aplicar los seis pilares al máximo siempre: hay tensiones reales entre costo y confiabilidad."],
+      concepts: [{t:"Excelencia operativa",d:"Ejecutar, monitorear y mejorar procesos de forma continua."},{t:"Seguridad",d:"Proteger datos, sistemas y activos."},{t:"Confiabilidad",d:"Recuperarse de fallos y escalar con la demanda."},{t:"Eficiencia del rendimiento",d:"Usar los recursos justos para el trabajo requerido."},{t:"Optimización de costos",d:"Evitar gastos innecesarios."},{t:"Sostenibilidad",d:"Reducir el impacto ambiental de la carga de trabajo."}] },
+    { name: "AWS CAF", d: "Cloud Adoption Framework: 6 perspectivas para migrar a la nube.", link: "https://aws.amazon.com/cloud-adoption-framework/",
+      long: "El <strong>Cloud Adoption Framework</strong> ordena la migración de una organización a la nube desde <strong>seis perspectivas</strong>: <strong>negocio, personas y gobernanza</strong> (las tres del lado organizacional) y <strong>plataforma, seguridad y operaciones</strong> (las tres técnicas). Su punto central es que <strong>migrar a la nube no es solo un problema técnico</strong>: si no cambian las capacidades del equipo, los procesos de gobierno y el modelo de negocio, la migración fracasa aunque la infraestructura funcione.",
+      use: ["Planificar una migración a gran escala más allá de mover servidores.", "Detectar brechas de capacidades en el equipo antes de arrancar.", "Alinear a las áreas técnicas y de negocio en un plan común.", "Aparece en el examen junto a las estrategias de migración (las 7 R)."],
+      avoid: ["No es una guía técnica paso a paso: es un marco organizacional.", "Migrar una sola aplicación chica no necesita todo el framework.", "No lo confundas con Well-Architected: CAF es adopción organizacional, Well-Architected es diseño técnico."],
+      concepts: [{t:"Perspectiva de negocio",d:"Asegurar que la inversión en nube dé resultados de negocio."},{t:"Perspectiva de personas",d:"Capacitación, cultura y estructura de los equipos."},{t:"Perspectiva de gobernanza",d:"Gestión de riesgos, cumplimiento y control del gasto."},{t:"Plataforma / Seguridad / Operaciones",d:"Las tres perspectivas técnicas: arquitectura, protección y operación diaria."}] },
+    { name: "Modelo de precios", d: "Pagás por uso; ahorrás por adelantado y por volumen.", link: "https://calculator.aws/",
+      long: "AWS se apoya en tres principios de precio: <strong>pagar por uso</strong> (sin costo inicial ni contrato), <strong>ahorrar comprometiéndose</strong> (Reserved Instances y Savings Plans dan hasta 72% de descuento a cambio de 1 o 3 años) y <strong>pagar menos a mayor volumen</strong> (el precio por unidad baja escalonadamente). Dos reglas prácticas que sorprenden: la <strong>transferencia de entrada suele ser gratuita y la de salida se cobra</strong>, y varios servicios administrados no cobran nada por sí mismos — solo pagás los recursos que crean.",
+      use: ["Estimar el costo de una arquitectura antes de construirla, con la Pricing Calculator.", "Elegir entre On-Demand, Reserved, Savings Plans o Spot según el patrón de uso.", "Diseñar teniendo en cuenta el costo de salida de datos entre regiones o hacia internet.", "Aprovechar el Free Tier de 12 meses mientras aprendés."],
+      avoid: ["Asumir que todo escala linealmente: hay saltos por volumen y mínimos.", "Ignorar la transferencia de salida: es la sorpresa más común en la factura.", "Comprometerse a 3 años sin datos de uso real que lo respalden.", "Confundir Free Tier siempre gratis con el de 12 meses: son distintos."],
+      concepts: [{t:"Pago por uso",d:"Sin costo inicial ni permanencia; se factura lo consumido."},{t:"Reserved / Savings Plans",d:"Compromiso de 1 o 3 años a cambio de descuentos de hasta 72%."},{t:"Spot",d:"Capacidad sobrante hasta 90% más barata, interrumpible con aviso."},{t:"Transferencia de datos",d:"La entrada suele ser gratis; la salida a internet se cobra."},{t:"Free Tier",d:"Tres formas: siempre gratis, 12 meses gratis y pruebas de corta duración."}] },
+    { name: "Infraestructura global", d: "Regiones, Availability Zones y ubicaciones de borde.", link: "https://aws.amazon.com/about-aws/global-infrastructure/",
+      long: "La infraestructura física de AWS se organiza en tres niveles. Una <strong>Región</strong> es un área geográfica (por ejemplo São Paulo o Virginia) y contiene varias <strong>Availability Zones</strong>: datacenters separados físicamente, cada uno con energía y red independientes, unidos por enlaces de baja latencia. Desplegar en <strong>dos o más AZ</strong> es lo que da alta disponibilidad — si una se cae, la otra sigue. Las <strong>edge locations</strong> son cientos de puntos adicionales donde CloudFront cachea contenido cerca del usuario. Elegir región se decide por <strong>latencia, costo, cumplimiento normativo y disponibilidad del servicio</strong>.",
+      use: ["Elegir la región más cercana a los usuarios para bajar la latencia.", "Distribuir en varias AZ para tolerar la caída de un datacenter.", "Cumplir normativas que exigen que los datos permanezcan en un país.", "Aprovechar diferencias de precio: la misma instancia cuesta distinto según la región."],
+      avoid: ["Asumir que todos los servicios están en todas las regiones: no es así.", "Confundir región con AZ: la región contiene varias AZ.", "Usar una sola AZ en producción: no hay alta disponibilidad real.", "Ignorar el costo de transferir datos entre regiones."],
+      concepts: [{t:"Región",d:"Área geográfica con varias Availability Zones. Ejemplo: sa-east-1."},{t:"Availability Zone",d:"Uno o más datacenters con energía y red independientes."},{t:"Edge location",d:"Punto de presencia para CloudFront y Route 53; hay muchos más que regiones."},{t:"Servicio global vs regional",d:"IAM, Route 53 y CloudFront son globales; EC2, S3 y RDS son regionales."},{t:"Multi-AZ",d:"Desplegar en varias AZ: la base de la alta disponibilidad en AWS."}] },
+    { name: "Pricing Calculator", d: "Estimá el costo de una arquitectura antes de construirla.", link: "https://calculator.aws/",
+      long: "Herramienta web <strong>gratuita</strong> para estimar cuánto va a costar una arquitectura <strong>antes de desplegarla</strong>. Agregás los servicios que pensás usar con su configuración —tipo de instancia, horas por mes, GB almacenados, transferencia de salida— y devuelve un desglose mensual y anual. La estimación se puede <strong>guardar, compartir por link y exportar</strong>, lo que la vuelve útil para presentar un presupuesto. Es el complemento de Cost Explorer: uno mira hacia adelante, el otro hacia atrás.",
+      use: ["Presupuestar un proyecto antes de aprobarlo.", "Comparar el costo de dos arquitecturas alternativas.", "Estimar el ahorro de pasar de On-Demand a Reserved o Savings Plans.", "Comparar el costo de AWS contra la infraestructura on-premise actual."],
+      avoid: ["Ver lo que ya gastaste &rarr; <strong>Cost Explorer</strong>.", "Alertas sobre gasto real &rarr; <strong>Budgets</strong>.", "Es una estimación: el consumo real casi siempre difiere.", "Fácil olvidar la transferencia de salida, que suele ser la sorpresa de la factura."],
+      concepts: [{t:"Estimación",d:"Cálculo basado en la configuración que declarás, no en uso real."},{t:"Grupos",d:"Permite organizar la estimación por proyecto o ambiente."},{t:"Compartir",d:"Genera un link público con la estimación guardada."},{t:"Ex Simple Monthly Calculator",d:"Reemplazó a la calculadora anterior de AWS."}] },
+    { name: "Marketplace", d: "Catálogo para comprar y desplegar software de terceros.", link: "https://aws.amazon.com/marketplace/",
+      long: "Tienda digital donde se encuentra, compra y despliega <strong>software de terceros</strong> que corre en AWS: imágenes de máquina con software preinstalado, contenedores, modelos de machine learning y servicios SaaS. Lo distintivo es la <strong>facturación</strong>: todo se cobra <strong>en la misma factura de AWS</strong>, sin gestionar un proveedor aparte, y el gasto puede computar contra los compromisos de consumo de la empresa. Los productos vienen con precios claros —por hora, mensual o traé tu propia licencia— y muchos ofrecen prueba gratuita.",
+      use: ["Desplegar una solución comercial (firewall, base de datos, monitoreo) ya lista.", "Consolidar la compra de software de terceros en la factura de AWS.", "Probar software empresarial con una prueba gratuita antes de comprar.", "Comprar sin pasar por el proceso de alta de un proveedor nuevo."],
+      avoid: ["Un servicio nativo de AWS ya resuelve lo mismo, casi siempre más barato.", "Software open source que podés instalar vos sin costo de licencia.", "Los precios de Marketplace suelen ser mayores que contratar al proveedor directo.", "Revisá siempre qué recursos de AWS levanta el producto: se facturan aparte."],
+      concepts: [{t:"AMI de Marketplace",d:"Imagen con software de terceros preinstalado y licenciado."},{t:"Modelos de precio",d:"Por hora, mensual, anual o BYOL (traé tu propia licencia)."},{t:"Facturación unificada",d:"Todo llega en la misma factura de AWS."},{t:"Private offers",d:"Condiciones negociadas directamente con el vendedor."}] },
+  ]},
+];
+
+// service-to-service relationships (by name; both endpoints must exist)
+const RELATIONS = [
+  ["EC2","EBS"],["EC2","ELB"],["EC2","VPC"],["EC2","CloudWatch"],["EC2","IAM"],["EC2","ECS"],["EC2","EKS"],
+  ["Lambda","API Gateway"],["Lambda","S3"],["Lambda","DynamoDB"],["Lambda","SQS"],["Lambda","SNS"],["Lambda","EventBridge"],["Lambda","Step Functions"],["Lambda","CloudWatch"],["Lambda","Kinesis"],
+  ["S3","CloudFront"],["S3","Athena"],["S3","S3 Glacier"],["S3","KMS"],
+  ["ECS","ECR"],["EKS","ECR"],["ECS","Fargate"],["EKS","Fargate"],
+  ["RDS","VPC"],["RDS","KMS"],["RDS","Secrets Manager"],["RDS","CloudWatch"],
+  ["Aurora","RDS"],
+  ["CloudFront","WAF"],["CloudFront","Route 53"],["API Gateway","Cognito"],["API Gateway","WAF"],
+  ["SQS","SNS"],["EventBridge","Step Functions"],
+  ["EBS","KMS"],
+  ["Athena","QuickSight"],["Kinesis","S3"],
+  ["ELB","VPC"],["ELB","EC2"],
+  ["CloudTrail","CloudWatch"],["Config","CloudWatch"],
+  ["Bedrock","Lambda"],["SageMaker","S3"],
+  // --- cómputo y contenedores ---
+  ["Auto Scaling","EC2"],["Auto Scaling","ELB"],["Auto Scaling","CloudWatch"],
+  ["Elastic Beanstalk","EC2"],["Elastic Beanstalk","ELB"],["Elastic Beanstalk","Auto Scaling"],
+  ["App Runner","ECR"],["Batch","ECS"],["Batch","EC2"],["Lightsail","EC2"],
+  // --- almacenamiento ---
+  ["EFS","EC2"],["EFS","VPC"],["FSx","VPC"],["Storage Gateway","S3"],["EBS","EC2"],
+  // --- migración y transferencia ---
+  ["Snow Family","S3"],["DataSync","S3"],["DataSync","EFS"],["DMS","RDS"],["DMS","Aurora"],
+  // --- bases de datos ---
+  ["Redshift","S3"],["Redshift","QuickSight"],["ElastiCache","RDS"],["ElastiCache","VPC"],["Neptune","VPC"],
+  // --- redes ---
+  ["Direct Connect","VPC"],["Route 53","ELB"],["VPC","IAM"],
+  // --- seguridad ---
+  ["Shield","CloudFront"],["Shield","Route 53"],["CloudHSM","VPC"],["Cognito","IAM"],
+  ["IAM Identity Center","IAM"],["IAM Identity Center","Organizations"],
+  ["Control Tower","Organizations"],["Control Tower","Config"],["Control Tower","IAM Identity Center"],
+  ["GuardDuty","CloudTrail"],["GuardDuty","VPC"],["Inspector","EC2"],["Inspector","ECR"],
+  ["Macie","S3"],["Artifact","Shared Responsibility"],
+  // --- administración ---
+  ["Organizations","IAM"],["Trusted Advisor","Support Plans"],["Trusted Advisor","Cost Explorer"],
+  ["Personal Health Dashboard","CloudWatch"],["Config","CloudTrail"],
+  // --- analítica y ML ---
+  ["EMR","S3"],["QuickSight","Athena"],["Rekognition","S3"],["Textract","S3"],["Comprehend","S3"],
+  // --- herramientas dev ---
+  ["CodePipeline","CodeBuild"],["CodePipeline","CodeDeploy"],["CodePipeline","CodeCommit"],
+  ["CodeBuild","ECR"],["CodeDeploy","EC2"],["CodeDeploy","Lambda"],["CodeDeploy","ECS"],
+  ["CloudFormation","IAM"],["Systems Manager","EC2"],["Systems Manager","Secrets Manager"],
+  // --- costos y fundamentos ---
+  ["Budgets","Cost Explorer"],["Budgets","SNS"],["Pricing Calculator","Modelo de precios"],
+  ["Cost Explorer","Organizations"],["Marketplace","EC2"],
+  ["Infraestructura global","VPC"],["Infraestructura global","CloudFront"],["Infraestructura global","Well-Architected"],
+  ["Well-Architected","Shared Responsibility"],["AWS CAF","Well-Architected"],
+  ["Modelo de precios","EC2"],["Support Plans","Personal Health Dashboard"],
+];
+
+// ---------- persisted state ----------
+let notes = {};
+async function loadState(){
+  try{ const r = await window.storage.get('aws-map:notes', false); if(r) notes = JSON.parse(r.value); }catch(e){}
+}
+let nt; function saveNotes(){ clearTimeout(nt); nt=setTimeout(()=>window.storage.set('aws-map:notes', JSON.stringify(notes), false).catch(()=>{}),500); }
+
+// ---------- build node index ----------
+const NS = "http://www.w3.org/2000/svg";
+const svg = document.getElementById('map');
+const stage = document.getElementById('stage');
+let vp; // viewport <g>
+const byId = {}, byName = {};
+let totalServices = 0;
+DATA.forEach((cat,ci)=>cat.items.forEach((svc,si)=>{
+  const id = `${ci}-${si}`;
+  const node = { id, ci, si, cat:cat.cat, accent:cat.accent, ...svc };
+  byId[id]=node; byName[svc.name]=node; totalServices++;
+}));
+document.getElementById('total').textContent = totalServices;
+
+// resolve relations to ids
+const relPairs = RELATIONS.filter(([a,b])=>byName[a]&&byName[b]).map(([a,b])=>[byName[a].id, byName[b].id]);
+function relatedIds(id){
+  const out = new Set();
+  relPairs.forEach(([a,b])=>{ if(a===id) out.add(b); if(b===id) out.add(a); });
+  return [...out];
+}
+
+let mode = 'radial';
+let visualStyle = 'circle'; // 'circle' (original dot/orbit look) or 'cards' (compact card grid)
+let selectedId = null;
+const pos = {}; // id -> {x,y} in world coords (services)
+const catPos = {}; // ci -> {x,y}
+
+// ---------- card geometry (cards style) ----------
+const CARD_W = 168, CARD_H = 54;
+
+// ---------- layouts: circle style (original orbit look) ----------
+function layoutRadialCircle(){
+  const N = DATA.length;
+  const R1 = 300, R2base = 560;
+  DATA.forEach((cat,ci)=>{
+    const a = (ci/N)*Math.PI*2 - Math.PI/2;
+    catPos[ci] = { x: Math.cos(a)*R1, y: Math.sin(a)*R1, ang:a };
+    const k = cat.items.length;
+    const slice = (Math.PI*2/N)*0.82;
+    cat.items.forEach((svc,si)=>{
+      const off = k===1 ? 0 : (si-(k-1)/2)*(slice/(k));
+      const aa = a + off;
+      const r = R2base + (si%2)*46; // stagger to reduce overlap
+      pos[`${ci}-${si}`] = { x: Math.cos(aa)*r, y: Math.sin(aa)*r, ang:aa };
+    });
+  });
+}
+function layoutGraphCircle(){
+  // all services on a big circle, grouped by category contiguously
+  const R = 520;
+  let idxList = [];
+  DATA.forEach((cat,ci)=>cat.items.forEach((svc,si)=>idxList.push(`${ci}-${si}`)));
+  const M = idxList.length;
+  idxList.forEach((id,i)=>{
+    const a = (i/M)*Math.PI*2 - Math.PI/2;
+    pos[id] = { x: Math.cos(a)*R, y: Math.sin(a)*R, ang:a };
+  });
+}
+
+// ---------- layouts: cards style (grid-based, compact, no overlap) ----------
+function layoutRadialCards(){
+  // one column per category, cards stacked vertically — compact & non-overlapping
+  const N = DATA.length;
+  const COLW = CARD_W + 64;
+  const totalW = (N-1)*COLW;
+  const startX = -totalW/2;
+  DATA.forEach((cat,ci)=>{
+    const cx = startX + ci*COLW;
+    const headerY = 0;
+    catPos[ci] = { x: cx, y: headerY };
+    const rowGap = CARD_H + 14;
+    const startY = headerY + 55;
+    cat.items.forEach((svc,si)=>{
+      pos[`${ci}-${si}`] = { x: cx, y: startY + si*rowGap };
+    });
+  });
+}
+function layoutGraphCards(){
+  // grid layout: wrap cards into rows, grouped by category contiguously
+  const COLS = 8;
+  const COLW = CARD_W + 40, ROWH = CARD_H + 34;
+  let idxList = [];
+  DATA.forEach((cat,ci)=>cat.items.forEach((svc,si)=>idxList.push(`${ci}-${si}`)));
+  const M = idxList.length;
+  const rows = Math.ceil(M/COLS);
+  const totalW = (COLS-1)*COLW, totalH = (rows-1)*ROWH;
+  idxList.forEach((id,i)=>{
+    const col = i%COLS, row = Math.floor(i/COLS);
+    pos[id] = { x: -totalW/2 + col*COLW, y: -totalH/2 + row*ROWH };
+  });
+}
+
+function curve(x1,y1,x2,y2,pull){
+  if(pull==null){ const mx=(x1+x2)/2, my=(y1+y2)/2; return `M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`; }
+  const cx = (x1+x2)/2*pull, cy=(y1+y2)/2*pull;
+  return `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
+}
+function el(tag,attrs){ const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); return e; }
+
+// draws a compact rectangular "card" node at (p.x,p.y) for service svc/id
+function drawCard(nodes, id, svc, accent, dim, hlActive){
+  const p = pos[id];
+  const g = el('g',{ transform:`translate(${p.x - CARD_W/2},${p.y - CARD_H/2})`, style:'cursor:pointer' });
+  g.setAttribute('data-id', id);
+
+  const bg = el('rect',{ x:0, y:0, width:CARD_W, height:CARD_H, rx:8,
+    fill: hlActive ? '#151d2b' : '#101722',
+    stroke: hlActive ? accent : '#25313f',
+    'stroke-width': hlActive ? 1.6 : 1, opacity: dim });
+  g.appendChild(bg);
+
+  // left accent bar
+  g.appendChild(el('rect',{ x:0, y:0, width:4, height:CARD_H, rx:2, fill:accent, opacity:dim }));
+
+  // category label (tiny, top)
+  const catT = el('text',{ x:14, y:16, fill:accent, 'font-size':8.5, 'font-weight':700, 'letter-spacing':'.03em',
+    'font-family':'var(--sans)', opacity:dim*0.9 });
+  catT.textContent = (cat_of(id)||'').toUpperCase();
+  g.appendChild(catT);
+
+  // service name
+  const nameT = el('text',{ x:14, y:33, fill:'#e7ecf2', 'font-size':13.5, 'font-weight':600,
+    'font-family':'var(--sans)', opacity:dim });
+  nameT.textContent = svc.name;
+  g.appendChild(nameT);
+
+  // bottom row: one-line description snippet
+  const descT = el('text',{ x:14, y:46, fill:'#7c8ca0', 'font-size':9.5, 'font-family':'var(--mono)', opacity:dim*0.85 });
+  const snippet = svc.d.length>34 ? svc.d.slice(0,32)+'…' : svc.d;
+  descT.textContent = snippet;
+  g.appendChild(descT);
+
+  g.addEventListener('click',(e)=>{ e.stopPropagation(); openPanel(id); });
+  nodes.appendChild(g);
+}
+function cat_of(id){ const [ci] = id.split('-'); return DATA[+ci] && DATA[+ci].cat; }
+
+function edgeAnchor(p, side){
+  // connect from card edge (left/right) instead of center, for cleaner routing
+  if(side==='right') return { x:p.x+CARD_W/2, y:p.y };
+  if(side==='left') return { x:p.x-CARD_W/2, y:p.y };
+  return { x:p.x, y:p.y+CARD_H/2 };
+}
+
+function render(){
+  svg.innerHTML='';
+  vp = el('g',{}); svg.appendChild(vp);
+  const edges = el('g',{}); const nodes = el('g',{});
+  vp.appendChild(edges); vp.appendChild(nodes);
+
+  const hl = selectedId ? new Set([selectedId, ...relatedIds(selectedId)]) : null;
+
+  if(visualStyle === 'cards'){
+    if(mode==='radial'){
+      layoutRadialCards();
+      // category header cards
+      DATA.forEach((cat,ci)=>{
+        const c = catPos[ci];
+        const g = el('g',{ transform:`translate(${c.x-CARD_W/2},${c.y-18})` });
+        g.appendChild(el('rect',{ x:0, y:0, width:CARD_W, height:30, rx:7, fill:'#131a26', stroke:cat.accent, 'stroke-width':1.2, opacity:.9 }));
+        const t = el('text',{ x:CARD_W/2, y:19, fill:cat.accent, 'font-size':12, 'font-weight':700, 'text-anchor':'middle', 'font-family':'var(--sans)' });
+        t.textContent = cat.cat;
+        g.appendChild(t);
+        nodes.appendChild(g);
+        // connector from header down to first card
+        const p0 = pos[`${ci}-0`];
+        if(p0) edges.appendChild(el('path',{ d: curve(c.x,c.y-3,p0.x,p0.y-CARD_H/2), stroke:cat.accent, 'stroke-width':1.5, fill:'none', 'stroke-dasharray':'2 4', opacity:.4 }));
+      });
+      // vertical connectors between cards in same column
+      DATA.forEach((cat,ci)=>{
+        for(let si=0; si<cat.items.length-1; si++){
+          const a = pos[`${ci}-${si}`], b = pos[`${ci}-${si+1}`];
+          edges.appendChild(el('path',{ d:`M ${a.x} ${a.y+CARD_H/2} L ${b.x} ${b.y-CARD_H/2}`, stroke:cat.accent, 'stroke-width':1, fill:'none', 'stroke-dasharray':'2 4', opacity:.25 }));
+        }
+      });
+      DATA.forEach((cat,ci)=>cat.items.forEach((svc,si)=>{
+        const id=`${ci}-${si}`;
+        const dim = hl && !hl.has(id) ? .28 : 1;
+        drawCard(nodes, id, svc, cat.accent, dim, hl && hl.has(id));
+      }));
+    } else {
+      layoutGraphCards();
+      // relationship edges — dotted, curved, AWS-doc-style
+      relPairs.forEach(([a,b])=>{
+        const pa=pos[a], pb=pos[b];
+        const active = hl && (hl.has(a)&&hl.has(b));
+        const dim = hl ? (active?1:.06) : .75;
+        const col = active ? '#4DD9C5' : '#5a6a80';
+        const A = edgeAnchor(pa, pa.x<pb.x?'right':'left');
+        const B = edgeAnchor(pb, pb.x<pa.x?'right':'left');
+        edges.appendChild(el('path',{ d: curve(A.x,A.y,B.x,B.y,0.5), stroke:col, 'stroke-width':active?2:1.3, fill:'none', 'stroke-dasharray': active?'none':'3 3', opacity:dim }));
+      });
+      DATA.forEach((cat,ci)=>cat.items.forEach((svc,si)=>{
+        const id=`${ci}-${si}`;
+        const dim = hl && !hl.has(id) ? .22 : 1;
+        drawCard(nodes, id, svc, cat.accent, dim, hl && hl.has(id));
+      }));
+    }
+    applyTransform();
+    return;
+  }
+
+  // ---------- circle style (original orbit look) ----------
+  if(mode==='radial'){
+    layoutRadialCircle();
+    // AWS -> category edges
+    DATA.forEach((cat,ci)=>{
+      const c = catPos[ci];
+      edges.appendChild(el('path',{ d: curve(0,0,c.x,c.y), stroke:cat.accent, 'stroke-width':4.5, fill:'none', 'stroke-linecap':'round', opacity:.85 }));
+      // category -> service edges
+      cat.items.forEach((svc,si)=>{
+        const p = pos[`${ci}-${si}`];
+        edges.appendChild(el('path',{ d: curve(c.x,c.y,p.x,p.y), stroke:cat.accent, 'stroke-width':2, fill:'none', 'stroke-linecap':'round', opacity:.45 }));
+      });
+    });
+    // category labels
+    DATA.forEach((cat,ci)=>{
+      const c = catPos[ci];
+      const g = el('g',{ transform:`translate(${c.x},${c.y})`, class:'catnode', style:'cursor:pointer' });
+      const t = el('text',{ x:0, y:0, fill:cat.accent, 'font-size':16, 'font-weight':700, 'text-anchor':'middle', 'dominant-baseline':'middle', 'font-family':'var(--sans)' });
+      t.textContent = cat.cat;
+      g.appendChild(t);
+      nodes.appendChild(g);
+    });
+    // service labels
+    DATA.forEach((cat,ci)=>cat.items.forEach((svc,si)=>{
+      const id=`${ci}-${si}`; const p=pos[id];
+      const right = p.x>=0;
+      const g = el('g',{ transform:`translate(${p.x},${p.y})`, style:'cursor:pointer' });
+      g.setAttribute('data-id', id);
+      const dim = hl && !hl.has(id) ? .28 : 1;
+      const t = el('text',{ x: right?8:-8, y:0, fill:'#e7ecf2', 'font-size':13, 'text-anchor': right?'start':'end', 'dominant-baseline':'middle', 'font-family':'var(--mono)', opacity:dim });
+      t.textContent = svc.name;
+      const dot = el('circle',{ cx:0, cy:0, r:3.5, fill:cat.accent, opacity:dim });
+      g.appendChild(dot); g.appendChild(t);
+      g.addEventListener('click',(e)=>{e.stopPropagation();openPanel(id);});
+      nodes.appendChild(g);
+    }));
+  } else {
+    layoutGraphCircle();
+    // relationship chords
+    relPairs.forEach(([a,b])=>{
+      const pa=pos[a], pb=pos[b];
+      const active = hl && (hl.has(a)&&hl.has(b));
+      const dim = hl ? (active?1:.08) : .32;
+      const col = active ? '#4DD9C5' : '#3a4757';
+      edges.appendChild(el('path',{ d: curve(pa.x,pa.y,pb.x,pb.y,0.18), stroke:col, 'stroke-width':active?2:1.2, fill:'none', opacity:dim }));
+    });
+    // service nodes
+    DATA.forEach((cat,ci)=>cat.items.forEach((svc,si)=>{
+      const id=`${ci}-${si}`; const p=pos[id];
+      const right = p.x>=0;
+      const dim = hl && !hl.has(id) ? .25 : 1;
+      const g = el('g',{ transform:`translate(${p.x},${p.y}) rotate(${p.ang*180/Math.PI + (right?0:180)})`, style:'cursor:pointer' });
+      const t = el('text',{ x: right?10:-10, y:0, fill: (hl&&hl.has(id))?cat.accent:'#c9d3de', 'font-size':12, 'text-anchor': right?'start':'end', 'dominant-baseline':'middle', 'font-family':'var(--mono)', opacity:dim });
+      t.textContent = svc.name;
+      const dot = el('circle',{ cx:0, cy:0, r:4, fill:cat.accent, opacity:dim, transform:`rotate(${-(p.ang*180/Math.PI + (right?0:180))})` });
+      g.appendChild(dot); g.appendChild(t);
+      g.addEventListener('click',(e)=>{e.stopPropagation();openPanel(id);});
+      nodes.appendChild(g);
+    }));
+  }
+
+  // AWS center node (drawn last, on top) — only meaningful in circle style
+  const cg = el('g',{});
+  const rectW=190, rectH=52;
+  cg.appendChild(el('rect',{ x:-rectW/2, y:-rectH/2, width:rectW, height:rectH, rx:12, fill:'#0f1520', stroke:'#4d5a6c', 'stroke-width':1.5 }));
+  const ct = el('text',{ x:0, y:0, fill:'#e7ecf2', 'font-size':18, 'font-weight':700, 'text-anchor':'middle', 'dominant-baseline':'middle', 'font-family':'var(--sans)' });
+  ct.textContent='Amazon Web Services';
+  cg.appendChild(ct); vp.appendChild(cg);
+
+  applyTransform();
+}
+
+// ---------- pan / zoom ----------
+let tx=0, ty=0, scale=1;
+function applyTransform(){ if(vp) vp.setAttribute('transform',`translate(${tx},${ty}) scale(${scale})`); }
+function fit(){
+  const w=stage.clientWidth, h=stage.clientHeight;
+  if(visualStyle==='cards'){
+    // compute actual bounding box of current positions so scale matches the grid layout, not a hardcoded guess
+    let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+    Object.values(pos).forEach(p=>{
+      minX=Math.min(minX,p.x-CARD_W/2); maxX=Math.max(maxX,p.x+CARD_W/2);
+      minY=Math.min(minY,p.y-CARD_H/2-40); maxY=Math.max(maxY,p.y+CARD_H/2);
+    });
+    const contentW = (maxX-minX)||1, contentH=(maxY-minY)||1;
+    scale = Math.min(w/contentW, h/contentH) * 0.9;
+    scale = Math.max(.25, Math.min(scale, 1.4));
+    tx = w/2 - (minX+maxX)/2*scale; ty = h/2 - (minY+maxY)/2*scale;
+  } else {
+    // circle style: fixed reference sizes calibrated to the orbit layout radii
+    scale = Math.min(w,h)/ (mode==='radial'?1500:1300);
+    scale = Math.max(.35, Math.min(scale, 1));
+    tx = w/2; ty = h/2;
+  }
+  applyTransform();
+}
+let dragging=false, sx, sy;
+stage.addEventListener('mousedown',(e)=>{ dragging=true; sx=e.clientX-tx; sy=e.clientY-ty; });
+window.addEventListener('mousemove',(e)=>{ if(!dragging)return; tx=e.clientX-sx; ty=e.clientY-sy; applyTransform(); });
+window.addEventListener('mouseup',()=>dragging=false);
+stage.addEventListener('wheel',(e)=>{ e.preventDefault(); const f=e.deltaY<0?1.1:1/1.1; const rect=stage.getBoundingClientRect(); const mx=e.clientX-rect.left, my=e.clientY-rect.top; tx = mx-(mx-tx)*f; ty = my-(my-ty)*f; scale*=f; scale=Math.max(.2,Math.min(scale,3)); applyTransform(); },{passive:false});
+// touch pan
+let lastT=null;
+stage.addEventListener('touchstart',(e)=>{ if(e.touches.length===1){ lastT={x:e.touches[0].clientX-tx,y:e.touches[0].clientY-ty}; } },{passive:true});
+stage.addEventListener('touchmove',(e)=>{ if(e.touches.length===1&&lastT){ tx=e.touches[0].clientX-lastT.x; ty=e.touches[0].clientY-lastT.y; applyTransform(); } },{passive:true});
+document.getElementById('zin').addEventListener('click',()=>{ scale=Math.min(scale*1.2,3); applyTransform(); });
+document.getElementById('zout').addEventListener('click',()=>{ scale=Math.max(scale/1.2,.2); applyTransform(); });
+document.getElementById('zfit').addEventListener('click',fit);
+
+// ---------- detail panel ----------
+const panel=document.getElementById('panel'), scrim=document.getElementById('scrim');
+function fillList(boxId,listId,items){
+  const box=document.getElementById(boxId), list=document.getElementById(listId);
+  box.open=false; // siempre colapsado al abrir un servicio
+  if(items&&items.length){ box.style.display='block'; list.innerHTML=items.map(t=>`<li>${t}</li>`).join(''); }
+  else { box.style.display='none'; list.innerHTML=''; }
+}
+function openPanel(id){
+  selectedId=id; const c=byId[id];
+  document.getElementById('pCat').textContent=c.cat;
+  document.getElementById('pCat').style.color=c.accent;
+  document.getElementById('pName').textContent=c.name;
+  document.getElementById('pDesc').textContent=c.d;
+  document.getElementById('pLong').innerHTML=c.long||'';
+  fillList('pUse','pUseList',c.use);
+  fillList('pAvoid','pAvoidList',c.avoid);
+  const conBlk=document.getElementById('pConceptsBlk'), conBox=document.getElementById('pConcepts');
+  conBlk.open=false;
+  if(c.concepts&&c.concepts.length){ conBlk.style.display='block'; conBox.innerHTML=c.concepts.map(k=>`<dt>${k.t}</dt><dd>${k.d}</dd>`).join(''); }
+  else { conBlk.style.display='none'; conBox.innerHTML=''; }
+  panel.style.setProperty('--pc-accent',c.accent);
+  const rels=relatedIds(id);
+  const relLbl=document.getElementById('pRelLbl'), relBox=document.getElementById('pRel');
+  if(rels.length){ relLbl.style.display='block'; relBox.innerHTML=rels.map(rid=>`<span class="chipr" data-id="${rid}">${byId[rid].name}</span>`).join(''); relBox.querySelectorAll('.chipr').forEach(ch=>ch.addEventListener('click',()=>openPanel(ch.dataset.id))); }
+  else { relLbl.style.display='none'; relBox.innerHTML=''; }
+  document.getElementById('pLink').href=c.link;
+  document.getElementById('pNotes').value=notes[id]||'';
+  panel.classList.add('open'); scrim.classList.add('open');
+  render();
+}
+function closePanel(){ panel.classList.remove('open'); scrim.classList.remove('open'); selectedId=null; render(); }
+document.getElementById('panelClose').addEventListener('click',closePanel);
+scrim.addEventListener('click',closePanel);
+document.getElementById('pNotes').addEventListener('input',(e)=>{ if(!selectedId)return; notes[selectedId]=e.target.value; saveNotes(); });
+
+// ---------- modes (radial vs relaciones) ----------
+document.querySelectorAll('.modebtn[data-mode]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.modebtn[data-mode]').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  mode=b.dataset.mode;
+  document.getElementById('modehint').textContent = mode==='radial'
+    ? 'arrastrá para mover · rueda para zoom · click en un servicio para ver detalle'
+    : 'cada línea es una relación real entre servicios · click en uno para resaltar sus conexiones';
+  selectedId=null; render(); fit();
+}));
+
+// ---------- visual style (círculo vs cards) ----------
+document.querySelectorAll('.modebtn[data-style]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.modebtn[data-style]').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  visualStyle=b.dataset.style;
+  selectedId=null; render(); fit();
+}));
+
+// deselect on background click
+svg.addEventListener('click',()=>{ if(selectedId){ selectedId=null; render(); }});
+
+// ---------- init ----------
+(async function init(){
+  await loadState();
+  render();
+  fit();
+})();
+window.addEventListener('resize',()=>{ render(); });
+</script>
+</body>
+</html>
