@@ -87,11 +87,11 @@ export default function DashboardView({ onStudy, onNavigate }: Props) {
 
 function StudySteps({ onNavigate }: { onNavigate: (v: View) => void }) {
   return (
-    <div className="mb-[34px] flex items-stretch">
+    <div className="mb-[34px] flex flex-wrap items-stretch gap-y-2">
       <button
         type="button"
         onClick={() => onNavigate("dashboard")}
-        className="flex items-center gap-[10px] bg-[#1d5ff5] py-3 pl-5 pr-[26px]"
+        className="flex items-center gap-[10px] bg-[#1d5ff5] py-3 pl-5 pr-[26px] max-sm:w-full max-sm:pr-5"
         style={{ clipPath: "polygon(0 0,calc(100% - 16px) 0,100% 50%,calc(100% - 16px) 100%,0 100%)" }}
       >
         <span className="text-[26px] font-black text-white">1</span>
@@ -100,7 +100,7 @@ function StudySteps({ onNavigate }: { onNavigate: (v: View) => void }) {
       <button
         type="button"
         onClick={() => onNavigate("practice")}
-        className="-ml-[14px] flex items-center gap-[10px] bg-[#1b2740] py-3 pl-[30px] pr-[26px] hover:bg-[#233350]"
+        className="-ml-[14px] flex items-center gap-[10px] bg-[#1b2740] py-3 pl-[30px] pr-[26px] hover:bg-[#233350] max-sm:ml-0 max-sm:w-full max-sm:pl-5 max-sm:pr-5"
         style={{
           clipPath: "polygon(16px 0,calc(100% - 16px) 0,100% 50%,calc(100% - 16px) 100%,16px 100%,0 50%)",
         }}
@@ -109,7 +109,7 @@ function StudySteps({ onNavigate }: { onNavigate: (v: View) => void }) {
         <span className="text-[15px] font-bold text-ink-2">Practicar</span>
       </button>
       <div
-        className="-ml-[14px] flex cursor-not-allowed items-center gap-[10px] bg-[#1b2740] px-[30px] py-3 opacity-60"
+        className="-ml-[14px] flex cursor-not-allowed items-center gap-[10px] bg-[#1b2740] px-[30px] py-3 opacity-60 max-sm:ml-0 max-sm:w-full max-sm:px-5"
         style={{ clipPath: "polygon(16px 0,100% 0,100% 100%,16px 100%,0 50%)" }}
         title="Próximamente"
       >

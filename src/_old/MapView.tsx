@@ -35,8 +35,8 @@ export default function MapView({ focus, onFocusChange, selectedId, onSelect }: 
   const fit = useCallback(() => {
     const stage = stageRef.current;
     if (!stage) return;
-    setTransform(fitTransform(focus, stage.clientWidth, stage.clientHeight));
-  }, [focus, setTransform]);
+    setTransform(fitTransform(layout, stage.clientWidth, stage.clientHeight));
+  }, [layout, setTransform]);
 
   useEffect(() => {
     fit();
@@ -117,6 +117,7 @@ export default function MapView({ focus, onFocusChange, selectedId, onSelect }: 
                 {DATA.map((cat, ci) => {
                   const c = catPos[ci];
                   const on = catInFocus(focus, cat);
+                  if (focus.kind !== "all" && !on) return null;
                   return (
                     <line
                       key={`spoke-${ci}`}
@@ -126,7 +127,7 @@ export default function MapView({ focus, onFocusChange, selectedId, onSelect }: 
                       y2={c.y}
                       stroke={cat.accent}
                       strokeWidth={focus.kind !== "all" && on ? 2 : 1}
-                      opacity={focus.kind === "all" ? 0.5 : on ? 0.9 : 0.25}
+                      opacity={focus.kind === "all" ? 0.5 : 0.9}
                     />
                   );
                 })}
@@ -140,7 +141,7 @@ export default function MapView({ focus, onFocusChange, selectedId, onSelect }: 
                     return (
                       <path
                         key={`twig-${ci}-${si}`}
-                        d={curve(c.x, c.y, p.x, p.y, 0.65)}
+                        d={curve(c.x, c.y, p.x, p.y)}
                         fill="none"
                         stroke={cat.accent}
                         strokeWidth={focus.kind === "all" ? 1 : 1.3}
@@ -179,6 +180,7 @@ export default function MapView({ focus, onFocusChange, selectedId, onSelect }: 
               {DATA.map((cat, ci) => {
                 const c = catPos[ci];
                 const on = catInFocus(focus, cat);
+                if (focus.kind !== "all" && !on) return null;
                 const isSingleCat = focus.kind === "category" && focus.name === cat.cat;
                 return (
                   <g

@@ -6,7 +6,7 @@ import CatalogView from "./CatalogView";
 import CategoryFilters from "./CategoryFilters";
 import DashboardView from "./DashboardView";
 import Header from "./Header";
-import MapView from "./MapView";
+import MindMapView from "./MindMapView";
 import PracticeView from "./PracticeView";
 
 export default function AwsStudyApp() {
@@ -35,15 +35,16 @@ export default function AwsStudyApp() {
       }}
     >
       <Header view={view} onNavigate={navigate}>
-        {(view === "map" || view === "catalog") && (
-          <CategoryFilters focus={focus} onFocusChange={setFocus} />
-        )}
+        <CategoryFilters
+          focus={focus}
+          onFocusChange={view === "map" || view === "catalog" ? setFocus : goStudy}
+        />
       </Header>
 
       {view === "dashboard" && <DashboardView onStudy={goStudy} onNavigate={navigate} />}
 
       {view === "map" && (
-        <MapView focus={focus} onFocusChange={setFocus} selectedId={selectedId} onSelect={setSelectedId} />
+        <MindMapView focus={focus} onFocusChange={setFocus} selectedId={selectedId} onSelect={setSelectedId} />
       )}
 
       {view === "catalog" && (
