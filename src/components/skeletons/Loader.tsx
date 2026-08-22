@@ -22,8 +22,8 @@ export default function Loader({ label = "LOADING" }: Props) {
       className="flex h-screen w-full flex-col items-center justify-center gap-20 bg-bg bg-repeat"
       style={{
         backgroundImage:
-          "linear-gradient(#141f36 1px,transparent 1px),linear-gradient(90deg,#141f36 1px,transparent 1px)",
-        backgroundSize: "56px 56px",
+          "linear-gradient(#1c2b4a 1px,transparent 1px),linear-gradient(90deg,#1c2b4a 1px,transparent 1px),linear-gradient(#16233c 1px,transparent 1px),linear-gradient(90deg,#16233c 1px,transparent 1px)",
+        backgroundSize: "73px 73px,73px 73px,18.25px 18.25px,18.25px 18.25px",
       }}
     >
       <div className="relative h-[280px] w-[560px] max-w-[85vw]">

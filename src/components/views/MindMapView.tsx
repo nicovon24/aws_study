@@ -193,7 +193,8 @@ function Inner({
             onInit={handleInit}
             onPaneClick={() => onSelect(null)}
           >
-            <Background color="#141f36" gap={56} />
+            <Background id="grid-minor" color="#16233c" gap={18.25} />
+            <Background id="grid-major" color="#1c2b4a" gap={73} />
             <Controls showInteractive={false} />
           </ReactFlow>
         ) : (

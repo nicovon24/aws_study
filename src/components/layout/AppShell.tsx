@@ -21,8 +21,8 @@ export default function AppShell({ drawerContent, children }: Props) {
       className="flex h-screen flex-col bg-bg bg-repeat text-ink"
       style={{
         backgroundImage:
-          "linear-gradient(#141f36 1px,transparent 1px),linear-gradient(90deg,#141f36 1px,transparent 1px)",
-        backgroundSize: "56px 56px",
+          "linear-gradient(#1c2b4a 1px,transparent 1px),linear-gradient(90deg,#1c2b4a 1px,transparent 1px),linear-gradient(#16233c 1px,transparent 1px),linear-gradient(90deg,#16233c 1px,transparent 1px)",
+        backgroundSize: "73px 73px,73px 73px,18.25px 18.25px,18.25px 18.25px",
       }}
     >
       <Header view={view} onNavigate={(v) => router.push(VIEW_PATH[v])}>

@@ -25,9 +25,15 @@ body {
 body {
   background-color: var(--color-bg);
   background-image:
-    linear-gradient(#141f36 1px, transparent 1px),
-    linear-gradient(90deg, #141f36 1px, transparent 1px);
-  background-size: 56px 56px;
+    linear-gradient(#1c2b4a 1px, transparent 1px),
+    linear-gradient(90deg, #1c2b4a 1px, transparent 1px),
+    linear-gradient(#16233c 1px, transparent 1px),
+    linear-gradient(90deg, #16233c 1px, transparent 1px);
+  background-size:
+    73px 73px,
+    73px 73px,
+    18.25px 18.25px,
+    18.25px 18.25px;
   color: var(--color-ink);
   font-family: var(--font-sans);
 }
