@@ -1,0 +1,97 @@
+"use client";
+
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect } from "react";
+import { ARCHITECTURES } from "@/data/architectures";
+import { MermaidDiagram } from "@/components/diagrams";
+
+type Props = {
+  selectedId: string | null;
+  onSelect: (id: string | null) => void;
+};
+
+export default function ArchitecturesView({ selectedId, onSelect }: Props) {
+  const active = ARCHITECTURES.find((a) => a.id === selectedId) ?? null;
+
+  useEffect(() => {
+    if (!active) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onSelect(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [active, onSelect]);
+
+  return (
+    <main className="flex-1 overflow-auto px-10 py-8 pb-[60px]">
+      <div className="mx-auto max-w-[1180px]">
+        <div className="mb-[6px] font-mono text-xs uppercase tracking-[.12em] text-accent">
+          patrones de referencia
+        </div>
+        <h1 className="mb-1 text-[34px] font-bold tracking-tight">Arquitecturas</h1>
+        <p className="mb-7 max-w-[620px] text-[15px] text-muted">
+          Diagramas de los patrones más comunes del examen: cómo se conectan los servicios entre sí en
+          una arquitectura real.
+        </p>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {ARCHITECTURES.map((a) => (
+            <button
+              key={a.id}
+              type="button"
+              onClick={() => onSelect(a.id)}
+              className="flex flex-col gap-3 rounded-lg border border-line bg-panel-2 px-[22px] pb-[18px] pt-5 text-left transition-colors hover:border-accent/50"
+            >
+              <div className="text-[17px] font-bold leading-[1.3]">{a.title}</div>
+              <p className="text-[13px] leading-[1.5] text-muted">{a.description}</p>
+              <MermaidDiagram chart={a.mermaid} className="h-32 w-full overflow-hidden [&_svg]:h-full [&_svg]:w-full" />
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {active && (
+          <motion.div
+            key="backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            onClick={() => onSelect(null)}
+            className="fixed inset-0 z-90 bg-black/50"
+          >
+            <motion.div
+              key="modal"
+              initial={{ opacity: 0, scale: 0.96, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 8 }}
+              transition={{ duration: 0.18, ease: "easeOut" }}
+              onClick={(e) => e.stopPropagation()}
+              className="fixed left-1/2 top-1/2 z-95 max-h-[85vh] w-[min(880px,92vw)] -translate-x-1/2 -translate-y-1/2 overflow-auto rounded-lg border border-line bg-panel-2 px-6 py-5 shadow-[0_20px_60px_rgba(5,8,15,.6)]"
+            >
+              <button
+                type="button"
+                onClick={() => onSelect(null)}
+                aria-label="cerrar"
+                className="absolute right-4 top-4 text-[1.1rem] text-muted hover:text-ink"
+              >
+                ✕
+              </button>
+              {active && (
+                <>
+                  <h2 className="mb-1 pr-8 text-xl font-bold">{active.title}</h2>
+                  <p className="mb-5 max-w-[720px] text-sm text-muted">{active.description}</p>
+                  <MermaidDiagram
+                    chart={active.mermaid}
+                    className="min-h-64 w-full [&_svg]:mx-auto [&_svg]:max-w-full"
+                  />
+                </>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </main>
+  );
+}

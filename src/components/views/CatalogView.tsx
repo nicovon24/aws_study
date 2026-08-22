@@ -6,9 +6,8 @@ import DATA from "@/data/services";
 import { DOMAIN_META, domainOf } from "@/lib/domains";
 import { byId } from "@/lib/graph";
 import type { MapFocus } from "@/lib/types";
-import AnimatedFilterSidebar from "./AnimatedFilterSidebar";
-import CatalogSkeleton from "./CatalogSkeleton";
-import DetailPanel from "./DetailPanel";
+import { AnimatedFilterSidebar, DetailPanel } from "@/components/shared";
+import { CatalogSkeleton } from "@/components/skeletons";
 
 type Props = {
   focus: MapFocus;

@@ -27,7 +27,7 @@ export type Node = Service & {
   accent: string;
 };
 
-export type View = "dashboard" | "map" | "catalog" | "practice";
+export type View = "dashboard" | "map" | "catalog" | "practice" | "architectures";
 
 /**
  * What the Map (and Catalog, and Practice scope picker) currently shows:

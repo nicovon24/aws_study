@@ -3,7 +3,7 @@
 import "reactflow/dist/style.css";
 
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import ReactFlow, {
   Background,
   BezierEdge,
@@ -15,14 +15,12 @@ import ReactFlow, {
   type NodeProps,
   Position,
   ReactFlowProvider,
-  useReactFlow,
 } from "reactflow";
+import { AnimatedFilterSidebar, DetailPanel } from "@/components/shared";
+import { MindMapSkeleton } from "@/components/skeletons";
+import { useMindMapLayout } from "@/hooks";
 import { byId } from "@/lib/graph";
-import { computeMindLayout, ROOT_W, type MindLayout } from "@/lib/mindmapLayout";
 import type { MapFocus } from "@/lib/types";
-import AnimatedFilterSidebar from "./AnimatedFilterSidebar";
-import DetailPanel from "./DetailPanel";
-import MindMapSkeleton from "./MindMapSkeleton";
 
 type Props = {
   focus: MapFocus;
@@ -126,47 +124,15 @@ function Inner({
   showFilters,
   onToggleFilters,
 }: Props & { showFilters: boolean; onToggleFilters: () => void }) {
-  const [layout, setLayout] = useState<MindLayout | null>(null);
-  const { setCenter } = useReactFlow();
+  const { layout, recenter } = useMindMapLayout(focus);
 
-  useEffect(() => {
-    let cancelled = false;
-    setLayout(null);
-    computeMindLayout(focus).then((l) => {
-      if (!cancelled) setLayout(l);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [focus]);
-
-  // Center on the root node itself rather than fitting the whole tree: an
-  // asymmetric left/right split otherwise pulls the visual center off "aws".
-  // The zoom is derived from the layout's real bounding box against the
-  // pane's actual pixel size, so "close" means the same thing regardless of
-  // window size or how wide/short the tree happens to be for this focus.
-  const recenter = useCallback(() => {
-    if (!layout) return;
-    const pane = document.querySelector(".react-flow__pane") as HTMLElement | null;
-    const w = pane?.clientWidth ?? 1200;
-    const h = pane?.clientHeight ?? 800;
-    const xs = layout.nodes.map((n) => n.x);
-    const ys = layout.nodes.map((n) => n.y);
-    const treeW = Math.max(...xs.map((x, i) => x + layout.nodes[i].width)) - Math.min(...xs);
-    const treeH = Math.max(...ys.map((y, i) => y + layout.nodes[i].height)) - Math.min(...ys);
-    const padding = 1.15;
-    const zoom = Math.max(0.15, Math.min(w / (treeW * padding), h / (treeH * padding), 1.4));
-    setCenter(ROOT_W / 2, 0, { zoom, duration: 200 });
-  }, [layout, setCenter]);
-
-  useEffect(() => {
-    if (!layout) return;
-    const id = requestAnimationFrame(recenter);
-    return () => cancelAnimationFrame(id);
-    // Only the layout itself should trigger this on its own — a sidebar toggle
-    // recenters via its own onAnimationComplete once the width settles instead.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [layout]);
+  // React Flow only knows its own pane size after it finishes mounting/measuring
+  // (it remounts each time `layout` flips from null back to a value, since the
+  // skeleton swaps in during that gap) — `onInit` fires exactly when React
+  // Flow's viewport is ready, so that's the reliable hook for the first mount.
+  const handleInit = useCallback(() => {
+    requestAnimationFrame(recenter);
+  }, [recenter]);
 
   const { nodes, edges } = useMemo<{ nodes: FlowNode<NodeData>[]; edges: Edge[] }>(() => {
     if (!layout) return { nodes: [], edges: [] };
@@ -224,6 +190,7 @@ function Inner({
             minZoom={0.1}
             maxZoom={2}
             nodesConnectable={false}
+            onInit={handleInit}
             onPaneClick={() => onSelect(null)}
           >
             <Background color="#141f36" gap={56} />

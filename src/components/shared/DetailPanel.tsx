@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
+import { architecturesUsing } from "@/data/architectures";
 import { byId, relatedIds } from "@/lib/graph";
 import type { Node } from "@/lib/types";
 
@@ -14,6 +16,7 @@ export default function DetailPanel({ node, onSelect, onClose }: Props) {
   // Remount the folds on every service so they always start collapsed.
   const foldKey = node?.id ?? "none";
   const rels = node ? relatedIds(node.id) : [];
+  const archs = node ? architecturesUsing(node.name) : [];
 
   useEffect(() => {
     if (!node) return;
@@ -114,6 +117,25 @@ export default function DetailPanel({ node, onSelect, onClose }: Props) {
                     >
                       {byId[rid].name}
                     </button>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {archs.length > 0 && (
+              <>
+                <span className="mb-[.35rem] mt-3 block text-[.72rem] uppercase tracking-[.04em] text-muted-2">
+                  Aparece en estas arquitecturas
+                </span>
+                <div className="mb-[.9rem] flex flex-col gap-1">
+                  {archs.map((a) => (
+                    <Link
+                      key={a.id}
+                      href={`/arquitecturas?id=${encodeURIComponent(a.id)}`}
+                      className="rounded border border-line px-2.5 py-1.5 font-sans text-[.78rem] text-ink-2 hover:border-[var(--pc-accent)] hover:text-[var(--pc-accent)]"
+                    >
+                      {a.title}
+                    </Link>
                   ))}
                 </div>
               </>

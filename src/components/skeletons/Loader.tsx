@@ -60,7 +60,7 @@ export default function Loader({ label = "LOADING" }: Props) {
         </div>
       </div>
 
-      <div className="h-[10px] w-[70vw] max-w-[900px] overflow-hidden rounded-full bg-line">
+      <div className="h-[10px] w-4/5 max-w-[1600px] overflow-hidden rounded-full bg-line">
         <div className="loader-bar h-full w-full" />
       </div>
     </div>

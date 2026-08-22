@@ -15,6 +15,7 @@ const TABS: { key: View; label: string }[] = [
   { key: "dashboard", label: "Home" },
   { key: "catalog", label: "Catálogo" },
   { key: "map", label: "Mapa" },
+  { key: "architectures", label: "Arquitecturas" },
   { key: "practice", label: "Practicar" },
 ];
 
