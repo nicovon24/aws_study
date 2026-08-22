@@ -2,7 +2,8 @@
 
 import "reactflow/dist/style.css";
 
-import { useEffect, useMemo, useState } from "react";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import ReactFlow, {
   Background,
   BezierEdge,
@@ -19,8 +20,9 @@ import ReactFlow, {
 import { byId } from "@/lib/graph";
 import { computeMindLayout, ROOT_W, type MindLayout } from "@/lib/mindmapLayout";
 import type { MapFocus } from "@/lib/types";
-import CategoryFilters from "./CategoryFilters";
+import AnimatedFilterSidebar from "./AnimatedFilterSidebar";
 import DetailPanel from "./DetailPanel";
+import MindMapSkeleton from "./MindMapSkeleton";
 
 type Props = {
   focus: MapFocus;
@@ -129,6 +131,7 @@ function Inner({
 
   useEffect(() => {
     let cancelled = false;
+    setLayout(null);
     computeMindLayout(focus).then((l) => {
       if (!cancelled) setLayout(l);
     });
@@ -137,13 +140,13 @@ function Inner({
     };
   }, [focus]);
 
-  useEffect(() => {
+  // Center on the root node itself rather than fitting the whole tree: an
+  // asymmetric left/right split otherwise pulls the visual center off "aws".
+  // The zoom is derived from the layout's real bounding box against the
+  // pane's actual pixel size, so "close" means the same thing regardless of
+  // window size or how wide/short the tree happens to be for this focus.
+  const recenter = useCallback(() => {
     if (!layout) return;
-    // Center on the root node itself rather than fitting the whole tree: an
-    // asymmetric left/right split otherwise pulls the visual center off "aws".
-    // The zoom is derived from the layout's real bounding box against the
-    // pane's actual pixel size, so "close" means the same thing regardless of
-    // window size or how wide/short the tree happens to be for this focus.
     const pane = document.querySelector(".react-flow__pane") as HTMLElement | null;
     const w = pane?.clientWidth ?? 1200;
     const h = pane?.clientHeight ?? 800;
@@ -153,9 +156,17 @@ function Inner({
     const treeH = Math.max(...ys.map((y, i) => y + layout.nodes[i].height)) - Math.min(...ys);
     const padding = 1.15;
     const zoom = Math.max(0.15, Math.min(w / (treeW * padding), h / (treeH * padding), 1.4));
-    const id = requestAnimationFrame(() => setCenter(ROOT_W / 2, 0, { zoom, duration: 200 }));
+    setCenter(ROOT_W / 2, 0, { zoom, duration: 200 });
+  }, [layout, setCenter]);
+
+  useEffect(() => {
+    if (!layout) return;
+    const id = requestAnimationFrame(recenter);
     return () => cancelAnimationFrame(id);
-  }, [layout, showFilters, setCenter]);
+    // Only the layout itself should trigger this on its own — a sidebar toggle
+    // recenters via its own onAnimationComplete once the width settles instead.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layout]);
 
   const { nodes, edges } = useMemo<{ nodes: FlowNode<NodeData>[]; edges: Edge[] }>(() => {
     if (!layout) return { nodes: [], edges: [] };
@@ -196,38 +207,39 @@ function Inner({
 
   return (
     <div className="flex min-w-0 flex-1">
-      {showFilters && (
-        <aside className="hidden w-59 shrink-0 overflow-auto border-r border-line bg-panel px-3 py-4 md:block">
-          <CategoryFilters focus={focus} onFocusChange={onFocusChange} />
-        </aside>
-      )}
+      <AnimatedFilterSidebar
+        focus={focus}
+        onFocusChange={onFocusChange}
+        show={showFilters}
+        onAnimationComplete={recenter}
+      />
       <div className="relative min-w-0 flex-1">
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
-          proOptions={{ hideAttribution: true }}
-          minZoom={0.1}
-          maxZoom={2}
-          nodesConnectable={false}
-          onPaneClick={() => onSelect(null)}
-        >
-          <Background color="#141f36" gap={56} />
-          <Controls showInteractive={false} />
-        </ReactFlow>
+        {layout ? (
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            proOptions={{ hideAttribution: true }}
+            minZoom={0.1}
+            maxZoom={2}
+            nodesConnectable={false}
+            onPaneClick={() => onSelect(null)}
+          >
+            <Background color="#141f36" gap={56} />
+            <Controls showInteractive={false} />
+          </ReactFlow>
+        ) : (
+          <MindMapSkeleton />
+        )}
 
         <button
           type="button"
           onClick={onToggleFilters}
           title={showFilters ? "ocultar categorías" : "mostrar categorías"}
-          className="absolute left-3 top-3 z-10 hidden h-8 w-9 items-center justify-center overflow-hidden rounded-lg border border-line bg-panel-2 text-muted-2 hover:text-ink md:flex"
+          className="absolute left-3 top-3 z-10 hidden h-8 w-9 items-center justify-center rounded-lg border border-line bg-panel-2 text-muted-2 hover:text-ink md:flex"
         >
-          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="4" width="18" height="16" rx="3" />
-            <line x1="9" y1="4" x2="9" y2="20" />
-            <path d={showFilters ? "M7 9l-2.5 3 2.5 3" : "M6.5 9l2.5 3-2.5 3"} />
-          </svg>
+          {showFilters ? <PanelLeftClose size={17} /> : <PanelLeftOpen size={17} />}
         </button>
 
         {focus.kind !== "all" && (

@@ -1,11 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import DATA from "@/data/services";
 import { DOMAIN_META, domainOf } from "@/lib/domains";
 import { byId } from "@/lib/graph";
 import type { MapFocus } from "@/lib/types";
-import CategoryFilters from "./CategoryFilters";
+import AnimatedFilterSidebar from "./AnimatedFilterSidebar";
+import CatalogSkeleton from "./CatalogSkeleton";
 import DetailPanel from "./DetailPanel";
 
 type Props = {
@@ -23,7 +25,17 @@ function catMatchesFocus(focus: MapFocus, catName: string): boolean {
 
 export default function CatalogView({ focus, onFocusChange, selectedId, onSelect }: Props) {
   const [q, setQ] = useState("");
+  const [showFilters, setShowFilters] = useState(true);
   const query = q.trim().toLowerCase();
+
+  // Filtering is actually instant here, but a brief skeleton keeps the same
+  // loading language as the mind map when switching category/domain focus.
+  const [isFiltering, setIsFiltering] = useState(false);
+  useEffect(() => {
+    setIsFiltering(true);
+    const id = setTimeout(() => setIsFiltering(false), 220);
+    return () => clearTimeout(id);
+  }, [focus]);
 
   const columns = useMemo(() => {
     let shown = 0;
@@ -48,12 +60,18 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
 
   return (
     <main className="flex min-h-0 flex-1">
-      <aside className="hidden w-59 shrink-0 overflow-auto border-r border-line bg-panel px-3 py-4 md:block">
-        <CategoryFilters focus={focus} onFocusChange={onFocusChange} />
-      </aside>
+      <AnimatedFilterSidebar focus={focus} onFocusChange={onFocusChange} show={showFilters} />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex shrink-0 flex-wrap items-center gap-3.5 border-b border-line bg-panel px-4 py-3.5 sm:px-6">
+          <button
+            type="button"
+            onClick={() => setShowFilters((v) => !v)}
+            title={showFilters ? "ocultar categorías" : "mostrar categorías"}
+            className="hidden h-8 w-9 shrink-0 items-center justify-center rounded-lg border border-line bg-panel-2 text-muted-2 hover:text-ink md:flex"
+          >
+            {showFilters ? <PanelLeftClose size={17} /> : <PanelLeftOpen size={17} />}
+          </button>
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -74,44 +92,48 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
           <div className="font-mono text-xs text-muted-2">{columns.shown} items visibles</div>
         </div>
 
-        <div className="flex-1 overflow-auto px-4 pb-10 pt-4 sm:px-6 sm:pt-5.5">
-          <div className="flex flex-col items-stretch gap-3.5 sm:flex-row sm:items-start">
-            {columns.cols.map(({ cat, items }) => (
-              <div key={cat.cat} className="flex flex-col gap-1.5 sm:w-53 sm:shrink-0">
-                <div
-                  className="mb-0.5 rounded border px-1.5 py-1.75 text-center font-mono text-[11px] uppercase tracking-[.08em]"
-                  style={{ color: cat.accent, borderColor: `${cat.accent}55`, background: `${cat.accent}12` }}
-                >
-                  {cat.cat}
+        {isFiltering ? (
+          <CatalogSkeleton />
+        ) : (
+          <div className="flex-1 overflow-auto px-4 pb-10 pt-4 sm:px-6 sm:pt-5.5">
+            <div className="flex flex-col items-stretch gap-3.5 sm:flex-row sm:items-start">
+              {columns.cols.map(({ cat, items }) => (
+                <div key={cat.cat} className="flex flex-col gap-1.5 sm:w-53 sm:shrink-0">
+                  <div
+                    className="mb-0.5 rounded border px-1.5 py-1.75 text-center font-mono text-[11px] uppercase tracking-[.08em]"
+                    style={{ color: cat.accent, borderColor: `${cat.accent}55`, background: `${cat.accent}12` }}
+                  >
+                    {cat.cat}
+                  </div>
+                  {items.map(({ id, svc }) => {
+                    const active = id === selectedId;
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => onSelect(id)}
+                        title={svc.d}
+                        style={{
+                          borderLeftColor: active ? cat.accent : `${cat.accent}88`,
+                          background: active ? `${cat.accent}14` : undefined,
+                          boxShadow: active ? `0 0 0 1px ${cat.accent}66` : undefined,
+                        }}
+                        className={`flex w-full flex-col gap-1 rounded border border-l-[3px] px-2.75 py-2.25 text-left font-sans transition-all duration-150 hover:border-muted-2/60 hover:bg-[#1b2740] ${
+                          active ? "border-transparent" : "border-line bg-panel-2"
+                        }`}
+                      >
+                        <span className="text-sm font-bold text-white">{svc.name}</span>
+                        <span className="text-[11.5px] leading-[1.45] text-muted-2">
+                          {svc.d.length > 74 ? `${svc.d.slice(0, 74)}…` : svc.d}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
-                {items.map(({ id, svc }) => {
-                  const active = id === selectedId;
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => onSelect(id)}
-                      title={svc.d}
-                      style={{
-                        borderLeftColor: active ? cat.accent : `${cat.accent}88`,
-                        background: active ? `${cat.accent}14` : undefined,
-                        boxShadow: active ? `0 0 0 1px ${cat.accent}66` : undefined,
-                      }}
-                      className={`flex w-full flex-col gap-1 rounded border border-l-[3px] px-2.75 py-2.25 text-left font-sans transition-all duration-150 hover:border-muted-2/60 hover:bg-[#1b2740] ${
-                        active ? "border-transparent" : "border-line bg-panel-2"
-                      }`}
-                    >
-                      <span className="text-sm font-bold text-white">{svc.name}</span>
-                      <span className="text-[11.5px] leading-[1.45] text-muted-2">
-                        {svc.d.length > 74 ? `${svc.d.slice(0, 74)}…` : svc.d}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <DetailPanel node={selectedId ? byId[selectedId] : null} onSelect={onSelect} onClose={() => onSelect(null)} />

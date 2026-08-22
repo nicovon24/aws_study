@@ -1,5 +1,6 @@
 "use client";
 
+import { Cloud } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { View } from "@/lib/types";
 
@@ -36,9 +37,12 @@ export default function Header({ view, onNavigate, children }: Props) {
 
   return (
     <header className="relative z-70 flex h-16 shrink-0 items-center gap-7 border-b border-line bg-panel-2 px-4 sm:px-6">
-      <div className="flex items-baseline gap-2.5">
-        <span className="text-[22px] font-black tracking-tight text-white">aws</span>
-        <span className="text-[17px] font-bold text-white">Study</span>
+      <div className="flex items-center gap-2.5">
+        <Cloud className="h-5.5 w-5.5 shrink-0 text-accent" strokeWidth={2.2} />
+        <span className="flex items-baseline gap-2.5">
+          <span className="text-[22px] font-black tracking-tight text-white">aws</span>
+          <span className="text-[17px] font-bold text-white">Study</span>
+        </span>
         <span className="hidden whitespace-nowrap rounded border border-[#6b4218] bg-[#2a1b0c] px-1.75 py-0.5 font-mono text-[11px] text-accent sm:inline">
           CLF-C02
         </span>
