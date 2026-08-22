@@ -58,22 +58,62 @@ export function usePanZoom(stageRef: React.RefObject<HTMLDivElement | null>) {
     return () => stage.removeEventListener("wheel", onWheel);
   }, [stageRef]);
 
-  // Single-finger touch pan.
+  // Single-finger pan; two-finger pinch zoom anchored at the midpoint between them.
   const touchOrigin = useRef<{ x: number; y: number } | null>(null);
+  const pinch = useRef<{ dist: number; mx: number; my: number } | null>(null);
+
+  const touchDist = (t: React.TouchList) =>
+    Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+
   const onTouchStart = useCallback(
     (e: React.TouchEvent) => {
-      if (e.touches.length !== 1) return;
-      touchOrigin.current = {
-        x: e.touches[0].clientX - transform.tx,
-        y: e.touches[0].clientY - transform.ty,
-      };
+      const stage = stageRef.current;
+      if (e.touches.length === 1) {
+        pinch.current = null;
+        touchOrigin.current = {
+          x: e.touches[0].clientX - transform.tx,
+          y: e.touches[0].clientY - transform.ty,
+        };
+      } else if (e.touches.length === 2 && stage) {
+        touchOrigin.current = null;
+        const rect = stage.getBoundingClientRect();
+        pinch.current = {
+          dist: touchDist(e.touches),
+          mx: (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left,
+          my: (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top,
+        };
+      }
     },
-    [transform.tx, transform.ty],
+    [stageRef, transform.tx, transform.ty],
   );
+
   const onTouchMove = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2 && pinch.current) {
+      const start = pinch.current;
+      const dist = touchDist(e.touches);
+      if (start.dist === 0) return;
+      const f = dist / start.dist;
+      // Consume the gesture each frame so the factor stays relative to the last move.
+      pinch.current = { ...start, dist };
+      setTransform((t) => {
+        const scale = Math.max(MIN_SCALE, Math.min(t.scale * f, MAX_SCALE));
+        const applied = scale / t.scale;
+        return {
+          scale,
+          tx: start.mx - (start.mx - t.tx) * applied,
+          ty: start.my - (start.my - t.ty) * applied,
+        };
+      });
+      return;
+    }
     if (e.touches.length !== 1 || !touchOrigin.current) return;
     const o = touchOrigin.current;
     setTransform((t) => ({ ...t, tx: e.touches[0].clientX - o.x, ty: e.touches[0].clientY - o.y }));
+  }, []);
+
+  const onTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length < 2) pinch.current = null;
+    if (e.touches.length === 0) touchOrigin.current = null;
   }, []);
 
   const zoomIn = useCallback(
@@ -91,6 +131,6 @@ export function usePanZoom(stageRef: React.RefObject<HTMLDivElement | null>) {
     dragging,
     zoomIn,
     zoomOut,
-    stageHandlers: { onMouseDown, onTouchStart, onTouchMove },
+    stageHandlers: { onMouseDown, onTouchStart, onTouchMove, onTouchEnd },
   };
 }

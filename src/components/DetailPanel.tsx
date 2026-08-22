@@ -28,11 +28,11 @@ export default function DetailPanel({ node, onSelect, onClose }: Props) {
     <>
       <div
         onClick={onClose}
-        className={`fixed inset-0 z-[55] bg-black/35 ${node ? "block" : "hidden"}`}
+        className={`fixed inset-0 z-75 bg-black/35 ${node ? "block" : "hidden"}`}
       />
       <aside
         style={{ "--pc-accent": node?.accent } as React.CSSProperties}
-        className={`fixed inset-y-0 right-0 z-[60] w-[min(380px,92vw)] overflow-y-auto border-l border-line bg-panel-2 px-[1.3rem] pb-8 pt-[1.2rem] transition-transform duration-[180ms] ease-out ${
+        className={`fixed inset-y-0 right-0 z-80 w-full overflow-y-auto border-l border-line bg-panel-2 px-5 pb-8 pt-5 transition-transform duration-180 ease-out sm:w-[min(380px,92vw)] sm:pt-[1.2rem] ${
           node ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -47,10 +47,17 @@ export default function DetailPanel({ node, onSelect, onClose }: Props) {
               ✕
             </button>
 
-            <div className="mb-[.2rem] text-[.72rem] uppercase tracking-[.05em]" style={{ color: node.accent }}>
+            <span
+              className="mb-3 inline-block rounded-[3px] border px-2 py-[3px] font-mono text-[10.5px] uppercase tracking-[.06em]"
+              style={{
+                color: node.accent,
+                borderColor: `${node.accent}55`,
+                background: `${node.accent}14`,
+              }}
+            >
               {node.cat}
-            </div>
-            <h2 className="mb-[.8rem] mt-[.1rem] font-sans text-[1.3rem]">{node.name}</h2>
+            </span>
+            <h2 className="mb-[.4rem] mt-0 font-sans text-2xl font-bold tracking-tight text-white">{node.name}</h2>
             <p className="mb-[.8rem] text-[.86rem] leading-[1.55] text-muted">{node.d}</p>
 
             {node.long && (
@@ -145,7 +152,7 @@ function Fold({
       open={open}
       onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}
       className={`fold mb-[.55rem] overflow-hidden rounded-r-md border border-line border-l-2 bg-panel ${
-        danger ? "border-l-danger" : "border-l-[var(--pc-accent,#4dd9c5)]"
+        danger ? "border-l-danger" : "border-l-[var(--pc-accent,#ec7211)]"
       }`}
     >
       <summary

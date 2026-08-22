@@ -1,51 +1,63 @@
 # aws-map
 
-Mapa interactivo de los servicios de AWS para el track Cloud Practitioner (CLF-C02).
-Migración a Next.js del prototipo original de un solo archivo (`../aws-map-v4.html`).
+App de estudio para la certificación **AWS Certified Cloud Practitioner (CLF-C02)**. Organiza ~80 servicios/conceptos de AWS en categorías y en los 4 dominios del examen, con un mapa interactivo, catálogo buscable y flashcards de repaso.
 
-## Correr
+## Stack
+
+- Next.js 16 (App Router, Turbopack), React 19, TypeScript
+- Tailwind CSS v4 (`@theme` en `src/app/globals.css`, sin config file)
+- Sin backend ni base de datos: todo el dataset vive en `src/data/`, la app corre 100% en el cliente (`ssr: false` en `src/app/page.tsx`)
+
+## Cómo correr
 
 ```bash
 npm install
 npm run dev      # http://localhost:3000
+npm run build    # build de producción
+npm run start    # sirve el build
+npm run lint
 ```
 
 ## Estructura
 
-```
+```text
 src/
   app/
-    layout.tsx        raíz del App Router + metadata
-    page.tsx          carga AwsMap solo en cliente
-    globals.css       Tailwind v4 + tokens de tema + estilos de <details>
+    page.tsx          # carga AwsStudyApp en el cliente + loader inicial
+    globals.css        # theme de Tailwind, scrollbars, animaciones
   components/
-    AwsMap.tsx        estado (modo, estilo, selección) y todo el SVG
-    Titlebar.tsx      barra superior y botones de modo/estilo
-    DetailPanel.tsx   panel lateral: descripción, folds, relaciones
-    ServiceCard.tsx   nodo rectangular (estilo "cards")
-    ServiceDot.tsx    nodo punto + label (estilo "círculo")
-  lib/
-    types.ts          tipos del dominio
-    graph.ts          índice de servicios y resolución de relaciones
-    layout.ts         los 4 layouts, curvas y cálculo de "fit"
-    usePanZoom.ts     arrastre, rueda y zoom anclado al cursor
+    AwsStudyApp.tsx     # estado raíz: view actual, foco (MapFocus), selección
+    Header.tsx           # navbar; en mobile es hamburger -> drawer full-screen
+    CategoryFilters.tsx   # lista de categorías/dominios (sidebar en desktop, drawer en mobile)
+    DashboardView.tsx     # home: dominios del examen + accesos a Mapa/Practicar
+    MapView.tsx            # mapa de nodos (SVG) con pan/zoom
+    CatalogView.tsx          # catálogo en columnas por categoría, con buscador
+    PracticeView.tsx          # configuración y sesión de flashcards
+    DetailPanel.tsx            # panel lateral (mobile: full screen) con el detalle de un servicio
+    ServiceNode.tsx              # nodo/pill de servicio dentro del SVG del mapa
+    Loader.tsx                    # splash inicial
   data/
-    services.ts       15 categorías, 80 servicios
-    relations.ts      119 relaciones servicio-a-servicio
+    services.ts    # categorías -> servicios (nombre, descripción, doc oficial, etc.)
+    relations.ts     # relaciones entre servicios (usadas en "Se relaciona con")
+  lib/
+    types.ts        # tipos compartidos (Node, Category, MapFocus, View, ...)
+    domains.ts        # mapeo categoría -> dominio del examen (CLF-C02) + pesos
+    graph.ts            # índices derivados de DATA (byId, relatedIds)
+    layout.ts             # cálculo de posiciones de nodos en el mapa
+    usePanZoom.ts          # hook de pan (drag/touch) y zoom (wheel) del mapa
+    flashcards.ts            # armado de mazos y opciones para el modo práctica
 ```
 
-## Modos
+## Vistas (`View`)
 
-Dos ejes independientes, combinables:
+`dashboard` (Home) · `map` · `catalog` · `practice` — el estado vive en `AwsStudyApp` y se navega con `onNavigate`. El "foco" (`MapFocus`: todas las categorías, un dominio, o una categoría puntual) es compartido entre Mapa, Catálogo y el selector de alcance de Practicar.
 
-- **radial** — jerarquía AWS → categoría → servicio.
-- **relaciones** — todos los servicios conectados por sus relaciones reales.
-- **círculo** — nodos como puntos con label, en órbita.
-- **cards** — nodos como tarjetas compactas en grilla.
+## Mobile
 
-## Notas de la migración
+- Header con hamburger (`md:hidden`) que abre un drawer full-screen con la navegación y, en Mapa/Catálogo, los filtros de categoría (mismo componente `CategoryFilters` que se usa como sidebar fijo en desktop).
+- `DetailPanel` (detalle de servicio) ocupa el 100% del ancho/alto en mobile en vez del panel angosto de desktop.
+- El mapa soporta pan de un dedo y pinch-zoom de dos dedos vía `usePanZoom` (el stage usa `touch-none` para no pelear con el zoom nativo del navegador).
 
-- El render imperativo con `createElementNS` es ahora JSX; los layouts siguen
-  siendo funciones puras que devuelven posiciones.
-- El campo `long` del dataset es HTML de autor y se inyecta con
-  `dangerouslySetInnerHTML`; no hay input de usuario en ese camino.
+## Dataset
+
+Agregar o editar servicios se hace en `src/data/services.ts` (por categoría) y, si corresponde, relaciones en `src/data/relations.ts`. La asignación de categoría a dominio del examen vive en `src/lib/domains.ts` — toda categoría nueva debe agregarse ahí o cae por defecto en el dominio 3.

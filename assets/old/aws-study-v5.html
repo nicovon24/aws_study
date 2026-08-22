@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AWS Study — CLF-C02</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a1120; --surface:#131e33; --surface-2:#101a2c; --surface-3:#16233c;
+  --header:#131c2e; --line:#22314b; --line-2:#26364f;
+  --text:#e8eef8; --text-2:#94a3bb; --text-3:#7c8ca6;
+  --orange:#ec7211; --blue:#1d5ff5; --link:#5da8f0;
+  --font:'Source Sans 3',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;height:100dvh;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font);display:flex;flex-direction:column}
+a{color:var(--link);text-decoration:none} a:hover{color:#8cc6ff}
+button{font-family:var(--font);cursor:pointer}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:#0d1728}
+::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:6px}
+::-webkit-scrollbar-thumb:hover{background:#37496a}
+.mono{font-family:var(--mono)}
+
+/* ---------- header ---------- */
+header{display:flex;align-items:center;gap:28px;padding:0 24px;height:64px;background:var(--header);border-bottom:1px solid var(--line);flex-shrink:0}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand b{font-weight:900;font-size:22px;letter-spacing:-1px;color:#fff}
+.brand span{font-weight:700;font-size:17px;color:#fff}
+.badge{font-family:var(--mono);font-size:11px;color:var(--orange);border:1px solid #6b4218;background:#2a1b0c;padding:2px 7px;border-radius:3px;white-space:nowrap}
+nav{display:flex;gap:4px}
+nav button{background:none;border:0;border-bottom:2px solid transparent;color:#9aabc4;font-weight:600;font-size:14px;padding:9px 16px 7px;border-radius:3px 3px 0 0}
+nav button[aria-current="page"]{background:#1f2d47;color:#fff;border-bottom-color:var(--orange)}
+.spacer{flex:1}
+.progress{display:flex;align-items:center;gap:14px}
+.progress .num{font-family:var(--mono);font-size:13px;color:#fff;text-align:right}
+.progress .cap{font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em}
+.track{width:120px;height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.track>i{display:block;height:100%;background:var(--orange);border-radius:3px}
+
+/* ---------- dashboard ---------- */
+.dash{flex:1;overflow:auto;padding:32px 40px 60px}
+.dash .inner{max-width:1180px;margin:0 auto}
+.eyebrow{font-family:var(--mono);font-size:12px;color:var(--orange);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px}
+h1{margin:0 0 4px;font-size:34px;font-weight:700;letter-spacing:-.5px}
+.lede{margin:0 0 28px;color:var(--text-2);font-size:15px;max-width:620px;text-wrap:pretty}
+.stepper{display:flex;align-items:stretch;margin-bottom:34px}
+.step{display:flex;align-items:center;gap:10px;background:#1b2740;padding:12px 26px 12px 30px;margin-left:-14px;
+  clip-path:polygon(16px 0,calc(100% - 16px) 0,100% 50%,calc(100% - 16px) 100%,16px 100%,0 50%)}
+.step b{font-size:26px;font-weight:900}
+.step span{font-weight:700;font-size:15px;color:#a9b8d0}
+.step:first-child{background:var(--blue);margin-left:0;padding-left:20px;clip-path:polygon(0 0,calc(100% - 16px) 0,100% 50%,calc(100% - 16px) 100%,0 100%)}
+.step:first-child b,.step:first-child span{color:#fff}
+.step:last-child{padding-right:30px;clip-path:polygon(16px 0,100% 0,100% 100%,16px 100%,0 50%)}
+.domains{display:grid;grid-template-columns:repeat(auto-fit,minmax(430px,1fr));gap:16px}
+.domain{background:var(--surface);border:1px solid var(--line-2);border-radius:8px;padding:20px 22px 18px;display:flex;flex-direction:column;gap:14px}
+.domain .top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.domain .kicker{font-family:var(--mono);font-size:11px;color:var(--text-3);letter-spacing:.1em;margin-bottom:4px}
+.domain .name{font-size:19px;font-weight:700;line-height:1.25}
+.domain .pct{font-family:var(--mono);font-size:22px;line-height:1}
+.domain .of{font-size:11px;color:var(--text-3)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:3px;border:1px solid;}
+.domain .foot{display:flex;align-items:center;gap:12px;margin-top:auto}
+.domain .foot .track{flex:1;width:auto}
+.count{font-family:var(--mono);font-size:12px;color:var(--text-2)}
+.btn{background:var(--orange);color:#111827;font-weight:700;font-size:13px;border:0;padding:8px 16px;
+  clip-path:polygon(0 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%)}
+.btn:hover{background:#ff8c2e}
+
+/* ---------- map ---------- */
+.map{flex:1;display:flex;min-height:0}
+.sidebar{width:236px;flex-shrink:0;background:var(--surface-2);border-right:1px solid var(--line);overflow-y:auto;overflow-x:hidden;padding:16px 12px}
+.sidebar h3{font-family:var(--mono);font-size:11px;color:var(--text-3);letter-spacing:.1em;text-transform:uppercase;padding:0 8px 10px;margin:0;font-weight:400}
+.catlist{display:flex;flex-direction:column;gap:2px}
+.catlist button{display:flex;align-items:center;gap:9px;width:100%;background:none;border:0;border-left:2px solid transparent;
+  padding:8px 10px;border-radius:4px;color:#a9b8d0;font-size:13.5px;text-align:left}
+.catlist button:hover{background:#16233c}
+.catlist button[aria-pressed="true"]{background:#1b2740;color:#fff;font-weight:700}
+.catlist .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.catlist .nm{flex:1}
+.catlist .ct{font-family:var(--mono);font-size:11px;color:var(--text-3)}
+.canvas-pane{flex:1;min-width:0;display:flex;flex-direction:column}
+.hint{flex-shrink:0;padding:11px 18px;border-bottom:1px solid var(--line);background:#0d1728;font-family:var(--mono);font-size:11.5px;color:#63748f}
+.canvas-host{flex:1;min-height:0;position:relative;overflow:hidden;
+  background-image:linear-gradient(#141f36 1px,transparent 1px),linear-gradient(90deg,#141f36 1px,transparent 1px);background-size:56px 56px}
+.canvas{position:absolute;left:50%;top:50%;width:1240px;height:800px;transform-origin:center center}
+.canvas svg{position:absolute;left:0;top:0;width:1240px;height:800px}
+.hub{position:absolute;left:620px;top:400px;transform:translate(-50%,-50%);width:96px;height:96px;border-radius:50%;
+  background:var(--surface);border:1.5px solid var(--orange);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.hub b{font-weight:900;font-size:19px;color:#fff;letter-spacing:-.5px}
+.hub i{font-family:var(--mono);font-size:9.5px;color:var(--text-2);font-style:normal}
+.node{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:4px;
+  cursor:pointer;opacity:.6;padding:4px;background:none;border:0}
+.node.active{opacity:1}
+.node.flip{flex-direction:column-reverse}
+.node .bullet{width:10px;height:10px;border-radius:50%;background:var(--surface);border:1.5px solid}
+.node.active .bullet{width:14px;height:14px;border-width:2.5px}
+.node .lbl{font-size:13px;font-weight:600;color:#c3cfe2;white-space:nowrap}
+.node.active .lbl{font-weight:700}
+.node .ct{font-family:var(--mono);font-size:9.5px;color:var(--text-3);white-space:nowrap}
+.svc{position:absolute;width:168px;display:flex;align-items:center;gap:8px;padding:7px 10px;cursor:pointer;
+  border-radius:4px;background:var(--surface);border:1px solid;box-shadow:0 4px 14px rgba(5,8,15,.5);text-align:left}
+.svc.done{background:var(--surface-3)}
+.svc .bullet{width:7px;height:7px;border-radius:50%;flex-shrink:0;border:1px solid}
+.svc .nm{font-size:12.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ---------- detail ---------- */
+.detail{width:380px;flex-shrink:0;background:var(--surface-2);border-left:1px solid var(--line);overflow:auto;padding:22px 22px 30px}
+.detail .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.detail .close{background:none;border:0;color:var(--text-3);font-size:20px;line-height:1;padding:2px 6px}
+.detail .close:hover{color:#fff}
+.detail h2{margin:0 0 6px;font-size:24px;font-weight:700;letter-spacing:-.3px}
+.detail .meta{font-family:var(--mono);font-size:11px;color:var(--text-3);margin-bottom:18px}
+.detail p{margin:0 0 20px;font-size:14px;line-height:1.6;color:#c3cfe2;text-wrap:pretty}
+.callout{background:var(--surface-3);border:1px solid var(--line-2);border-left:3px solid var(--orange);border-radius:4px;padding:14px 16px;margin-bottom:16px}
+.callout.info{border-left-color:var(--link)}
+.callout .k{font-family:var(--mono);font-size:10px;color:var(--orange);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.callout.info .k{color:var(--link)}
+.callout .v{font-size:13.5px;line-height:1.55;color:#dbe4f2}
+.learn{width:100%;padding:12px 16px;font-weight:700;font-size:14px;border:0;background:var(--orange);color:#111827;
+  clip-path:polygon(0 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%)}
+.learn.on{background:#1b2740;color:#7ee0b6}
+
+/* ---------- catalog ---------- */
+.catalog{flex:1;display:flex;flex-direction:column;min-height:0;position:relative}
+.toolbar{display:flex;align-items:center;gap:14px;padding:14px 24px;border-bottom:1px solid var(--line);background:var(--surface-2);flex-shrink:0}
+.toolbar input{background:#0d1728;border:1px solid #2b3a55;border-radius:4px;color:var(--text);font-family:var(--font);font-size:14px;padding:9px 14px;width:280px;outline:none}
+.toolbar input:focus{border-color:var(--orange)}
+.toggle{background:none;color:#9aabc4;border:1px solid #2b3a55;border-radius:4px;padding:9px 14px;font-size:13px;font-weight:600}
+.toggle[aria-pressed="true"]{background:#2a1b0c;color:var(--orange);border-color:#6b4218}
+.cols-scroll{flex:1;overflow:auto;padding:22px 24px 40px}
+.cols{display:flex;gap:14px;align-items:flex-start}
+.col{width:212px;flex-shrink:0;display:flex;flex-direction:column;gap:6px}
+.col>.h{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;text-align:center;
+  padding:7px 6px;border:1px solid;border-radius:4px;margin-bottom:2px}
+.card{display:flex;flex-direction:column;gap:4px;width:100%;background:#111c2f;border:1px solid var(--line-2);
+  border-left:3px solid;border-radius:4px;padding:9px 11px;text-align:left}
+.card.done{background:var(--surface-3)}
+.card .t{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card .nm{font-size:14px;font-weight:700;color:#fff}
+.card .tick{font-size:11px;color:#2a3a55}
+.card:not(.done) .tick{color:#2a3a55}
+.card.done .tick{color:inherit}
+.card .d{font-size:11.5px;line-height:1.45;color:#8d9cb5}
+.cols .gutter{flex:0 0 396px}
+.catalog .detail{position:absolute;right:0;top:0;bottom:0;box-shadow:-24px 0 60px rgba(5,8,15,.6)}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><b>aws</b><span>Study</span><span class="badge">CLF-C02</span></div>
+  <nav id="nav">
+    <button data-view="dashboard">Panel</button>
+    <button data-view="map">Mapa</button>
+    <button data-view="catalog">Catálogo</button>
+  </nav>
+  <div class="spacer"></div>
+  <div class="progress">
+    <div><div class="num" id="gnum">0/80</div><div class="cap">aprendidos</div></div>
+    <div class="track"><i id="gbar" style="width:0%"></i></div>
+  </div>
+</header>
+<div id="app" style="flex:1;display:flex;flex-direction:column;min-height:0"></div>
+
+<script>
+/* ============================================================
+   DATOS — 80 items. Campos: [nombre, qué es, cuándo usarlo, no confundir con]
+   ============================================================ */
+const CATS = [
+    { name: 'Cómputo', color: '#f0a13a', dom: 3, items: [
+      ['EC2', 'Servidores virtuales redimensionables en la nube; elegís tipo de instancia, AMI y almacenamiento.', 'Cuando necesitás control total del sistema operativo o migrar una app existente tal cual.', 'Lambda: EC2 es un servidor que administrás vos, Lambda no tiene servidor que gestionar.'],
+      ['Lambda', 'Ejecuta código sin administrar servidores, pagando solo por tiempo de ejecución.', 'Tareas cortas y disparadas por eventos: procesar un archivo que llega a S3, responder a una API.', 'Fargate: Lambda corre funciones, Fargate corre contenedores.'],
+      ['App Runner', 'Despliega apps web y APIs desde código o imagen de contenedor sin configurar infraestructura.', 'Cuando querés publicar un servicio web rápido sin tocar redes ni escalado.', ''],
+      ['Batch', 'Procesamiento de lotes a escala; administra colas y provisiona cómputo automáticamente.', 'Miles de trabajos que pueden esperar: renders, simulaciones, procesamiento científico.', ''],
+      ['Elastic Beanstalk', 'Subís el código y AWS gestiona capacidad, balanceo, escalado y monitoreo.', 'Plataforma como servicio para apps web cuando no querés armar la infra a mano.', 'CloudFormation: Beanstalk despliega apps, CloudFormation describe infraestructura.'],
+      ['Lightsail', 'Servidores privados virtuales con precio fijo mensual y todo preconfigurado.', 'Proyectos chicos, WordPress, entornos de prueba con costo predecible.', ''],
+      ['Auto Scaling', 'Ajusta automáticamente la cantidad de instancias según demanda.', 'Cuando el tráfico varía y querés elasticidad sin pagar capacidad ociosa.', 'ELB: Auto Scaling suma o quita instancias, ELB reparte el tráfico entre ellas.']
+    ]},
+    { name: 'Contenedores', color: '#ff7847', dom: 3, items: [
+      ['ECS', 'Orquestador de contenedores propio de AWS, integrado con el resto de los servicios.', 'Correr contenedores en AWS sin la complejidad de Kubernetes.', 'EKS: ECS es el orquestador de AWS, EKS es Kubernetes administrado.'],
+      ['EKS', 'Kubernetes administrado por AWS con plano de control gestionado.', 'Cuando tu equipo ya usa Kubernetes o necesitás portabilidad entre nubes.', ''],
+      ['ECR', 'Registro privado de imágenes de contenedor.', 'Guardar y versionar tus imágenes Docker para que ECS o EKS las consuman.', ''],
+      ['Fargate', 'Cómputo serverless para contenedores: no administrás instancias.', 'Cuando querés contenedores sin gestionar el servidor donde corren.', 'Modo EC2: con Fargate no ves las instancias, con EC2 sí.']
+    ]},
+    { name: 'Almacenamiento', color: '#35c8a9', dom: 3, items: [
+      ['S3', 'Almacenamiento de objetos con durabilidad de 11 nueves y varias clases de acceso.', 'Archivos, backups, data lakes, hosting de sitios estáticos.', 'EBS: S3 es objetos vía API, EBS es un disco conectado a una instancia.'],
+      ['EBS', 'Volúmenes de bloque persistentes para instancias EC2.', 'Discos de sistema o de base de datos que necesitan baja latencia por bloque.', 'EFS: EBS se monta en una sola instancia y una AZ, EFS en muchas a la vez.'],
+      ['EFS', 'Sistema de archivos elástico compartido por varias instancias Linux.', 'Cuando muchos servidores necesitan leer y escribir los mismos archivos.', ''],
+      ['FSx', 'Sistemas de archivos administrados de terceros (Windows, Lustre, NetApp).', 'Cargas Windows con SMB o HPC que requieren Lustre.', ''],
+      ['S3 Glacier', 'Almacenamiento de archivado de muy bajo costo con recuperación diferida.', 'Retención legal y backups a los que casi nunca accedés.', ''],
+      ['Storage Gateway', 'Puente híbrido entre tu datacenter y el almacenamiento de AWS.', 'Extender storage on-premise a la nube sin cambiar las apps.', '']
+    ]},
+    { name: 'Migración', color: '#56c9c0', dom: 3, items: [
+      ['Snow Family', 'Dispositivos físicos para mover petabytes de datos hacia AWS.', 'Cuando el volumen es tan grande que por red tardaría meses.', ''],
+      ['DMS', 'Migra bases de datos hacia AWS con mínimo tiempo fuera de servicio.', 'Pasar una base on-premise a RDS, incluso cambiando de motor.', ''],
+      ['DataSync', 'Transferencia automatizada de archivos entre on-premise y AWS.', 'Sincronizaciones recurrentes de NFS o SMB hacia S3 o EFS.', '']
+    ]},
+    { name: 'Bases de datos', color: '#a78bfa', dom: 3, items: [
+      ['RDS', 'Bases relacionales administradas: parches, backups y réplicas incluidos.', 'Apps que necesitan SQL sin administrar el motor.', 'DynamoDB: RDS es relacional, DynamoDB es NoSQL clave-valor.'],
+      ['Aurora', 'Motor relacional compatible con MySQL y PostgreSQL, hasta 5x más rápido.', 'Cargas relacionales exigentes que necesitan alta disponibilidad.', ''],
+      ['DynamoDB', 'NoSQL serverless de latencia de milisegundos a cualquier escala.', 'Sesiones, carritos, catálogos, IoT: acceso por clave y volumen alto.', ''],
+      ['Neptune', 'Base de datos de grafos administrada.', 'Redes sociales, detección de fraude, motores de recomendación.', ''],
+      ['Redshift', 'Data warehouse para análisis sobre grandes volúmenes.', 'Reportes y BI sobre terabytes de datos históricos.', 'Athena: Redshift es un warehouse, Athena consulta S3 directamente.'],
+      ['ElastiCache', 'Caché en memoria administrada (Redis o Memcached).', 'Reducir latencia y carga sobre la base de datos.', '']
+    ]},
+    { name: 'Redes y CDN', color: '#4f9df7', dom: 3, items: [
+      ['VPC', 'Red virtual y aislada donde viven tus recursos, con subredes públicas y privadas.', 'Siempre: es el perímetro de red de tu arquitectura.', ''],
+      ['Route 53', 'DNS administrado con enrutamiento y chequeos de salud.', 'Registrar dominios y dirigir tráfico entre regiones.', ''],
+      ['CloudFront', 'Red de entrega de contenido global con cientos de ubicaciones de borde.', 'Servir sitios, video y APIs con baja latencia en todo el mundo.', ''],
+      ['API Gateway', 'Publica, protege y escala APIs REST, HTTP y WebSocket.', 'Frente de entrada de arquitecturas serverless.', ''],
+      ['ELB', 'Balanceador de carga elástico entre varias instancias y zonas.', 'Alta disponibilidad y distribución de tráfico.', ''],
+      ['Direct Connect', 'Conexión de red dedicada y privada entre tu sede y AWS.', 'Cuando necesitás ancho de banda estable y no querés pasar por internet.', 'VPN sitio a sitio: la VPN va por internet cifrada, Direct Connect es un enlace físico.']
+    ]},
+    { name: 'Seguridad e identidad', color: '#f2686b', dom: 2, items: [
+      ['IAM', 'Usuarios, grupos, roles y políticas: quién puede hacer qué sobre qué recurso.', 'Siempre. Aplicá mínimo privilegio y usá roles en lugar de claves.', 'IAM Identity Center: IAM es por cuenta, Identity Center da acceso a varias cuentas.'],
+      ['KMS', 'Creación y gestión de claves de cifrado.', 'Cifrar datos en reposo en S3, EBS o RDS con claves que controlás.', 'CloudHSM: KMS es administrado y compartido, CloudHSM es hardware dedicado.'],
+      ['Cognito', 'Autenticación, autorización y gestión de usuarios para apps web y móviles.', 'Login de usuarios finales con social login o pools propios.', ''],
+      ['Shield', 'Protección contra ataques de denegación de servicio.', 'Standard viene incluido; Advanced para apps críticas.', ''],
+      ['WAF', 'Firewall de aplicaciones web: filtra por reglas el tráfico HTTP.', 'Bloquear inyección SQL, cross-site scripting y bots.', ''],
+      ['Secrets Manager', 'Almacena y rota credenciales y claves de API.', 'Sacar contraseñas del código y rotarlas automáticamente.', 'Parameter Store: Secrets Manager rota solo, Parameter Store es más simple y barato.'],
+      ['CloudHSM', 'Módulo de hardware de seguridad dedicado y de un solo tenant.', 'Requisitos regulatorios que exigen control exclusivo de las claves.', '']
+    ]},
+    { name: 'Detección y gobierno', color: '#ef5f7a', dom: 2, items: [
+      ['GuardDuty', 'Detección inteligente de amenazas analizando logs y tráfico.', 'Monitoreo continuo de actividad sospechosa en la cuenta.', ''],
+      ['Inspector', 'Escaneo automatizado de vulnerabilidades en EC2, contenedores y Lambda.', 'Encontrar CVEs y configuraciones expuestas.', ''],
+      ['Macie', 'Descubre y protege datos sensibles en S3 con machine learning.', 'Detectar datos personales o tarjetas guardadas por error.', ''],
+      ['Artifact', 'Portal de descarga de informes de cumplimiento y acuerdos.', 'Cuando auditoría te pide el SOC 2 o la ISO de AWS.', ''],
+      ['IAM Identity Center', 'Inicio de sesión único para varias cuentas y aplicaciones.', 'Organizaciones con muchas cuentas y usuarios federados.', ''],
+      ['Control Tower', 'Configura y gobierna un entorno multicuenta con barreras de protección.', 'Montar una landing zone segura desde el día uno.', ''],
+      ['Personal Health Dashboard', 'Estado de los servicios de AWS que afectan a tus recursos.', 'Saber si un incidente te impacta a vos y no solo a la región.', '']
+    ]},
+    { name: 'Administración', color: '#4ade80', dom: 3, items: [
+      ['CloudWatch', 'Métricas, logs y alarmas de tus recursos y aplicaciones.', 'Monitorear rendimiento y disparar acciones ante umbrales.', 'CloudTrail: CloudWatch mira rendimiento, CloudTrail registra quién hizo qué.'],
+      ['CloudTrail', 'Registro de auditoría de todas las llamadas a la API de AWS.', 'Investigar quién creó, cambió o borró un recurso.', ''],
+      ['Config', 'Inventario y evaluación continua de la configuración de recursos.', 'Verificar cumplimiento de reglas y ver el historial de cambios.', ''],
+      ['Trusted Advisor', 'Recomendaciones de costo, seguridad, rendimiento y tolerancia a fallos.', 'Revisión periódica de buenas prácticas.', ''],
+      ['Organizations', 'Gestión centralizada de varias cuentas con facturación consolidada.', 'Separar entornos por cuenta y aplicar políticas de servicio.', '']
+    ]},
+    { name: 'Analítica', color: '#e879b0', dom: 3, items: [
+      ['Athena', 'Consultas SQL serverless directamente sobre datos en S3.', 'Explorar logs y datasets sin cargar nada a una base.', ''],
+      ['Kinesis', 'Ingesta y procesamiento de datos en streaming.', 'Clics, telemetría e IoT en tiempo real.', ''],
+      ['EMR', 'Big data administrado sobre Hadoop y Spark.', 'Procesos ETL grandes con frameworks open source.', ''],
+      ['QuickSight', 'Business intelligence y dashboards interactivos.', 'Reportes visuales para el negocio.', '']
+    ]},
+    { name: 'Machine Learning', color: '#38bdf8', dom: 3, items: [
+      ['SageMaker', 'Plataforma end-to-end para construir, entrenar y desplegar modelos.', 'Cuando entrenás tus propios modelos.', ''],
+      ['Rekognition', 'Análisis de imágenes y video con IA.', 'Detección de objetos, caras y moderación de contenido.', ''],
+      ['Comprehend', 'Procesamiento de lenguaje natural: entidades, sentimiento y temas.', 'Analizar opiniones o clasificar documentos.', ''],
+      ['Bedrock', 'Acceso a modelos fundacionales de IA generativa vía API.', 'Sumar IA generativa sin entrenar modelos propios.', ''],
+      ['Textract', 'Extrae texto y datos estructurados de documentos escaneados.', 'Digitalizar facturas y formularios.', '']
+    ]},
+    { name: 'Integración', color: '#c6e04f', dom: 3, items: [
+      ['SQS', 'Cola de mensajes administrada para desacoplar componentes.', 'Amortiguar picos y evitar que un componente lento frene al resto.', 'SNS: SQS es una cola que se consume de a uno, SNS publica a muchos.'],
+      ['SNS', 'Notificaciones publicación-suscripción hacia múltiples destinos.', 'Avisar a varios sistemas o personas del mismo evento.', ''],
+      ['EventBridge', 'Bus de eventos serverless para conectar servicios y SaaS.', 'Arquitecturas dirigidas por eventos y tareas programadas.', ''],
+      ['Step Functions', 'Orquestación visual de flujos de trabajo con estados.', 'Coordinar varias Lambdas con reintentos y ramificaciones.', '']
+    ]},
+    { name: 'Herramientas dev', color: '#f5d442', dom: 3, items: [
+      ['CodeCommit', 'Repositorios Git privados administrados.', 'Alojar código dentro de AWS.', ''],
+      ['CodePipeline', 'Automatiza el flujo de integración y entrega continua.', 'Encadenar build, test y deploy en cada commit.', ''],
+      ['CodeBuild', 'Compila y testea código sin administrar servidores de build.', 'La etapa de build dentro de tu pipeline.', ''],
+      ['CodeDeploy', 'Automatiza despliegues en EC2, Lambda y on-premise.', 'Despliegues blue/green o canary sin downtime.', ''],
+      ['CloudFormation', 'Infraestructura como código con plantillas declarativas.', 'Recrear entornos idénticos y versionar la infra.', ''],
+      ['Systems Manager', 'Administración y automatización de la flota de instancias.', 'Parches, comandos remotos y parámetros centralizados.', '']
+    ]},
+    { name: 'Costos y soporte', color: '#9aa7bd', dom: 4, items: [
+      ['Cost Explorer', 'Visualiza y analiza el gasto histórico y proyectado.', 'Entender de dónde viene la factura y detectar desvíos.', 'Budgets: Cost Explorer analiza, Budgets alerta.'],
+      ['Budgets', 'Presupuestos con alertas cuando el gasto supera un umbral.', 'Avisar antes de que la factura se dispare.', ''],
+      ['Planes de soporte', 'Niveles Basic, Developer, Business y Enterprise.', 'Business en adelante da soporte técnico 24/7 y acceso a la API de soporte.', '']
+    ]},
+    { name: 'Fundamentos', color: '#cbd5e1', dom: 1, items: [
+      ['Responsabilidad compartida', 'AWS protege la nube; vos protegés lo que ponés en la nube.', 'Marco mental para toda pregunta de seguridad del examen.', ''],
+      ['Well-Architected', 'Seis pilares: excelencia operativa, seguridad, fiabilidad, eficiencia de rendimiento, optimización de costos y sostenibilidad.', 'Revisar el diseño de una arquitectura antes de construirla.', ''],
+      ['AWS CAF', 'Marco de adopción de la nube con seis perspectivas de negocio y técnicas.', 'Planificar una migración organizacional.', ''],
+      ['Modelo de precios', 'Pago por uso, instancias reservadas, planes de ahorro y spot.', 'Elegir el modelo según la previsibilidad de la carga.', 'Spot: hasta 90% de descuento pero AWS puede interrumpir la instancia.'],
+      ['Infraestructura global', 'Regiones, zonas de disponibilidad, ubicaciones de borde y zonas locales.', 'Decidir dónde desplegar por latencia, soberanía de datos y resiliencia.', ''],
+      ['Pricing Calculator', 'Estimador de costos previo al despliegue.', 'Armar el presupuesto de una arquitectura propuesta.', ''],
+      ['Marketplace', 'Catálogo de software de terceros listo para desplegar.', 'Comprar AMIs y soluciones con facturación unificada.', '']
+    ]}
+];
+const DOMAINS = {
+  1: { name: 'Conceptos de la nube',      weight: 24, color: '#cbd5e1' },
+  2: { name: 'Seguridad y cumplimiento',  weight: 30, color: '#f2686b' },
+  3: { name: 'Tecnología y servicios',    weight: 34, color: '#4f9df7' },
+  4: { name: 'Facturación y soporte',     weight: 12, color: '#9aa7bd' }
+};
+
+/* ============================================================
+   ESTADO
+   ============================================================ */
+const S = {
+  view: 'dashboard',
+  activeCat: CATS[0].name,
+  sel: null,
+  learned: new Set(JSON.parse(localStorage.getItem('awsStudy.learned') || '[]')),
+  q: '',
+  onlyPending: false,
+  scale: 1
+};
+const save = () => localStorage.setItem('awsStudy.learned', JSON.stringify([...S.learned]));
+const set = patch => { Object.assign(S, patch); render(); };
+
+const ALL = CATS.flatMap(c => c.items.map(it => ({
+  name: it[0], desc: it[1], use: it[2], tip: it[3], cat: c.name, color: c.color, dom: c.dom
+})));
+const byName = n => ALL.find(s => s.name === n);
+const isLearned = n => S.learned.has(n);
+const el = (tag, attrs = {}, kids = []) => {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v === null || v === false) continue;
+    if (k === 'text') n.textContent = v;
+    else if (k === 'html') n.innerHTML = v;
+    else if (k === 'on') for (const [ev, fn] of Object.entries(v)) n.addEventListener(ev, fn);
+    else if (k === 'style') n.setAttribute('style', v);
+    else n.setAttribute(k, v);
+  }
+  (Array.isArray(kids) ? kids : [kids]).filter(Boolean).forEach(c => n.append(c));
+  return n;
+};
+
+/* ============================================================
+   VISTA 1 — PANEL
+   ============================================================ */
+function viewDashboard() {
+  const wrap = el('main', { class: 'dash' });
+  const inner = el('div', { class: 'inner' });
+  inner.append(
+    el('div', { class: 'eyebrow', text: 'tu ruta de estudio' }),
+    el('h1', { text: 'AWS Certified Cloud Practitioner' }),
+    el('p', { class: 'lede', text: '80 servicios y conceptos organizados en los 4 dominios del examen. Estudiá por dominio, explorá el mapa y marcá lo que ya dominás.' }),
+    el('div', { class: 'stepper' }, [
+      el('div', { class: 'step' }, [el('b', { text: '1' }), el('span', { text: 'Aprender' })]),
+      el('div', { class: 'step' }, [el('b', { style: 'color:#f2b544', text: '2' }), el('span', { text: 'Practicar' })]),
+      el('div', { class: 'step' }, [el('b', { style: 'color:#2ee6a8', text: '3' }), el('span', { text: 'Simulacro' })])
+    ])
+  );
+
+  const grid = el('div', { class: 'domains' });
+  for (const d of [1, 2, 3, 4]) {
+    const meta = DOMAINS[d];
+    const cs = CATS.filter(c => c.dom === d);
+    const items = cs.flatMap(c => c.items);
+    const done = items.filter(i => isLearned(i[0])).length;
+    grid.append(el('div', { class: 'domain' }, [
+      el('div', { class: 'top' }, [
+        el('div', {}, [
+          el('div', { class: 'kicker', text: 'DOMINIO ' + d }),
+          el('div', { class: 'name', text: meta.name })
+        ]),
+        el('div', { style: 'text-align:right;flex-shrink:0' }, [
+          el('div', { class: 'pct', style: 'color:' + meta.color, text: meta.weight + '%' }),
+          el('div', { class: 'of', text: 'del examen' })
+        ])
+      ]),
+      el('div', { class: 'chips' }, cs.map(c => el('span', {
+        class: 'chip', text: c.name,
+        style: 'color:' + c.color + ';border-color:' + c.color + '55;background:' + c.color + '14'
+      }))),
+      el('div', { class: 'foot' }, [
+        el('div', { class: 'track' }, el('i', { style: 'width:' + (items.length ? done / items.length * 100 : 0) + '%;background:' + meta.color })),
+        el('div', { class: 'count', text: done + '/' + items.length }),
+        el('button', { class: 'btn', text: 'Estudiar', on: { click: () => set({ view: 'map', activeCat: cs[0].name, sel: null }) } })
+      ])
+    ]));
+  }
+  inner.append(grid);
+  wrap.append(inner);
+  return wrap;
+}
+
+/* ============================================================
+   VISTA 2 — MAPA (radial por niveles: solo se abre la rama activa)
+   ============================================================ */
+const W = 1240, H = 800, CX = 620, CY = 400, R = 206, CHIP = 168;
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const angleOf = i => (i / CATS.length) * Math.PI * 2 - Math.PI / 2;
+
+function viewMap() {
+  const wrap = el('main', { class: 'map' });
+
+  // --- sidebar de categorías
+  const list = el('div', { class: 'catlist' });
+  CATS.forEach(c => {
+    const done = c.items.filter(i => isLearned(i[0])).length;
+    list.append(el('button', {
+      'aria-pressed': c.name === S.activeCat ? 'true' : 'false',
+      style: c.name === S.activeCat ? 'border-left-color:' + c.color : null,
+      on: { click: () => set({ activeCat: c.name }) }
+    }, [
+      el('span', { class: 'dot', style: 'background:' + c.color }),
+      el('span', { class: 'nm', text: c.name }),
+      el('span', { class: 'ct', text: done + '/' + c.items.length })
+    ]));
+  });
+  wrap.append(el('aside', { class: 'sidebar' }, [el('h3', { text: 'categorías' }), list]));
+
+  // --- lienzo
+  const canvas = el('div', { class: 'canvas' });
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  canvas.append(svg);
+  const line = (x1, y1, x2, y2, stroke, w, op) => {
+    const l = document.createElementNS(svgNS, 'line');
+    l.setAttribute('x1', x1); l.setAttribute('y1', y1); l.setAttribute('x2', x2); l.setAttribute('y2', y2);
+    l.setAttribute('stroke', stroke); l.setAttribute('stroke-width', w); l.setAttribute('opacity', op);
+    svg.append(l);
+  };
+  const curve = (d, stroke) => {
+    const p = document.createElementNS(svgNS, 'path');
+    p.setAttribute('d', d); p.setAttribute('fill', 'none');
+    p.setAttribute('stroke', stroke); p.setAttribute('stroke-width', 1.3); p.setAttribute('opacity', .55);
+    svg.append(p);
+  };
+
+  // radios + nodos de categoría
+  CATS.forEach((c, i) => {
+    const a = angleOf(i), on = c.name === S.activeCat;
+    const x = CX + Math.cos(a) * R, y = CY + Math.sin(a) * R;
+    line(CX, CY, x, y, c.color, on ? 2 : 1, on ? .9 : .3);
+    const done = c.items.filter(it => isLearned(it[0])).length;
+    canvas.append(el('button', {
+      class: 'node' + (on ? ' active' : '') + (i % 2 ? ' flip' : ''),
+      style: 'left:' + x + 'px;top:' + y + 'px',
+      on: { click: () => set({ activeCat: c.name }) }
+    }, [
+      el('span', { class: 'bullet', style: 'border-color:' + c.color }),
+      el('span', { class: 'lbl', style: on ? 'color:' + c.color : null, text: c.name }),
+      el('span', { class: 'ct', text: done + '/' + c.items.length })
+    ]));
+  });
+
+  // rama activa
+  const ai = Math.max(0, CATS.findIndex(c => c.name === S.activeCat));
+  const act = CATS[ai], aA = angleOf(ai);
+  const px = CX + Math.cos(aA) * R, py = CY + Math.sin(aA) * R;
+  const m = act.items.length, spread = Math.min(1.55, m * 0.2);
+  act.items.forEach((it, j) => {
+    const a2 = aA - spread / 2 + (m === 1 ? spread / 2 : (j / (m - 1)) * spread);
+    const rr = 316 + (j % 2) * 74;
+    const x = CX + Math.cos(a2) * rr, y = CY + Math.sin(a2) * rr;
+    const right = Math.cos(a2) >= 0;
+    const left = clamp(right ? x : x - CHIP, 10, W - CHIP - 10);
+    const top = clamp(y - 16, 12, H - 46);
+    const ax = right ? left : left + CHIP, ay = top + 16;
+    curve('M' + px + ' ' + py + ' Q' + (px + (ax - px) * .5) + ' ' + (py + (ay - py) * .65) + ' ' + ax + ' ' + ay, act.color);
+    const done = isLearned(it[0]);
+    canvas.append(el('button', {
+      class: 'svc' + (done ? ' done' : ''),
+      style: 'left:' + left + 'px;top:' + top + 'px;border-color:' + (done ? act.color : act.color + '55'),
+      on: { click: () => set({ sel: it[0] }) }
+    }, [
+      el('span', { class: 'bullet', style: 'border-color:' + act.color + ';background:' + (done ? act.color : 'transparent') }),
+      el('span', { class: 'nm', text: it[0] })
+    ]));
+  });
+
+  canvas.append(el('div', { class: 'hub' }, [el('b', { text: 'aws' }), el('i', { text: ALL.length + ' items' })]));
+
+  const host = el('div', { class: 'canvas-host' }, canvas);
+  wrap.append(el('div', { class: 'canvas-pane' }, [
+    el('div', { class: 'hint', text: 'click en una categoría para abrir su rama · click en un servicio para ver su ficha' }),
+    host
+  ]));
+  if (S.sel) wrap.append(detailPanel());
+
+  // ajuste automático: el lienzo escala para caber siempre
+  requestAnimationFrame(() => fit(host, canvas));
+  const ro = new ResizeObserver(() => fit(host, canvas));
+  ro.observe(host);
+  return wrap;
+}
+
+function fit(host, canvas) {
+  const s = Math.min(1, (host.clientWidth - 24) / W, (host.clientHeight - 24) / H);
+  canvas.style.transform = 'translate(-50%,-50%) scale(' + (s > 0 ? s : 1) + ')';
+}
+
+/* ============================================================
+   FICHA DE SERVICIO
+   ============================================================ */
+function detailPanel() {
+  const s = byName(S.sel);
+  if (!s) return null;
+  const done = isLearned(s.name);
+  const meta = DOMAINS[s.dom];
+  return el('aside', { class: 'detail' }, [
+    el('div', { class: 'head' }, [
+      el('span', { class: 'chip', text: s.cat, style: 'color:' + s.color + ';border-color:' + s.color + '55;background:' + s.color + '14' }),
+      el('button', { class: 'close', text: '×', 'aria-label': 'Cerrar', on: { click: () => set({ sel: null }) } })
+    ]),
+    el('h2', { text: s.name }),
+    el('div', { class: 'meta', text: 'dominio ' + s.dom + ' · ' + meta.name }),
+    el('p', { text: s.desc }),
+    el('div', { class: 'callout' }, [
+      el('div', { class: 'k', text: 'cuándo usarlo' }),
+      el('div', { class: 'v', text: s.use })
+    ]),
+    s.tip ? el('div', { class: 'callout info' }, [
+      el('div', { class: 'k', text: 'no confundir con' }),
+      el('div', { class: 'v', text: s.tip })
+    ]) : null,
+    el('button', {
+      class: 'learn' + (done ? ' on' : ''),
+      text: done ? '✓ Aprendido — desmarcar' : 'Marcar como aprendido',
+      on: { click: () => { done ? S.learned.delete(s.name) : S.learned.add(s.name); save(); render(); } }
+    })
+  ]);
+}
+
+/* ============================================================
+   VISTA 3 — CATÁLOGO
+   ============================================================ */
+function viewCatalog() {
+  const wrap = el('main', { class: 'catalog' });
+  const q = S.q.trim().toLowerCase();
+  const cols = el('div', { class: 'cols' });
+  let shown = 0;
+
+  CATS.forEach(c => {
+    const items = c.items.filter(it =>
+      (!q || it[0].toLowerCase().includes(q) || it[1].toLowerCase().includes(q)) &&
+      (!S.onlyPending || !isLearned(it[0]))
+    );
+    if (!items.length) return;
+    shown += items.length;
+    const col = el('div', { class: 'col' }, el('div', {
+      class: 'h', text: c.name,
+      style: 'color:' + c.color + ';border-color:' + c.color + '55;background:' + c.color + '12'
+    }));
+    items.forEach(it => {
+      const done = isLearned(it[0]);
+      col.append(el('button', {
+        class: 'card' + (done ? ' done' : ''),
+        style: 'border-left-color:' + (done ? c.color : c.color + '55') + (done ? ';color:' + c.color : ''),
+        on: { click: () => set({ sel: it[0] }) }
+      }, [
+        el('div', { class: 't' }, [
+          el('span', { class: 'nm', text: it[0] }),
+          el('span', { class: 'tick', text: '✓' })
+        ]),
+        el('div', { class: 'd', text: it[1].length > 74 ? it[1].slice(0, 74) + '…' : it[1] })
+      ]));
+    });
+    cols.append(col);
+  });
+  // espaciador real: deja que la última columna se libere de la ficha al scrollear
+  if (S.sel) cols.append(el('div', { class: 'gutter' }));
+
+  const input = el('input', {
+    placeholder: 'Buscar servicio o concepto…', value: S.q,
+    on: { input: e => { S.q = e.target.value; render(); requestAnimationFrame(() => { const i = document.querySelector('.toolbar input'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }); } }
+  });
+  wrap.append(
+    el('div', { class: 'toolbar' }, [
+      input,
+      el('button', {
+        class: 'toggle', 'aria-pressed': S.onlyPending ? 'true' : 'false',
+        text: S.onlyPending ? 'Mostrando pendientes' : 'Solo pendientes',
+        on: { click: () => set({ onlyPending: !S.onlyPending }) }
+      }),
+      el('div', { class: 'spacer' }),
+      el('div', { class: 'count', text: shown + ' items visibles' })
+    ]),
+    el('div', { class: 'cols-scroll' }, cols)
+  );
+  if (S.sel) wrap.append(detailPanel());
+  return wrap;
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function render() {
+  const app = document.getElementById('app');
+  app.replaceChildren(
+    S.view === 'dashboard' ? viewDashboard() :
+    S.view === 'map' ? viewMap() : viewCatalog()
+  );
+  const done = ALL.filter(s => isLearned(s.name)).length;
+  document.getElementById('gnum').textContent = done + '/' + ALL.length;
+  document.getElementById('gbar').style.width = (done / ALL.length * 100) + '%';
+  document.querySelectorAll('#nav button').forEach(b =>
+    b.toggleAttribute('aria-current', b.dataset.view === S.view) ||
+    (b.dataset.view === S.view ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current'))
+  );
+}
+document.getElementById('nav').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (b) set({ view: b.dataset.view, sel: b.dataset.view === 'dashboard' ? null : S.sel });
+});
+render();
+</script>
+</body>
+</html>

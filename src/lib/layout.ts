@@ -1,11 +1,9 @@
 import DATA from "@/data/services";
-import type { Layout, Mode, Point, VisualStyle } from "./types";
+import { domainOf, type DomainNumber } from "./domains";
+import type { Layout, MapFocus, Point } from "./types";
 
-export const CARD_W = 168;
-export const CARD_H = 54;
-
-/** Orbit look: categories on an inner ring, their services fanned out beyond it. */
-function layoutRadialCircle(): Layout {
+/** Orbit look: all 15 categories on an inner ring, their services fanned out beyond it. */
+export function layoutAllCategories(): Layout {
   const pos: Record<string, Point> = {};
   const catPos: Record<number, Point> = {};
   const N = DATA.length;
@@ -26,65 +24,72 @@ function layoutRadialCircle(): Layout {
   return { pos, catPos };
 }
 
-/** All services on one big circle, grouped by category contiguously. */
-function layoutGraphCircle(): Layout {
-  const pos: Record<string, Point> = {};
-  const R = 520;
-  const ids: string[] = [];
-  DATA.forEach((cat, ci) => cat.items.forEach((_svc, si) => ids.push(`${ci}-${si}`)));
-  const M = ids.length;
-  ids.forEach((id, i) => {
-    const a = (i / M) * Math.PI * 2 - Math.PI / 2;
-    pos[id] = { x: Math.cos(a) * R, y: Math.sin(a) * R, ang: a };
-  });
-  return { pos, catPos: {} };
-}
-
-/** One column per category, cards stacked vertically — compact and non-overlapping. */
-function layoutRadialCards(): Layout {
+/**
+ * Drill-down look: every category keeps its slot on the same ring used by
+ * "all" (dim, clickable), but only the active category's services are fanned
+ * out — at the same radii as "all" so the branch reads at the same scale as
+ * the full tree instead of shrinking toward the center.
+ */
+export function layoutCategoryBranch(activeCat: string): Layout {
   const pos: Record<string, Point> = {};
   const catPos: Record<number, Point> = {};
   const N = DATA.length;
-  const COLW = CARD_W + 64;
-  const totalW = (N - 1) * COLW;
-  const startX = -totalW / 2;
+  const R1 = 300;
+  const R2base = 560;
+  const ai = Math.max(
+    0,
+    DATA.findIndex((c) => c.cat === activeCat),
+  );
   DATA.forEach((cat, ci) => {
-    const cx = startX + ci * COLW;
-    const headerY = 0;
-    catPos[ci] = { x: cx, y: headerY };
-    const rowGap = CARD_H + 14;
-    const startY = headerY + 55;
+    const a = (ci / N) * Math.PI * 2 - Math.PI / 2;
+    catPos[ci] = { x: Math.cos(a) * R1, y: Math.sin(a) * R1, ang: a };
+  });
+  const active = DATA[ai];
+  const aA = catPos[ai].ang!;
+  const m = active.items.length;
+  // Wider spread than the "all" layout since the active branch has the whole ring to itself.
+  const spread = Math.min(2.2, m * 0.42 + 0.3);
+  active.items.forEach((_svc, si) => {
+    const a2 = m === 1 ? aA : aA - spread / 2 + (si / (m - 1)) * spread;
+    const r = R2base + (si % 2) * 74;
+    pos[`${ai}-${si}`] = { x: Math.cos(a2) * r, y: Math.sin(a2) * r, ang: a2 };
+  });
+  return { pos, catPos };
+}
+
+/**
+ * Every category keeps its ring slot (dim, clickable) like the branch layout,
+ * but every category in the given domain gets its services fanned out — each
+ * branch narrower than a lone drill-down since they share the ring with siblings.
+ */
+export function layoutDomainCategories(domain: DomainNumber): Layout {
+  const pos: Record<string, Point> = {};
+  const catPos: Record<number, Point> = {};
+  const N = DATA.length;
+  const R1 = 300;
+  const R2base = 560;
+  DATA.forEach((cat, ci) => {
+    const a = (ci / N) * Math.PI * 2 - Math.PI / 2;
+    catPos[ci] = { x: Math.cos(a) * R1, y: Math.sin(a) * R1, ang: a };
+  });
+  DATA.forEach((cat, ci) => {
+    if (domainOf(cat.cat) !== domain) return;
+    const aA = catPos[ci].ang!;
+    const m = cat.items.length;
+    const spread = Math.min(1.1, m * 0.22 + 0.2);
     cat.items.forEach((_svc, si) => {
-      pos[`${ci}-${si}`] = { x: cx, y: startY + si * rowGap };
+      const a2 = m === 1 ? aA : aA - spread / 2 + (si / (m - 1)) * spread;
+      const r = R2base + (si % 2) * 74;
+      pos[`${ci}-${si}`] = { x: Math.cos(a2) * r, y: Math.sin(a2) * r, ang: a2 };
     });
   });
   return { pos, catPos };
 }
 
-/** Grid layout: wrap cards into rows, grouped by category contiguously. */
-function layoutGraphCards(): Layout {
-  const pos: Record<string, Point> = {};
-  const COLS = 8;
-  const COLW = CARD_W + 40;
-  const ROWH = CARD_H + 34;
-  const ids: string[] = [];
-  DATA.forEach((cat, ci) => cat.items.forEach((_svc, si) => ids.push(`${ci}-${si}`)));
-  const rows = Math.ceil(ids.length / COLS);
-  const totalW = (COLS - 1) * COLW;
-  const totalH = (rows - 1) * ROWH;
-  ids.forEach((id, i) => {
-    const col = i % COLS;
-    const row = Math.floor(i / COLS);
-    pos[id] = { x: -totalW / 2 + col * COLW, y: -totalH / 2 + row * ROWH };
-  });
-  return { pos, catPos: {} };
-}
-
-export function computeLayout(mode: Mode, style: VisualStyle): Layout {
-  if (style === "cards") {
-    return mode === "radial" ? layoutRadialCards() : layoutGraphCards();
-  }
-  return mode === "radial" ? layoutRadialCircle() : layoutGraphCircle();
+export function computeLayout(focus: MapFocus): Layout {
+  if (focus.kind === "all") return layoutAllCategories();
+  if (focus.kind === "domain") return layoutDomainCategories(focus.n);
+  return layoutCategoryBranch(focus.name);
 }
 
 /** Quadratic path between two points. `pull` scales the control point toward the origin. */
@@ -99,45 +104,9 @@ export function curve(x1: number, y1: number, x2: number, y2: number, pull?: num
   return `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
 }
 
-/** Connect from a card's left/right edge instead of its center, for cleaner routing. */
-export function edgeAnchor(p: Point, side: "left" | "right" | "bottom"): Point {
-  if (side === "right") return { x: p.x + CARD_W / 2, y: p.y };
-  if (side === "left") return { x: p.x - CARD_W / 2, y: p.y };
-  return { x: p.x, y: p.y + CARD_H / 2 };
-}
-
 /** Transform that centers the current layout in a stage of the given size. */
-export function fitTransform(
-  layout: Layout,
-  style: VisualStyle,
-  mode: Mode,
-  w: number,
-  h: number,
-) {
-  if (style === "cards") {
-    // Measure the real bounding box so the scale matches the grid, not a hardcoded guess.
-    let minX = Infinity;
-    let maxX = -Infinity;
-    let minY = Infinity;
-    let maxY = -Infinity;
-    Object.values(layout.pos).forEach((p) => {
-      minX = Math.min(minX, p.x - CARD_W / 2);
-      maxX = Math.max(maxX, p.x + CARD_W / 2);
-      minY = Math.min(minY, p.y - CARD_H / 2 - 40);
-      maxY = Math.max(maxY, p.y + CARD_H / 2);
-    });
-    const contentW = maxX - minX || 1;
-    const contentH = maxY - minY || 1;
-    let scale = Math.min(w / contentW, h / contentH) * 0.9;
-    scale = Math.max(0.25, Math.min(scale, 1.4));
-    return {
-      scale,
-      tx: w / 2 - ((minX + maxX) / 2) * scale,
-      ty: h / 2 - ((minY + maxY) / 2) * scale,
-    };
-  }
-  // Circle style: reference sizes calibrated to the orbit layout radii.
-  let scale = Math.min(w, h) / (mode === "radial" ? 1500 : 1300);
-  scale = Math.max(0.35, Math.min(scale, 1));
+export function fitTransform(focus: MapFocus, w: number, h: number) {
+  void focus; // "all", a domain, and a branch all share the same ring radii.
+  const scale = Math.max(0.35, Math.min(Math.min(w, h) / 1500, 1));
   return { scale, tx: w / 2, ty: h / 2 };
 }
