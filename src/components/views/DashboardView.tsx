@@ -3,6 +3,7 @@
 import DATA from "@/data/services";
 import { DOMAIN_META, domainOf, type DomainNumber } from "@/lib/domains";
 import type { MapFocus, View } from "@/lib/types";
+import { AccentButton } from "@/components/ui";
 
 type Props = {
   onStudy: (focus: MapFocus) => void;
@@ -38,7 +39,7 @@ export default function DashboardView({ onStudy, onNavigate }: Props) {
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="mb-1 font-mono text-[11px] tracking-[.1em] text-muted-2">
+                  <div className="mb-1 font-mono text-[11px] tracking-widest text-muted-2">
                     DOMINIO {meta.n}
                   </div>
                   <div className="text-[19px] font-bold leading-[1.25]">{meta.name}</div>
@@ -65,17 +66,9 @@ export default function DashboardView({ onStudy, onNavigate }: Props) {
 
               <div className="mt-auto flex items-center gap-3">
                 <span className="font-mono text-xs text-muted">{count} servicios</span>
-                <button
-                  type="button"
-                  onClick={() => onStudy({ kind: "domain", n: meta.n })}
-                  className="ml-auto bg-accent px-4 py-2 font-sans text-[13px] font-bold text-[#111827]"
-                  style={{
-                    clipPath:
-                      "polygon(0 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%)",
-                  }}
-                >
+                <AccentButton size="sm" className="ml-auto" onClick={() => onStudy({ kind: "domain", n: meta.n })}>
                   Estudiar
-                </button>
+                </AccentButton>
               </div>
             </div>
           ))}

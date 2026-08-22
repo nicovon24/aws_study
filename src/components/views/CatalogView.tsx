@@ -8,6 +8,7 @@ import { byId } from "@/lib/graph";
 import type { MapFocus } from "@/lib/types";
 import { AnimatedFilterSidebar, DetailPanel } from "@/components/shared";
 import { CatalogSkeleton } from "@/components/skeletons";
+import { IconButton, Input } from "@/components/ui";
 
 type Props = {
   focus: MapFocus;
@@ -63,19 +64,19 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex shrink-0 flex-wrap items-center gap-3.5 border-b border-line bg-panel px-4 py-3.5 sm:px-6">
-          <button
-            type="button"
+          <IconButton
+            size="sm"
             onClick={() => setShowFilters((v) => !v)}
             title={showFilters ? "ocultar categorías" : "mostrar categorías"}
-            className="hidden h-8 w-9 shrink-0 items-center justify-center rounded-lg border border-line bg-panel-2 text-muted-2 hover:text-ink md:flex"
+            className="hidden rounded-lg md:flex"
           >
             {showFilters ? <PanelLeftClose size={17} /> : <PanelLeftOpen size={17} />}
-          </button>
-          <input
+          </IconButton>
+          <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Buscar servicio o concepto…"
-            className="w-full rounded border border-line bg-bg px-3.5 py-2.25 font-sans text-sm text-ink outline-none focus:border-accent sm:w-70"
+            className="w-full sm:w-70"
           />
           {focusLabel && (
             <button

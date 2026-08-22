@@ -11,6 +11,7 @@ import {
   type FlashcardMode,
 } from "@/lib/flashcards";
 import type { MapFocus, View } from "@/lib/types";
+import { AccentButton, BackIcon, IconButton, Input, Pill } from "@/components/ui";
 
 type Props = {
   focus: MapFocus;
@@ -39,17 +40,9 @@ export default function PracticeView({ focus, onFocusChange, onNavigate }: Props
   return (
     <main className="flex-1 overflow-auto px-10 py-8 pb-[60px]">
       <div className="mx-auto max-w-[720px]">
-        <button
-          type="button"
-          onClick={() => onNavigate("dashboard")}
-          aria-label="Volver"
-          title="Volver"
-          className="mb-4 flex h-9 w-9 items-center justify-center rounded-full border border-line bg-panel-2 text-ink-2 transition-colors hover:border-accent hover:text-accent"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-        </button>
+        <IconButton onClick={() => onNavigate("dashboard")} aria-label="Volver" title="Volver" className="mb-4">
+          <BackIcon />
+        </IconButton>
         <div className="mb-[6px] font-mono text-xs uppercase tracking-[.12em] text-accent">practicar</div>
         <h1 className="mb-1 text-[34px] font-bold tracking-tight">Flashcards</h1>
         <p className="mb-8 max-w-[520px] text-[15px] text-muted">
@@ -60,27 +53,31 @@ export default function PracticeView({ focus, onFocusChange, onNavigate }: Props
         <div className="mb-8">
           <div className="mb-3 font-mono text-xs uppercase tracking-[.08em] text-muted-2">alcance</div>
           <div className="flex flex-wrap gap-2">
-            <ScopeChip active={focus.kind === "all"} label="Todos" onClick={() => onFocusChange({ kind: "all" })} />
+            <Pill active={focus.kind === "all"} onClick={() => onFocusChange({ kind: "all" })}>
+              Todos
+            </Pill>
             {([1, 2, 3, 4] as const).map((n) => (
-              <ScopeChip
+              <Pill
                 key={n}
                 active={focus.kind === "domain" && focus.n === n}
-                label={DOMAIN_META[n].name}
                 color={DOMAIN_META[n].color}
                 onClick={() => onFocusChange({ kind: "domain", n })}
-              />
+              >
+                {DOMAIN_META[n].name}
+              </Pill>
             ))}
           </div>
           <div className="mt-2 flex flex-wrap gap-2">
             {DATA.map((cat) => (
-              <ScopeChip
+              <Pill
                 key={cat.cat}
                 active={focus.kind === "category" && focus.name === cat.cat}
-                label={cat.cat}
                 color={cat.accent}
                 small
                 onClick={() => onFocusChange({ kind: "category", name: cat.cat })}
-              />
+              >
+                {cat.cat}
+              </Pill>
             ))}
           </div>
         </div>
@@ -111,32 +108,20 @@ export default function PracticeView({ focus, onFocusChange, onNavigate }: Props
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {[5, 10, 20].map((n) => (
-              <button
+              <Pill
                 key={n}
-                type="button"
+                active={count === n}
                 disabled={n > available}
                 onClick={() => setCount(n)}
-                className={`rounded-full border px-3 py-[6px] font-mono text-xs disabled:cursor-not-allowed disabled:opacity-30 ${
-                  count === n
-                    ? "border-accent bg-accent/10 text-accent"
-                    : "border-line text-muted-2 hover:border-muted-2/70"
-                }`}
+                className="font-mono! normal-case! tracking-normal! disabled:cursor-not-allowed disabled:opacity-30"
               >
                 {n}
-              </button>
+              </Pill>
             ))}
-            <button
-              type="button"
-              onClick={() => setCount(null)}
-              className={`rounded-full border px-3 py-[6px] font-mono text-xs ${
-                count === null
-                  ? "border-accent bg-accent/10 text-accent"
-                  : "border-line text-muted-2 hover:border-muted-2/70"
-              }`}
-            >
+            <Pill active={count === null} onClick={() => setCount(null)} className="font-mono! normal-case! tracking-normal!">
               Todas ({available})
-            </button>
-            <input
+            </Pill>
+            <Input
               type="number"
               min={1}
               max={available}
@@ -151,7 +136,7 @@ export default function PracticeView({ focus, onFocusChange, onNavigate }: Props
                 if (v == null || Number.isNaN(v)) return setCount(null);
                 setCount(Math.max(1, Math.min(v, available)));
               }}
-              className="w-[110px] rounded border border-line bg-bg px-3 py-[6px] font-mono text-xs text-ink outline-none focus:border-accent"
+              className="w-[110px] py-1.5! text-xs!"
             />
           </div>
         </div>
@@ -159,37 +144,6 @@ export default function PracticeView({ focus, onFocusChange, onNavigate }: Props
         <StartButton focus={focus} mode={mode} count={count} onStart={(cards) => setDeck(cards)} />
       </div>
     </main>
-  );
-}
-
-function ScopeChip({
-  active,
-  label,
-  color,
-  small,
-  onClick,
-}: {
-  active: boolean;
-  label: string;
-  color?: string;
-  small?: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        color: active ? (color ?? "#ec7211") : undefined,
-        borderColor: active ? `${color ?? "#ec7211"}88` : undefined,
-        background: active ? `${color ?? "#ec7211"}14` : undefined,
-      }}
-      className={`rounded-full border px-3 py-[6px] font-mono uppercase tracking-[.04em] ${
-        small ? "text-[10.5px]" : "text-xs"
-      } ${active ? "" : "border-line text-muted-2 hover:border-muted-2/70"}`}
-    >
-      {label}
-    </button>
   );
 }
 
@@ -209,15 +163,9 @@ function StartButton({
     [focus, mode, count],
   );
   return (
-    <button
-      type="button"
-      disabled={deckSize === 0}
-      onClick={() => onStart(buildDeck(focus, mode, count ?? undefined))}
-      className="bg-accent px-6 py-3 font-sans text-sm font-bold text-[#111827] disabled:cursor-not-allowed disabled:opacity-40"
-      style={{ clipPath: "polygon(0 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%)" }}
-    >
+    <AccentButton disabled={deckSize === 0} onClick={() => onStart(buildDeck(focus, mode, count ?? undefined))}>
       Empezar ({deckSize} {deckSize === 1 ? "tarjeta" : "tarjetas"})
-    </button>
+    </AccentButton>
   );
 }
 
@@ -242,14 +190,7 @@ function FlashcardSession({
         <div className="text-center">
           <div className="mb-2 text-2xl font-bold">Completaste la tanda</div>
           <p className="mb-6 text-muted">{deck.length} tarjetas repasadas.</p>
-          <button
-            type="button"
-            onClick={onExit}
-            className="bg-accent px-6 py-3 font-sans text-sm font-bold text-[#111827]"
-            style={{ clipPath: "polygon(0 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%)" }}
-          >
-            Volver a configurar
-          </button>
+          <AccentButton onClick={onExit}>Volver a configurar</AccentButton>
         </div>
       </main>
     );
@@ -261,9 +202,9 @@ function FlashcardSession({
   return (
     <main className="flex flex-1 flex-col items-center overflow-auto px-10 py-10">
       <div className="mb-6 flex w-full max-w-[640px] items-center justify-between">
-        <button type="button" onClick={onExit} className="font-mono text-xs text-muted-2 hover:text-ink-2">
-          ✕ salir
-        </button>
+        <IconButton onClick={onExit} aria-label="Volver" title="Volver">
+          <BackIcon />
+        </IconButton>
         <span className="font-mono text-xs text-muted-2">
           {index + 1} / {deck.length}
         </span>
@@ -310,17 +251,15 @@ function FlashcardSession({
       </div>
 
       {pickedId != null && (
-        <button
-          type="button"
+        <AccentButton
+          className="mt-8"
           onClick={() => {
             setPickedId(null);
             setIndex((i) => i + 1);
           }}
-          className="mt-8 bg-accent px-6 py-3 font-sans text-sm font-bold text-[#111827]"
-          style={{ clipPath: "polygon(0 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%)" }}
         >
           Siguiente
-        </button>
+        </AccentButton>
       )}
     </main>
   );
