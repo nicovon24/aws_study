@@ -34,7 +34,13 @@ export function useUrlFocus() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const focus = useMemo(() => parseFocus(searchParams), [searchParams]);
+  const domainParam = searchParams.get("domain");
+  const catParam = searchParams.get("cat");
+  // Memoize on the individual params (not the searchParams object), so
+  // selecting a service — which only touches ?service= — doesn't produce a
+  // new `focus` reference and re-trigger the mind map's layout recompute.
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally keyed on the raw params, not searchParams itself
+  const focus = useMemo(() => parseFocus(searchParams), [domainParam, catParam]);
   const selectedId = searchParams.get("service");
 
   const setFocus = useCallback(
