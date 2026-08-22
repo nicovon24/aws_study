@@ -9,7 +9,7 @@
   --color-ink-2: #c3cfe2;
   --color-muted: #94a3bb;
   --color-muted-2: #7c8ca6;
-  --color-accent: #ec7211;
+  --color-accent: #ef4444;
   --color-danger: #f2686b;
 
   --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
@@ -165,12 +165,12 @@ input[type="submit"] {
 .loader-bar {
   background-image: linear-gradient(
     90deg,
-    #3b82f6,
+    #ef4444,
     #94a3bb,
     #f2b544,
     #ec7211,
     #ec4899,
-    #3b82f6,
+    #ef4444,
     #94a3bb,
     #f2b544,
     #ec7211,

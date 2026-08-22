@@ -12,7 +12,7 @@ type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
 /** Rounded-full filter chip whose active state tints border/text/background with
  * a given accent color. Used for scope/domain/category filter toggles. */
 export default function Pill({ active, color, small, className = "", style, ...rest }: Props) {
-  const c = color ?? "#ec7211";
+  const c = color ?? "#ef4444";
   return (
     <button
       type="button"

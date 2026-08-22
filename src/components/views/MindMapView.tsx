@@ -3,7 +3,7 @@
 import "reactflow/dist/style.css";
 
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import ReactFlow, {
   Background,
   BezierEdge,
@@ -15,12 +15,14 @@ import ReactFlow, {
   type NodeProps,
   Position,
   ReactFlowProvider,
+  useReactFlow,
 } from "reactflow";
 import { AnimatedFilterSidebar, DetailPanel } from "@/components/shared";
 import { MindMapSkeleton } from "@/components/skeletons";
 import { useMindMapLayout } from "@/hooks";
 import { byId } from "@/lib/graph";
 import type { MapFocus } from "@/lib/types";
+import MapSearch from "./MapSearch";
 
 type Props = {
   focus: MapFocus;
@@ -125,6 +127,20 @@ function Inner({
   onToggleFilters,
 }: Props & { showFilters: boolean; onToggleFilters: () => void }) {
   const { layout, recenter } = useMindMapLayout(focus);
+  const { setCenter } = useReactFlow();
+
+  // Set when a search result is picked; once the layout that should contain
+  // it finishes computing, the camera zooms onto that node and this clears
+  // so it only fires once per pick.
+  const [centerOnId, setCenterOnId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!centerOnId || !layout) return;
+    const node = layout.nodes.find((n) => n.id === centerOnId);
+    if (!node) return;
+    setCenter(node.x + node.width / 2, node.y + node.height / 2, { zoom: 1.1, duration: 400 });
+    setCenterOnId(null);
+  }, [centerOnId, layout, setCenter]);
 
   // React Flow only knows its own pane size after it finishes mounting/measuring
   // (it remounts each time `layout` flips from null back to a value, since the
@@ -201,14 +217,23 @@ function Inner({
           <MindMapSkeleton />
         )}
 
-        <button
-          type="button"
-          onClick={onToggleFilters}
-          title={showFilters ? "ocultar categorías" : "mostrar categorías"}
-          className="absolute left-3 top-3 z-10 hidden h-8 w-9 items-center justify-center rounded-lg border border-line bg-panel-2 text-muted-2 hover:text-ink md:flex"
-        >
-          {showFilters ? <PanelLeftClose size={17} /> : <PanelLeftOpen size={17} />}
-        </button>
+        <div className="absolute left-3 right-3 top-3 z-10 flex items-start gap-2">
+          <button
+            type="button"
+            onClick={onToggleFilters}
+            title={showFilters ? "ocultar categorías" : "mostrar categorías"}
+            className="hidden h-8 w-9 shrink-0 items-center justify-center rounded-lg border border-line bg-panel-2 text-muted-2 hover:text-ink md:flex"
+          >
+            {showFilters ? <PanelLeftClose size={17} /> : <PanelLeftOpen size={17} />}
+          </button>
+          <MapSearch
+            onPick={(node) => {
+              if (focus.kind !== "all") onFocusChange({ kind: "all" });
+              onSelect(node.id);
+              setCenterOnId(node.id);
+            }}
+          />
+        </div>
 
         {focus.kind !== "all" && (
           <div className="absolute bottom-4 left-4 z-10">

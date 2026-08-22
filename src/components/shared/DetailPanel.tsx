@@ -174,7 +174,7 @@ function Fold({
       open={open}
       onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}
       className={`fold mb-[.55rem] overflow-hidden rounded-r-md border border-line border-l-2 bg-panel ${
-        danger ? "border-l-danger" : "border-l-[var(--pc-accent,#ec7211)]"
+        danger ? "border-l-danger" : "border-l-[var(--pc-accent,#ef4444)]"
       }`}
     >
       <summary

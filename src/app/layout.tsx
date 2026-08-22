@@ -15,8 +15,9 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "aws Study — CLF-C02",
-  description: "Mapa interactivo de servicios AWS para el track CLF-C02.",
+  title: "AWS Prep — CLF-C02",
+  description:
+    "Mapa interactivo de servicios AWS para el track CLF-C02. Proyecto personal de estudio, no afiliado ni patrocinado por Amazon Web Services, Inc.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -29,6 +29,9 @@ export default function AppShell({ drawerContent, children }: Props) {
         {drawerContent}
       </Header>
       {children}
+      <div className="shrink-0 border-t border-line bg-panel-2 px-4 py-1.5 text-center font-mono text-[10px] text-muted-2 sm:px-6">
+        Proyecto personal de estudio, no afiliado ni patrocinado por Amazon Web Services, Inc.
+      </div>
     </div>
   );
 }

@@ -14,7 +14,7 @@ function ensureInit() {
     themeVariables: {
       background: "#0a1120",
       primaryColor: "#131e33",
-      primaryBorderColor: "#ec7211",
+      primaryBorderColor: "#ef4444",
       primaryTextColor: "#e8ecf4",
       lineColor: "#5b6b8c",
       secondaryColor: "#1b2740",

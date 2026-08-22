@@ -84,8 +84,8 @@ function CategoryButton({
       type="button"
       onClick={onClick}
       style={{
-        borderLeftColor: active ? (color ?? "#ec7211") : "transparent",
-        background: active ? `${color ?? "#ec7211"}14` : undefined,
+        borderLeftColor: active ? (color ?? "#ef4444") : "transparent",
+        background: active ? `${color ?? "#ef4444"}14` : undefined,
       }}
       className={`flex w-full items-center gap-2.25 rounded border-l-2 px-2.5 py-2 font-sans text-[13.5px] transition-colors duration-150 ${
         active ? "font-bold text-white" : "text-ink-2 hover:bg-[#1b2740]/50 hover:text-white"
@@ -101,7 +101,7 @@ function CategoryButton({
       {count != null && (
         <span
           className="font-mono text-[11px] tabular-nums"
-          style={{ color: active ? (color ?? "#ec7211") : undefined }}
+          style={{ color: active ? (color ?? "#ef4444") : undefined }}
         >
           {count}
         </span>

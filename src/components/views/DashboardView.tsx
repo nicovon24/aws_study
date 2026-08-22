@@ -20,6 +20,10 @@ export default function DashboardView({ onStudy, onNavigate }: Props) {
   return (
     <main className="flex-1 overflow-auto px-10 py-8 pb-[60px]">
       <div className="mx-auto max-w-[1180px]">
+        <p className="mb-4 max-w-[620px] text-[13px] text-muted-2">
+          App de estudio y repaso para certificaciones AWS. Por ahora cubre el{" "}
+          <span className="text-ink-2">AWS Certified Cloud Practitioner</span>.
+        </p>
         <div className="mb-[6px] font-mono text-xs uppercase tracking-[.12em] text-accent">
           tu ruta de estudio
         </div>

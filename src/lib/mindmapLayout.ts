@@ -109,7 +109,7 @@ export async function computeMindLayout(focus: MapFocus): Promise<MindLayout> {
       width: ROOT_W,
       height: ROOT_H,
       ci: -1,
-      accent: "#ec7211",
+      accent: "#ef4444",
       side: "right",
     },
   ];
