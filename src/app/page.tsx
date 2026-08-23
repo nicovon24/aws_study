@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Suspense, useEffect, useState } from "react";
 import { AppShell } from "@/components/layout";
-import { CategoryFilters } from "@/components/shared";
 import { Loader } from "@/components/skeletons";
 import { useUrlFocus } from "@/hooks";
 import { VIEW_PATH } from "@/lib/routes";
@@ -35,7 +34,7 @@ function DashboardPageInner() {
 
   return (
     <>
-      <AppShell drawerContent={<CategoryFilters focus={focus} onFocusChange={setFocus} />}>
+      <AppShell>
         <DashboardView onStudy={goStudy} onNavigate={(v) => router.push(VIEW_PATH[v])} />
       </AppShell>
       {showLoader && (

@@ -136,7 +136,11 @@ export default function Header({ view, onNavigate, children }: Props) {
           ))}
         </nav>
 
-        {children && <div className="mt-2 border-t border-line px-4 pt-4">{children}</div>}
+        {children && (
+          <div className="mt-2 border-t border-line px-4 pt-4" onClick={() => setOpen(false)}>
+            {children}
+          </div>
+        )}
       </div>
     </header>
   );

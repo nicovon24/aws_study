@@ -60,7 +60,14 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
 
   return (
     <main className="flex min-h-0 flex-1">
-      <AnimatedFilterSidebar focus={focus} onFocusChange={onFocusChange} show={showFilters} />
+      <AnimatedFilterSidebar
+        focus={focus}
+        onFocusChange={(f) => {
+          onFocusChange(f);
+          setShowFilters(false);
+        }}
+        show={showFilters}
+      />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex shrink-0 flex-wrap items-center gap-3.5 border-b border-line bg-panel px-4 py-3.5 sm:px-6">
