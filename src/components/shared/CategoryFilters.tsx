@@ -1,7 +1,10 @@
 "use client";
 
 import DATA from "@/data/services";
+import { useLocale } from "@/hooks";
 import { DOMAIN_META, domainOf, type DomainNumber } from "@/lib/domains";
+import { pick } from "@/lib/locale";
+import { UI } from "@/lib/uiStrings";
 import type { MapFocus } from "@/lib/types";
 
 type Props = {
@@ -10,13 +13,16 @@ type Props = {
 };
 
 export default function CategoryFilters({ focus, onFocusChange }: Props) {
+  const { locale } = useLocale();
   return (
     <>
-      <div className="px-2 pb-2.5 font-mono text-[11px] uppercase tracking-widest text-muted-2">categorías</div>
+      <div className="px-2 pb-2.5 font-mono text-[11px] uppercase tracking-widest text-muted-2">
+        {pick(locale, UI.categories)}
+      </div>
       <div className="mb-3 flex flex-col gap-0.5">
         <CategoryButton
           active={focus.kind === "all"}
-          label="Todas"
+          label={pick(locale, UI.all)}
           count={null}
           onClick={() => onFocusChange({ kind: "all" })}
         />
@@ -24,13 +30,13 @@ export default function CategoryFilters({ focus, onFocusChange }: Props) {
 
       {([1, 2, 3, 4] as DomainNumber[]).map((n) => {
         const meta = DOMAIN_META[n];
-        const cats = DATA.filter((c) => domainOf(c.cat) === n);
+        const cats = DATA.filter((c) => domainOf(c.slug) === n);
         return (
           <div key={n} className="mb-3">
             <button
               type="button"
               onClick={() => onFocusChange({ kind: "domain", n })}
-              title={`Dominio ${n} · ${meta.weight}% del examen`}
+              title={`${pick(locale, UI.domainTitle)} ${n} · ${meta.weight}% ${pick(locale, UI.ofExam)}`}
               className={`mb-0.5 flex w-full items-center gap-2.25 rounded px-2.5 py-1.5 font-sans text-[12px] font-bold uppercase tracking-[.04em] transition-colors duration-150 ${
                 focus.kind === "domain" && focus.n === n
                   ? "bg-[#1b2740] text-white"
@@ -42,7 +48,7 @@ export default function CategoryFilters({ focus, onFocusChange }: Props) {
                 className="h-1.5 w-1.5 shrink-0 rounded-full"
                 style={{ background: meta.color, opacity: focus.kind === "domain" && focus.n === n ? 1 : 0.5 }}
               />
-              <span className="flex-1 text-left">{meta.name}</span>
+              <span className="flex-1 text-left">{pick(locale, meta.name)}</span>
               <span className="font-mono text-[10px] font-normal normal-case tracking-normal text-muted-2">
                 {meta.weight}%
               </span>
@@ -50,12 +56,12 @@ export default function CategoryFilters({ focus, onFocusChange }: Props) {
             <div className="flex flex-col gap-0.5">
               {cats.map((cat) => (
                 <CategoryButton
-                  key={cat.cat}
-                  active={focus.kind === "category" && focus.name === cat.cat}
-                  label={cat.cat}
+                  key={cat.slug}
+                  active={focus.kind === "category" && focus.slug === cat.slug}
+                  label={pick(locale, cat.cat)}
                   color={cat.accent}
                   count={cat.items.length}
-                  onClick={() => onFocusChange({ kind: "category", name: cat.cat })}
+                  onClick={() => onFocusChange({ kind: "category", slug: cat.slug })}
                 />
               ))}
             </div>

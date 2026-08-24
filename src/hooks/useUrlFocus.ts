@@ -12,15 +12,15 @@ function parseFocus(params: URLSearchParams): MapFocus {
     if (n >= 1 && n <= 4) return { kind: "domain", n: n as DomainNumber };
   }
   const cat = params.get("cat");
-  if (cat) return { kind: "category", name: cat };
+  if (cat) return { kind: "category", slug: cat };
   return { kind: "all" };
 }
 
-function focusToParams(focus: MapFocus, params: URLSearchParams) {
+export function focusToParams(focus: MapFocus, params: URLSearchParams) {
   params.delete("domain");
   params.delete("cat");
   if (focus.kind === "domain") params.set("domain", String(focus.n));
-  else if (focus.kind === "category") params.set("cat", focus.name);
+  else if (focus.kind === "category") params.set("cat", focus.slug);
 }
 
 /**

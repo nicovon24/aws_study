@@ -1,19 +1,24 @@
 import type { DomainNumber } from "./domains";
+import type { Locale } from "./locale";
 
-export type Concept = { t: string; d: string };
+export type Localized = { es: string; en: string };
+
+export type Concept = { t: Localized; d: Localized };
 
 export type Service = {
   name: string;
-  d: string;
+  d: Localized;
   link: string;
-  long?: string;
-  use?: string[];
-  avoid?: string[];
+  long?: Localized;
+  use?: Localized[];
+  avoid?: Localized[];
   concepts?: Concept[];
 };
 
 export type Category = {
-  cat: string;
+  /** Stable identifier for URLs/filters/comparisons — independent of the display label. */
+  slug: string;
+  cat: Localized;
   accent: string;
   items: Service[];
 };
@@ -23,9 +28,12 @@ export type Node = Service & {
   id: string;
   ci: number;
   si: number;
-  cat: string;
+  cat: Localized;
+  catSlug: string;
   accent: string;
 };
+
+export type { Locale };
 
 export type View = "dashboard" | "map" | "catalog" | "practice" | "architectures";
 
@@ -36,7 +44,7 @@ export type View = "dashboard" | "map" | "catalog" | "practice" | "architectures
 export type MapFocus =
   | { kind: "all" }
   | { kind: "domain"; n: DomainNumber }
-  | { kind: "category"; name: string };
+  | { kind: "category"; slug: string };
 
 /** World-space position. `ang` is only set by the circle layouts. */
 export type Point = { x: number; y: number; ang?: number };

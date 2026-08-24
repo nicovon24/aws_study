@@ -2,8 +2,10 @@
 
 import { useMemo, useRef, useState } from "react";
 import { Input } from "@/components/ui";
-import { useDebouncedValue } from "@/hooks";
+import { useDebouncedValue, useLocale } from "@/hooks";
 import { byId } from "@/lib/graph";
+import { pick as pickLocale } from "@/lib/locale";
+import { UI } from "@/lib/uiStrings";
 import type { Node } from "@/lib/types";
 
 type Props = {
@@ -15,6 +17,7 @@ const MAX_RESULTS = 8;
 /** Debounced service search for the mind map: typing filters a dropdown of
  * matching services (by name or description), picking one centers that node. */
 export default function MapSearch({ onPick }: Props) {
+  const { locale } = useLocale();
   const [raw, setRaw] = useState("");
   const [open, setOpen] = useState(false);
   const query = useDebouncedValue(raw.trim().toLowerCase(), 200);
@@ -23,9 +26,11 @@ export default function MapSearch({ onPick }: Props) {
   const results = useMemo(() => {
     if (!query) return [];
     return Object.values(byId)
-      .filter((n) => n.name.toLowerCase().includes(query) || n.d.toLowerCase().includes(query))
+      .filter(
+        (n) => n.name.toLowerCase().includes(query) || pickLocale(locale, n.d).toLowerCase().includes(query),
+      )
       .slice(0, MAX_RESULTS);
-  }, [query]);
+  }, [query, locale]);
 
   function pick(node: Node) {
     onPick(node);
@@ -46,13 +51,13 @@ export default function MapSearch({ onPick }: Props) {
           // Delay so a click on a result registers before the dropdown unmounts.
           setTimeout(() => setOpen(false), 120);
         }}
-        placeholder="Buscar servicio…"
+        placeholder={pickLocale(locale, UI.searchService)}
         className="w-full"
       />
       {open && query && (
         <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-20 max-h-80 overflow-auto rounded border border-line bg-panel-2 shadow-[0_12px_30px_rgba(5,8,15,.5)]">
           {results.length === 0 ? (
-            <div className="px-3 py-2.5 text-[13px] text-muted-2">Sin resultados</div>
+            <div className="px-3 py-2.5 text-[13px] text-muted-2">{pickLocale(locale, UI.noResults)}</div>
           ) : (
             results.map((n) => (
               <button
@@ -66,7 +71,7 @@ export default function MapSearch({ onPick }: Props) {
                   <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: n.accent }} />
                   {n.name}
                 </span>
-                <span className="truncate text-[11.5px] text-muted-2">{n.d}</span>
+                <span className="truncate text-[11.5px] text-muted-2">{pickLocale(locale, n.d)}</span>
               </button>
             ))
           )}

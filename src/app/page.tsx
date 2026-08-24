@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { Suspense, useEffect, useState } from "react";
 import { AppShell } from "@/components/layout";
 import { Loader } from "@/components/skeletons";
-import { useUrlFocus } from "@/hooks";
+import { focusToParams, useUrlFocus } from "@/hooks";
 import { VIEW_PATH } from "@/lib/routes";
 
 // The map view sizes itself from the live stage dimensions, so there is
@@ -26,8 +26,7 @@ function DashboardPageInner() {
 
   function goStudy(f: typeof focus) {
     const params = new URLSearchParams();
-    if (f.kind === "domain") params.set("domain", String(f.n));
-    else if (f.kind === "category") params.set("cat", f.name);
+    focusToParams(f, params);
     const qs = params.toString();
     router.push(qs ? `${VIEW_PATH.map}?${qs}` : VIEW_PATH.map);
   }

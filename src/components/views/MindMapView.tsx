@@ -19,8 +19,10 @@ import ReactFlow, {
 } from "reactflow";
 import { AnimatedFilterSidebar, DetailPanel } from "@/components/shared";
 import { MindMapSkeleton } from "@/components/skeletons";
-import { useMindMapLayout } from "@/hooks";
-import { byId } from "@/lib/graph";
+import { useLocale, useMindMapLayout } from "@/hooks";
+import { byId, catBySlug } from "@/lib/graph";
+import { pick } from "@/lib/locale";
+import { UI } from "@/lib/uiStrings";
 import type { MapFocus } from "@/lib/types";
 import MapSearch from "./MapSearch";
 
@@ -129,6 +131,7 @@ function Inner({
 }: Props & { showFilters: boolean; onToggleFilters: () => void; onCloseFilters: () => void }) {
   const { layout, recenter } = useMindMapLayout(focus);
   const { setCenter } = useReactFlow();
+  const { locale } = useLocale();
 
   // Set when a search result is picked; once the layout that should contain
   // it finishes computing, the camera zooms onto that node and this clears
@@ -168,7 +171,7 @@ function Inner({
         selected: n.kind === "service" ? n.id === selectedId : false,
         onClick:
           n.kind === "category"
-            ? () => onFocusChange({ kind: "category", name: n.label })
+            ? () => onFocusChange({ kind: "category", slug: n.slug! })
             : n.kind === "service"
               ? () => onSelect(n.id)
               : undefined,
@@ -225,7 +228,7 @@ function Inner({
           <button
             type="button"
             onClick={onToggleFilters}
-            title={showFilters ? "ocultar categorías" : "mostrar categorías"}
+            title={showFilters ? pick(locale, UI.hideCategories) : pick(locale, UI.showCategories)}
             className="hidden h-8 w-9 shrink-0 items-center justify-center rounded-lg border border-line bg-panel-2 text-muted-2 hover:text-ink md:flex"
           >
             {showFilters ? <PanelLeftClose size={17} /> : <PanelLeftOpen size={17} />}
@@ -246,7 +249,9 @@ function Inner({
               onClick={() => onFocusChange({ kind: "all" })}
               className="flex items-center gap-2 rounded-full border border-accent/50 bg-accent/10 py-1.5 pl-3 pr-2.5 font-mono text-[11px] text-accent hover:border-accent hover:bg-accent/20"
             >
-              {focus.kind === "domain" ? `Dominio ${focus.n}` : focus.name}
+              {focus.kind === "domain"
+                ? `${pick(locale, UI.domainChip)} ${focus.n}`
+                : pick(locale, catBySlug[focus.slug]?.cat ?? { es: "", en: "" })}
               <span aria-hidden className="text-[13px] leading-none">
                 ✕
               </span>

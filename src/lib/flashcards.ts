@@ -20,15 +20,15 @@ function shuffle<T>(arr: T[]): T[] {
   return out;
 }
 
-function scopeMatches(focus: MapFocus, catName: string): boolean {
+function scopeMatches(focus: MapFocus, catSlug: string): boolean {
   if (focus.kind === "all") return true;
-  if (focus.kind === "domain") return domainOf(catName) === focus.n;
-  return catName === focus.name;
+  if (focus.kind === "domain") return domainOf(catSlug) === focus.n;
+  return catSlug === focus.slug;
 }
 
 /** Every service belonging to the chosen scope, as flashcard subjects. */
 export function nodesInScope(focus: MapFocus): Node[] {
-  return DATA.filter((cat) => scopeMatches(focus, cat.cat)).flatMap((cat) => {
+  return DATA.filter((cat) => scopeMatches(focus, cat.slug)).flatMap((cat) => {
     const ci = DATA.indexOf(cat);
     return cat.items.map((_svc, si) => byId[`${ci}-${si}`]);
   });

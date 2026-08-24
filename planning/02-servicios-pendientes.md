@@ -30,11 +30,35 @@ Método de inserción que funciona (los heredocs de bash rompen con las comillas
 
 ---
 
+## En curso — próxima tanda a agregar
+
+Prioridad Glue, CDK, Outposts primero; resto de la tanda sigue después.
+
+| Servicio | Categoría | Por qué |
+|---|---|---|
+| **Glue** | Analítica | ETL serverless. Ya se menciona en Athena y EMR |
+| **CDK** | Herramientas dev | Ya se menciona en CloudFormation. IaC en lenguaje de programación |
+| **Outposts** | Cómputo | AWS en tu datacenter. Modelo híbrido |
+| **Amazon Q** | Machine Learning | Asistente de IA de AWS. Incorporado al temario reciente |
+| **X-Ray** | Administración | Trazado distribuido. Ya se menciona en CloudWatch |
+| **CloudWatch Logs Insights** | Administración | Podría ser ficha propia o quedar como concepto |
+| **DAX** | Bases de datos | Caché de DynamoDB. Ya se menciona en ElastiCache |
+| **DocumentDB** | Bases de datos | Compatible con MongoDB |
+| **MemoryDB** | Bases de datos | Redis durable |
+| **Audit Manager** | Seguridad y detección | Ya se menciona en Artifact |
+| **Migration Hub** | Migración y transferencia | Completa la categoría junto a DMS y DataSync |
+| **Elastic Disaster Recovery** | Migración y transferencia | DR. Concepto RTO/RPO del examen |
+| **Backup** | Almacenamiento | Backup centralizado entre servicios |
+
+Conceptos sin servicio, misma tanda (van a Fundamentos):
+
+- **Ventajas de la nube** — los seis beneficios que enumera AWS
+- **Las 7 R de migración** — Rehost, Replatform, Repurchase, Refactor, Retire, Retain, Relocate
+
 ## Prioridad alta — aparecen con frecuencia en el examen
 
 | Servicio | Categoría | Por qué |
 |---|---|---|
-| **Amazon Q** | Machine Learning | Asistente de IA de AWS. Incorporado al temario reciente |
 | **Global Accelerator** | Redes y CDN | Red global anycast. Se contrasta con CloudFront en preguntas |
 | **Transit Gateway** | Redes y CDN | Ya se menciona en la ficha de VPC, no existe como servicio |
 | **Site-to-Site VPN** | Redes y CDN | Ya se menciona en Direct Connect. Par clásico VPN vs DX |
@@ -43,29 +67,13 @@ Método de inserción que funciona (los heredocs de bash rompen con las comillas
 | **Translate** | Machine Learning | Traducción automática |
 | **Transcribe** | Machine Learning | Voz a texto |
 
-## Prioridad media — cubren huecos conceptuales
-
-| Servicio | Categoría | Por qué |
-|---|---|---|
-| **Glue** | Analítica | ETL serverless. Ya se menciona en Athena y EMR |
-| **X-Ray** | Administración | Trazado distribuido. Ya se menciona en CloudWatch |
-| **DAX** | Bases de datos | Caché de DynamoDB. Ya se menciona en ElastiCache |
-| **CDK** | Herramientas dev | Ya se menciona en CloudFormation. IaC en lenguaje de programación |
-| **CloudWatch Logs Insights** | Administración | Podría ser ficha propia o quedar como concepto |
-| **Audit Manager** | Seguridad y detección | Ya se menciona en Artifact |
-| **Migration Hub** | Migración y transferencia | Completa la categoría junto a DMS y DataSync |
-| **Backup** | Almacenamiento | Backup centralizado entre servicios |
-| **Elastic Disaster Recovery** | Migración y transferencia | DR. Concepto RTO/RPO del examen |
-
 ## Prioridad baja — completitud
 
 | Servicio | Categoría | Por qué |
 |---|---|---|
-| **DocumentDB** | Bases de datos | Compatible con MongoDB |
 | **Timestream** | Bases de datos | Series temporales |
 | **QLDB** | Bases de datos | Libro mayor inmutable |
 | **Keyspaces** | Bases de datos | Compatible con Cassandra |
-| **MemoryDB** | Bases de datos | Redis durable |
 | **Lex** | Machine Learning | Chatbots conversacionales |
 | **Kendra** | Machine Learning | Búsqueda empresarial |
 | **Forecast / Personalize** | Machine Learning | Predicción y recomendaciones |
@@ -74,7 +82,6 @@ Método de inserción que funciona (los heredocs de bash rompen con las comillas
 | **MQ** | Integración | Broker de mensajes administrado |
 | **OpenSearch** | Analítica | Búsqueda y análisis de logs |
 | **Data Firehose** | Analítica | Hoy es un concepto dentro de Kinesis |
-| **Outposts** | Cómputo | AWS en tu datacenter. Modelo híbrido |
 | **Local Zones / Wavelength** | Cómputo | Cómputo de baja latencia en el borde |
 | **WorkSpaces** | (nueva: Usuario final) | Escritorios virtuales |
 | **Connect** | (nueva: Usuario final) | Centro de contacto |
@@ -90,13 +97,11 @@ Método de inserción que funciona (los heredocs de bash rompen con las comillas
 
 Estos no son servicios pero aparecen en el examen. Podrían ir como fichas en **Fundamentos**:
 
-- **Las 7 R de migración** — Rehost, Replatform, Repurchase, Refactor, Retire, Retain, Relocate
 - **RTO / RPO** — objetivos de tiempo y punto de recuperación
 - **Estrategias de DR** — backup y restore, pilot light, warm standby, multi-site
 - **Escalado vertical vs horizontal** — scale up contra scale out
 - **CapEx vs OpEx** — el argumento económico de la nube
 - **Free Tier** — sus tres modalidades; hoy es un concepto dentro de "Modelo de precios"
-- **Ventajas de la nube** — los seis beneficios que enumera AWS
 
 ---
 

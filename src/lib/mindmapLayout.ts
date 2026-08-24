@@ -6,6 +6,7 @@ import type { ElkNode } from "elkjs/lib/elk-api";
 import DATA from "@/data/services";
 import { domainOf } from "./domains";
 import { byId } from "./graph";
+import { pick, type Locale } from "./locale";
 import type { MapFocus } from "./types";
 
 const elk = new ELK();
@@ -22,6 +23,8 @@ export type MindNode = {
   id: string;
   kind: "root" | "category" | "service";
   label: string;
+  /** Category slug — only set on `kind: "category"` nodes; used to build the focus on click. */
+  slug?: string;
   x: number;
   y: number;
   width: number;
@@ -48,8 +51,8 @@ export type MindLayout = {
 /** Whether a category should be drawn for the current focus. */
 function catActive(focus: MapFocus, cat: (typeof DATA)[number]): boolean {
   if (focus.kind === "all") return true;
-  if (focus.kind === "domain") return domainOf(cat.cat) === focus.n;
-  return cat.cat === focus.name;
+  if (focus.kind === "domain") return domainOf(cat.slug) === focus.n;
+  return cat.slug === focus.slug;
 }
 
 /**
@@ -88,7 +91,7 @@ function buildElkTree(cats: { ci: number; cat: (typeof DATA)[number] }[]): ElkNo
  * to the left and right (alternating), each with its services laid out by elk
  * in a horizontal tree, then the left half is mirrored back onto the root.
  */
-export async function computeMindLayout(focus: MapFocus): Promise<MindLayout> {
+export async function computeMindLayout(focus: MapFocus, locale: Locale): Promise<MindLayout> {
   const activeCats = DATA.map((cat, ci) => ({ ci, cat })).filter(({ cat }) => catActive(focus, cat));
 
   const left = activeCats.filter((_, i) => i % 2 === 0);
@@ -127,7 +130,8 @@ export async function computeMindLayout(focus: MapFocus): Promise<MindLayout> {
       nodes.push({
         id: n.id!,
         kind: isCat ? "category" : "service",
-        label: isCat ? cat.cat : (byId[n.id!]?.name ?? n.id!),
+        label: isCat ? pick(locale, cat.cat) : (byId[n.id!]?.name ?? n.id!),
+        slug: isCat ? cat.slug : undefined,
         x,
         y,
         width: w,

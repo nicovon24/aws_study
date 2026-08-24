@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { architecturesUsing } from "@/data/architectures";
+import { useLocale } from "@/hooks";
 import { byId, relatedIds } from "@/lib/graph";
+import { pick } from "@/lib/locale";
+import { UI } from "@/lib/uiStrings";
 import type { Node } from "@/lib/types";
 
 type Props = {
@@ -13,6 +16,8 @@ type Props = {
 };
 
 export default function DetailPanel({ node, onSelect, onClose }: Props) {
+  const { locale } = useLocale();
+  const t = (k: keyof typeof UI) => pick(locale, UI[k]);
   // Remount the folds on every service so they always start collapsed.
   const foldKey = node?.id ?? "none";
   const rels = node ? relatedIds(node.id) : [];
@@ -44,7 +49,7 @@ export default function DetailPanel({ node, onSelect, onClose }: Props) {
             <button
               type="button"
               onClick={onClose}
-              aria-label="cerrar"
+              aria-label={t("close")}
               className="absolute right-4 top-[.9rem] text-[1.1rem] text-muted"
             >
               ✕
@@ -58,45 +63,45 @@ export default function DetailPanel({ node, onSelect, onClose }: Props) {
                 background: `${node.accent}14`,
               }}
             >
-              {node.cat}
+              {pick(locale, node.cat)}
             </span>
             <h2 className="mb-[.4rem] mt-0 font-sans text-2xl font-bold tracking-tight text-white">{node.name}</h2>
-            <p className="mb-[.8rem] text-[.86rem] leading-[1.55] text-muted">{node.d}</p>
+            <p className="mb-[.8rem] text-[.86rem] leading-[1.55] text-muted">{pick(locale, node.d)}</p>
 
             {node.long && (
               // `long` is authored copy from the local dataset, not user input.
               <div
                 className="long-copy mb-4 text-[.84rem] leading-[1.6] text-ink-2"
-                dangerouslySetInnerHTML={{ __html: node.long }}
+                dangerouslySetInnerHTML={{ __html: pick(locale, node.long) }}
               />
             )}
 
-            <Fold key={`use-${foldKey}`} title="Cuándo usarlo" show={!!node.use?.length}>
+            <Fold key={`use-${foldKey}`} title={t("whenToUse")} show={!!node.use?.length}>
               <ul className="m-0 list-disc pl-[1.05rem] text-ink-2">
                 {node.use?.map((t, i) => (
                   <li key={i} className="mb-[.22rem]">
-                    {t}
+                    {pick(locale, t)}
                   </li>
                 ))}
               </ul>
             </Fold>
 
-            <Fold key={`avoid-${foldKey}`} title="Cuándo NO" show={!!node.avoid?.length} danger>
+            <Fold key={`avoid-${foldKey}`} title={t("whenNot")} show={!!node.avoid?.length} danger>
               <ul className="m-0 list-disc pl-[1.05rem] text-ink-2">
                 {node.avoid?.map((t, i) => (
                   <li key={i} className="mb-[.22rem]">
-                    {t}
+                    {pick(locale, t)}
                   </li>
                 ))}
               </ul>
             </Fold>
 
-            <Fold key={`con-${foldKey}`} title="Conceptos propios" show={!!node.concepts?.length}>
+            <Fold key={`con-${foldKey}`} title={t("ownConcepts")} show={!!node.concepts?.length}>
               <dl className="m-0">
                 {node.concepts?.map((c, i) => (
                   <div key={i}>
-                    <dt className={`panel-accent font-mono text-[.75rem] ${i === 0 ? "" : "mt-2"}`}>{c.t}</dt>
-                    <dd className="ml-0 mt-[.1rem] text-muted">{c.d}</dd>
+                    <dt className={`panel-accent font-mono text-[.75rem] ${i === 0 ? "" : "mt-2"}`}>{pick(locale, c.t)}</dt>
+                    <dd className="ml-0 mt-[.1rem] text-muted">{pick(locale, c.d)}</dd>
                   </div>
                 ))}
               </dl>
@@ -105,7 +110,7 @@ export default function DetailPanel({ node, onSelect, onClose }: Props) {
             {rels.length > 0 && (
               <>
                 <span className="mb-[.35rem] mt-3 block text-[.72rem] uppercase tracking-[.04em] text-muted-2">
-                  Se relaciona con
+                  {t("relatedTo")}
                 </span>
                 <div className="mb-[.9rem] text-[.8rem] leading-[1.7] text-muted">
                   {rels.map((rid) => (
@@ -125,7 +130,7 @@ export default function DetailPanel({ node, onSelect, onClose }: Props) {
             {archs.length > 0 && (
               <>
                 <span className="mb-[.35rem] mt-3 block text-[.72rem] uppercase tracking-[.04em] text-muted-2">
-                  Aparece en estas arquitecturas
+                  {t("appearsInArchitectures")}
                 </span>
                 <div className="mb-[.9rem] flex flex-col gap-1">
                   {archs.map((a) => (
@@ -134,7 +139,7 @@ export default function DetailPanel({ node, onSelect, onClose }: Props) {
                       href={`/arquitecturas?id=${encodeURIComponent(a.id)}`}
                       className="rounded border border-line px-2.5 py-1.5 font-sans text-[.78rem] text-ink-2 hover:border-[var(--pc-accent)] hover:text-[var(--pc-accent)]"
                     >
-                      {a.title}
+                      {pick(locale, a.title)}
                     </Link>
                   ))}
                 </div>
@@ -147,7 +152,7 @@ export default function DetailPanel({ node, onSelect, onClose }: Props) {
               rel="noopener noreferrer"
               className="inline-block text-[.8rem] text-accent hover:underline"
             >
-              ↗ doc oficial
+              {t("officialDoc")}
             </a>
           </>
         )}

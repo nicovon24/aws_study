@@ -2,6 +2,10 @@
 
 import { Cloud } from "lucide-react";
 import { useEffect, useState } from "react";
+import { LocaleToggle } from "@/components/ui";
+import { useLocale } from "@/hooks";
+import { pick } from "@/lib/locale";
+import { UI } from "@/lib/uiStrings";
 import type { View } from "@/lib/types";
 
 type Props = {
@@ -11,15 +15,16 @@ type Props = {
   children?: React.ReactNode;
 };
 
-const TABS: { key: View; label: string }[] = [
-  { key: "dashboard", label: "Home" },
-  { key: "catalog", label: "Catálogo" },
-  { key: "map", label: "Mapa" },
-  { key: "architectures", label: "Arquitecturas" },
-  { key: "practice", label: "Practicar" },
+const TABS: { key: View; label: keyof typeof UI }[] = [
+  { key: "dashboard", label: "navHome" },
+  { key: "catalog", label: "navCatalog" },
+  { key: "map", label: "navMap" },
+  { key: "architectures", label: "navArchitectures" },
+  { key: "practice", label: "navPractice" },
 ];
 
 export default function Header({ view, onNavigate, children }: Props) {
+  const { locale } = useLocale();
   const [open, setOpen] = useState(false);
 
   // Close the drawer whenever the view changes (nav tap, or programmatic navigation).
@@ -47,6 +52,7 @@ export default function Header({ view, onNavigate, children }: Props) {
         <span className="hidden whitespace-nowrap rounded border border-line bg-panel px-1.75 py-0.5 font-mono text-[11px] text-muted-2 sm:inline">
           CLF-C02
         </span>
+        <LocaleToggle />
       </div>
 
       <nav className="ml-2 hidden gap-1 md:flex">
@@ -61,14 +67,14 @@ export default function Header({ view, onNavigate, children }: Props) {
                 : "border-transparent text-muted-2 hover:text-ink-2"
             }`}
           >
-            {t.label}
+            {pick(locale, UI[t.label])}
           </button>
         ))}
       </nav>
 
       <button
         type="button"
-        aria-label={open ? "cerrar menú" : "abrir menú"}
+        aria-label={open ? pick(locale, UI.closeMenu) : pick(locale, UI.openMenu)}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
         className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line bg-panel text-ink-2 md:hidden"
@@ -111,7 +117,7 @@ export default function Header({ view, onNavigate, children }: Props) {
       >
         <button
           type="button"
-          aria-label="cerrar menú"
+          aria-label={pick(locale, UI.closeMenu)}
           onClick={() => setOpen(false)}
           className="absolute right-4 top-4 flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line bg-panel text-ink-2"
         >
@@ -131,7 +137,7 @@ export default function Header({ view, onNavigate, children }: Props) {
                 view === t.key ? "bg-[#1f2d47] text-white" : "text-muted-2 hover:bg-[#1b2740]/60 hover:text-ink-2"
               }`}
             >
-              {t.label}
+              {pick(locale, UI[t.label])}
             </button>
           ))}
         </nav>

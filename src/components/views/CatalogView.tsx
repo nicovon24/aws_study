@@ -3,8 +3,11 @@
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import DATA from "@/data/services";
+import { useLocale } from "@/hooks";
 import { DOMAIN_META, domainOf } from "@/lib/domains";
-import { byId } from "@/lib/graph";
+import { byId, catBySlug } from "@/lib/graph";
+import { pick } from "@/lib/locale";
+import { UI } from "@/lib/uiStrings";
 import type { MapFocus } from "@/lib/types";
 import { AnimatedFilterSidebar, DetailPanel } from "@/components/shared";
 import { CatalogSkeleton } from "@/components/skeletons";
@@ -17,13 +20,14 @@ type Props = {
   onSelect: (id: string | null) => void;
 };
 
-function catMatchesFocus(focus: MapFocus, catName: string): boolean {
+function catMatchesFocus(focus: MapFocus, catSlug: string): boolean {
   if (focus.kind === "all") return true;
-  if (focus.kind === "domain") return domainOf(catName) === focus.n;
-  return catName === focus.name;
+  if (focus.kind === "domain") return domainOf(catSlug) === focus.n;
+  return catSlug === focus.slug;
 }
 
 export default function CatalogView({ focus, onFocusChange, selectedId, onSelect }: Props) {
+  const { locale } = useLocale();
   const [q, setQ] = useState("");
   const [showFilters, setShowFilters] = useState(true);
   const query = q.trim().toLowerCase();
@@ -39,24 +43,30 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
 
   const columns = useMemo(() => {
     let shown = 0;
-    const cols = DATA.filter((cat) => catMatchesFocus(focus, cat.cat))
+    const cols = DATA.filter((cat) => catMatchesFocus(focus, cat.slug))
       .map((cat) => {
         const ci = DATA.indexOf(cat);
         const items = cat.items
           .map((svc, si) => ({ id: `${ci}-${si}`, svc }))
           .filter(
             ({ svc }) =>
-              !query || svc.name.toLowerCase().includes(query) || svc.d.toLowerCase().includes(query),
+              !query ||
+              svc.name.toLowerCase().includes(query) ||
+              pick(locale, svc.d).toLowerCase().includes(query),
           );
         shown += items.length;
         return { cat, items };
       })
       .filter((col) => col.items.length > 0);
     return { cols, shown };
-  }, [query, focus]);
+  }, [query, focus, locale]);
 
   const focusLabel =
-    focus.kind === "domain" ? DOMAIN_META[focus.n].name : focus.kind === "category" ? focus.name : null;
+    focus.kind === "domain"
+      ? pick(locale, DOMAIN_META[focus.n].name)
+      : focus.kind === "category"
+        ? (catBySlug[focus.slug] && pick(locale, catBySlug[focus.slug].cat))
+        : null;
 
   return (
     <main className="flex min-h-0 flex-1">
@@ -74,7 +84,7 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
           <IconButton
             size="sm"
             onClick={() => setShowFilters((v) => !v)}
-            title={showFilters ? "ocultar categorías" : "mostrar categorías"}
+            title={showFilters ? pick(locale, UI.hideCategories) : pick(locale, UI.showCategories)}
             className="hidden rounded-lg md:flex"
           >
             {showFilters ? <PanelLeftClose size={17} /> : <PanelLeftOpen size={17} />}
@@ -82,7 +92,7 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Buscar servicio o concepto…"
+            placeholder={pick(locale, UI.searchServiceOrConcept)}
             className="w-full sm:w-70"
           />
           {focusLabel && (
@@ -96,7 +106,9 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
             </button>
           )}
           <div className="hidden flex-1 sm:block" />
-          <div className="font-mono text-xs text-muted-2">{columns.shown} items visibles</div>
+          <div className="font-mono text-xs text-muted-2">
+            {columns.shown} {pick(locale, UI.itemsVisible)}
+          </div>
         </div>
 
         {isFiltering ? (
@@ -105,21 +117,22 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
           <div className="flex-1 overflow-auto px-4 pb-10 pt-4 sm:px-6 sm:pt-5.5">
             <div className="flex flex-col items-stretch gap-3.5 sm:flex-row sm:items-start">
               {columns.cols.map(({ cat, items }) => (
-                <div key={cat.cat} className="flex flex-col gap-1.5 sm:w-53 sm:shrink-0">
+                <div key={cat.slug} className="flex flex-col gap-1.5 sm:w-53 sm:shrink-0">
                   <div
                     className="mb-0.5 rounded border px-1.5 py-1.75 text-center font-mono text-[11px] uppercase tracking-[.08em]"
                     style={{ color: cat.accent, borderColor: `${cat.accent}55`, background: `${cat.accent}12` }}
                   >
-                    {cat.cat}
+                    {pick(locale, cat.cat)}
                   </div>
                   {items.map(({ id, svc }) => {
                     const active = id === selectedId;
+                    const d = pick(locale, svc.d);
                     return (
                       <button
                         key={id}
                         type="button"
                         onClick={() => onSelect(id)}
-                        title={svc.d}
+                        title={d}
                         style={{
                           borderLeftColor: active ? cat.accent : `${cat.accent}88`,
                           background: active ? `${cat.accent}14` : undefined,
@@ -131,7 +144,7 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
                       >
                         <span className="text-sm font-bold text-white">{svc.name}</span>
                         <span className="text-[11.5px] leading-[1.45] text-muted-2">
-                          {svc.d.length > 74 ? `${svc.d.slice(0, 74)}…` : svc.d}
+                          {d.length > 74 ? `${d.slice(0, 74)}…` : d}
                         </span>
                       </button>
                     );

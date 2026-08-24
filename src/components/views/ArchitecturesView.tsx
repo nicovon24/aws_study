@@ -3,6 +3,9 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect } from "react";
 import { ARCHITECTURES } from "@/data/architectures";
+import { useLocale } from "@/hooks";
+import { pick } from "@/lib/locale";
+import { UI } from "@/lib/uiStrings";
 import { MermaidDiagram } from "@/components/diagrams";
 
 type Props = {
@@ -11,6 +14,7 @@ type Props = {
 };
 
 export default function ArchitecturesView({ selectedId, onSelect }: Props) {
+  const { locale } = useLocale();
   const active = ARCHITECTURES.find((a) => a.id === selectedId) ?? null;
 
   useEffect(() => {
@@ -26,13 +30,10 @@ export default function ArchitecturesView({ selectedId, onSelect }: Props) {
     <main className="flex-1 overflow-auto px-10 py-8 pb-[60px]">
       <div className="mx-auto max-w-[1180px]">
         <div className="mb-[6px] font-mono text-xs uppercase tracking-[.12em] text-accent">
-          patrones de referencia
+          {pick(locale, UI.archEyebrow)}
         </div>
-        <h1 className="mb-1 text-[34px] font-bold tracking-tight">Arquitecturas</h1>
-        <p className="mb-7 max-w-[620px] text-[15px] text-muted">
-          Diagramas de los patrones más comunes del examen: cómo se conectan los servicios entre sí en
-          una arquitectura real.
-        </p>
+        <h1 className="mb-1 text-[34px] font-bold tracking-tight">{pick(locale, UI.archTitle)}</h1>
+        <p className="mb-7 max-w-[620px] text-[15px] text-muted">{pick(locale, UI.archSubtitle)}</p>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {ARCHITECTURES.map((a) => (
@@ -42,9 +43,9 @@ export default function ArchitecturesView({ selectedId, onSelect }: Props) {
               onClick={() => onSelect(a.id)}
               className="flex flex-col gap-3 rounded-lg border border-line bg-panel-2 px-[22px] pb-[18px] pt-5 text-left transition-colors hover:border-accent/50"
             >
-              <div className="text-[17px] font-bold leading-[1.3]">{a.title}</div>
-              <p className="text-[13px] leading-[1.5] text-muted">{a.description}</p>
-              <MermaidDiagram chart={a.mermaid} className="h-32 w-full overflow-hidden [&_svg]:h-full [&_svg]:w-full" />
+              <div className="text-[17px] font-bold leading-[1.3]">{pick(locale, a.title)}</div>
+              <p className="text-[13px] leading-[1.5] text-muted">{pick(locale, a.description)}</p>
+              <MermaidDiagram chart={pick(locale, a.mermaid)} className="h-32 w-full overflow-hidden [&_svg]:h-full [&_svg]:w-full" />
             </button>
           ))}
         </div>
@@ -73,17 +74,17 @@ export default function ArchitecturesView({ selectedId, onSelect }: Props) {
               <button
                 type="button"
                 onClick={() => onSelect(null)}
-                aria-label="cerrar"
+                aria-label={pick(locale, UI.close)}
                 className="absolute right-4 top-4 text-[1.1rem] text-muted hover:text-ink"
               >
                 ✕
               </button>
               {active && (
                 <>
-                  <h2 className="mb-1 pr-8 text-xl font-bold">{active.title}</h2>
-                  <p className="mb-5 max-w-[720px] text-sm text-muted">{active.description}</p>
+                  <h2 className="mb-1 pr-8 text-xl font-bold">{pick(locale, active.title)}</h2>
+                  <p className="mb-5 max-w-[720px] text-sm text-muted">{pick(locale, active.description)}</p>
                   <MermaidDiagram
-                    chart={active.mermaid}
+                    chart={pick(locale, active.mermaid)}
                     className="min-h-64 w-full [&_svg]:mx-auto [&_svg]:max-w-full"
                   />
                 </>

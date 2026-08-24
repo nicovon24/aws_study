@@ -1,19 +1,23 @@
 import DATA from "@/data/services";
 import RELATIONS from "@/data/relations";
-import type { Node } from "./types";
+import type { Category, Node } from "./types";
 
 /** Every service flattened, indexed by `${categoryIndex}-${serviceIndex}`. */
 export const byId: Record<string, Node> = {};
 const byName: Record<string, Node> = {};
 
-DATA.forEach((cat, ci) =>
+/** Category lookup by its stable slug — resolves a `MapFocus` category slug back to its display data. */
+export const catBySlug: Record<string, Category> = {};
+
+DATA.forEach((cat, ci) => {
+  catBySlug[cat.slug] = cat;
   cat.items.forEach((svc, si) => {
     const id = `${ci}-${si}`;
-    const node: Node = { id, ci, si, cat: cat.cat, accent: cat.accent, ...svc };
+    const node: Node = { id, ci, si, cat: cat.cat, catSlug: cat.slug, accent: cat.accent, ...svc };
     byId[id] = node;
     byName[svc.name] = node;
-  }),
-);
+  });
+});
 
 export const totalServices = Object.keys(byId).length;
 

@@ -1,7 +1,10 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
+import { useLocale } from "@/hooks";
+import { pick } from "@/lib/locale";
 import { VIEW_PATH, viewFromPathname } from "@/lib/routes";
+import { UI } from "@/lib/uiStrings";
 import Header from "./Header";
 
 type Props = {
@@ -12,6 +15,7 @@ type Props = {
 
 /** Shared header + checkered background wrapper used by every route/page. */
 export default function AppShell({ drawerContent, children }: Props) {
+  const { locale } = useLocale();
   const router = useRouter();
   const pathname = usePathname();
   const view = viewFromPathname(pathname);
@@ -30,7 +34,7 @@ export default function AppShell({ drawerContent, children }: Props) {
       </Header>
       {children}
       <div className="shrink-0 border-t border-line bg-panel-2 px-4 py-1.5 text-center font-mono text-[10px] text-muted-2 sm:px-6">
-        Proyecto personal de estudio, no afiliado ni patrocinado por Amazon Web Services, Inc.
+        {pick(locale, UI.disclaimer)}
       </div>
     </div>
   );

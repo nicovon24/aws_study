@@ -2,14 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import DATA from "@/data/services";
+import { useLocale } from "@/hooks";
 import { DOMAIN_META } from "@/lib/domains";
-import {
-  buildDeck,
-  FLASHCARD_MODE_LABEL,
-  nodesInScope,
-  type Flashcard,
-  type FlashcardMode,
-} from "@/lib/flashcards";
+import { buildDeck, nodesInScope, type Flashcard, type FlashcardMode } from "@/lib/flashcards";
+import { pick } from "@/lib/locale";
+import { UI } from "@/lib/uiStrings";
 import type { MapFocus, View } from "@/lib/types";
 import { AccentButton, BackIcon, IconButton, Input, Pill } from "@/components/ui";
 
@@ -22,6 +19,7 @@ type Props = {
 const MODES: FlashcardMode[] = ["guess-description", "guess-service"];
 
 export default function PracticeView({ focus, onFocusChange, onNavigate }: Props) {
+  const { locale } = useLocale();
   const [mode, setMode] = useState<FlashcardMode>("guess-description");
   const [deck, setDeck] = useState<Flashcard[] | null>(null);
 
@@ -40,21 +38,27 @@ export default function PracticeView({ focus, onFocusChange, onNavigate }: Props
   return (
     <main className="flex-1 overflow-auto px-10 py-8 pb-[60px]">
       <div className="mx-auto max-w-[720px]">
-        <IconButton onClick={() => onNavigate("dashboard")} aria-label="Volver" title="Volver" className="mb-4">
+        <IconButton
+          onClick={() => onNavigate("dashboard")}
+          aria-label={pick(locale, UI.back)}
+          title={pick(locale, UI.back)}
+          className="mb-4"
+        >
           <BackIcon />
         </IconButton>
-        <div className="mb-[6px] font-mono text-xs uppercase tracking-[.12em] text-accent">practicar</div>
-        <h1 className="mb-1 text-[34px] font-bold tracking-tight">Flashcards</h1>
-        <p className="mb-8 max-w-[520px] text-[15px] text-muted">
-          Elegí qué querés repasar y en qué sentido: adivinar la descripción a partir del
-          servicio, o el servicio a partir de la descripción.
-        </p>
+        <div className="mb-[6px] font-mono text-xs uppercase tracking-[.12em] text-accent">
+          {pick(locale, UI.practiceEyebrow)}
+        </div>
+        <h1 className="mb-1 text-[34px] font-bold tracking-tight">{pick(locale, UI.flashcards)}</h1>
+        <p className="mb-8 max-w-[520px] text-[15px] text-muted">{pick(locale, UI.practiceIntro)}</p>
 
         <div className="mb-8">
-          <div className="mb-3 font-mono text-xs uppercase tracking-[.08em] text-muted-2">alcance</div>
+          <div className="mb-3 font-mono text-xs uppercase tracking-[.08em] text-muted-2">
+            {pick(locale, UI.scope)}
+          </div>
           <div className="flex flex-wrap gap-2">
             <Pill active={focus.kind === "all"} onClick={() => onFocusChange({ kind: "all" })}>
-              Todos
+              {pick(locale, UI.allPill)}
             </Pill>
             {([1, 2, 3, 4] as const).map((n) => (
               <Pill
@@ -63,27 +67,29 @@ export default function PracticeView({ focus, onFocusChange, onNavigate }: Props
                 color={DOMAIN_META[n].color}
                 onClick={() => onFocusChange({ kind: "domain", n })}
               >
-                {DOMAIN_META[n].name}
+                {pick(locale, DOMAIN_META[n].name)}
               </Pill>
             ))}
           </div>
           <div className="mt-2 flex flex-wrap gap-2">
             {DATA.map((cat) => (
               <Pill
-                key={cat.cat}
-                active={focus.kind === "category" && focus.name === cat.cat}
+                key={cat.slug}
+                active={focus.kind === "category" && focus.slug === cat.slug}
                 color={cat.accent}
                 small
-                onClick={() => onFocusChange({ kind: "category", name: cat.cat })}
+                onClick={() => onFocusChange({ kind: "category", slug: cat.slug })}
               >
-                {cat.cat}
+                {pick(locale, cat.cat)}
               </Pill>
             ))}
           </div>
         </div>
 
         <div className="mb-9">
-          <div className="mb-3 font-mono text-xs uppercase tracking-[.08em] text-muted-2">modo</div>
+          <div className="mb-3 font-mono text-xs uppercase tracking-[.08em] text-muted-2">
+            {pick(locale, UI.mode)}
+          </div>
           <div className="flex gap-2">
             {MODES.map((m) => (
               <button
@@ -96,7 +102,7 @@ export default function PracticeView({ focus, onFocusChange, onNavigate }: Props
                     : "border-line bg-panel-2 text-ink-2 hover:border-muted-2"
                 }`}
               >
-                {FLASHCARD_MODE_LABEL[m]}
+                {pick(locale, m === "guess-description" ? UI.guessDescription : UI.guessService)}
               </button>
             ))}
           </div>
@@ -104,7 +110,7 @@ export default function PracticeView({ focus, onFocusChange, onNavigate }: Props
 
         <div className="mb-9">
           <div className="mb-3 font-mono text-xs uppercase tracking-[.08em] text-muted-2">
-            cantidad de preguntas
+            {pick(locale, UI.questionCount)}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {[5, 10, 20].map((n) => (
@@ -119,13 +125,13 @@ export default function PracticeView({ focus, onFocusChange, onNavigate }: Props
               </Pill>
             ))}
             <Pill active={count === null} onClick={() => setCount(null)} className="font-mono! normal-case! tracking-normal!">
-              Todas ({available})
+              {pick(locale, UI.allCount)} ({available})
             </Pill>
             <Input
               type="number"
               min={1}
               max={available}
-              placeholder="otra cantidad"
+              placeholder={pick(locale, UI.otherCount)}
               value={count != null && ![5, 10, 20].includes(count) ? count : ""}
               onChange={(e) => {
                 const v = e.target.value === "" ? null : Number(e.target.value);
@@ -158,13 +164,14 @@ function StartButton({
   count: number | null;
   onStart: (deck: Flashcard[]) => void;
 }) {
+  const { locale } = useLocale();
   const deckSize = useMemo(
     () => buildDeck(focus, mode, count ?? undefined).length,
     [focus, mode, count],
   );
   return (
     <AccentButton disabled={deckSize === 0} onClick={() => onStart(buildDeck(focus, mode, count ?? undefined))}>
-      Empezar ({deckSize} {deckSize === 1 ? "tarjeta" : "tarjetas"})
+      {pick(locale, UI.start)} ({deckSize} {pick(locale, deckSize === 1 ? UI.card : UI.cards)})
     </AccentButton>
   );
 }
@@ -178,6 +185,7 @@ function FlashcardSession({
   deck: Flashcard[];
   onExit: () => void;
 }) {
+  const { locale } = useLocale();
   const [index, setIndex] = useState(0);
   const [pickedId, setPickedId] = useState<string | null>(null);
 
@@ -188,21 +196,23 @@ function FlashcardSession({
     return (
       <main className="flex flex-1 items-center justify-center px-10">
         <div className="text-center">
-          <div className="mb-2 text-2xl font-bold">Completaste la tanda</div>
-          <p className="mb-6 text-muted">{deck.length} tarjetas repasadas.</p>
-          <AccentButton onClick={onExit}>Volver a configurar</AccentButton>
+          <div className="mb-2 text-2xl font-bold">{pick(locale, UI.batchDone)}</div>
+          <p className="mb-6 text-muted">
+            {deck.length} {pick(locale, UI.cardsReviewed)}
+          </p>
+          <AccentButton onClick={onExit}>{pick(locale, UI.backToSetup)}</AccentButton>
         </div>
       </main>
     );
   }
 
   const isDescriptionMode = mode === "guess-description";
-  const questionText = isDescriptionMode ? card.correct.name : card.correct.d;
+  const questionText = isDescriptionMode ? card.correct.name : pick(locale, card.correct.d);
 
   return (
     <main className="flex flex-1 flex-col items-center overflow-auto px-10 py-10">
       <div className="mb-6 flex w-full max-w-[640px] items-center justify-between">
-        <IconButton onClick={onExit} aria-label="Volver" title="Volver">
+        <IconButton onClick={onExit} aria-label={pick(locale, UI.back)} title={pick(locale, UI.back)}>
           <BackIcon />
         </IconButton>
         <span className="font-mono text-xs text-muted-2">
@@ -215,7 +225,7 @@ function FlashcardSession({
           className="mb-2 font-mono text-[11px] uppercase tracking-[.08em]"
           style={{ color: card.correct.accent }}
         >
-          {isDescriptionMode ? "¿Qué hace este servicio?" : "¿Qué servicio es este?"}
+          {pick(locale, isDescriptionMode ? UI.whatDoesThisDo : UI.whichServiceIsThis)}
         </div>
         <div className={isDescriptionMode ? "text-2xl font-bold" : "text-base leading-relaxed text-ink-2"}>
           {questionText}
@@ -224,7 +234,7 @@ function FlashcardSession({
 
       <div className="grid w-full max-w-[640px] gap-3 sm:grid-cols-1">
         {card.options.map((opt) => {
-          const label = isDescriptionMode ? opt.d : opt.name;
+          const label = isDescriptionMode ? pick(locale, opt.d) : opt.name;
           const isCorrect = opt.id === card.correct.id;
           const isPicked = opt.id === pickedId;
           const revealed = pickedId != null;
@@ -258,7 +268,7 @@ function FlashcardSession({
             setIndex((i) => i + 1);
           }}
         >
-          Siguiente
+          {pick(locale, UI.next)}
         </AccentButton>
       )}
     </main>

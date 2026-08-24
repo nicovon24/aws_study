@@ -19,7 +19,7 @@ const SEGMENTS = [
 export default function Loader({ label = "LOADING" }: Props) {
   return (
     <div
-      className="flex h-screen w-full flex-col items-center justify-center gap-20 bg-bg bg-repeat"
+      className="flex h-screen w-full flex-col items-center justify-center gap-10 bg-bg bg-repeat sm:gap-20"
       style={{
         backgroundImage:
           "linear-gradient(#1c2b4a 1px,transparent 1px),linear-gradient(90deg,#1c2b4a 1px,transparent 1px),linear-gradient(#16233c 1px,transparent 1px),linear-gradient(90deg,#16233c 1px,transparent 1px)",

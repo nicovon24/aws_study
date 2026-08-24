@@ -1,0 +1,6 @@
+[mcp_servers.aws-documentation]
+command = 'C:\Users\Nicolas\.local\bin\uvx.exe'
+args = ["awslabs.aws-documentation-mcp-server@latest"]
+
+[mcp_servers.aws-documentation.env]
+FASTMCP_LOG_LEVEL = "ERROR"
