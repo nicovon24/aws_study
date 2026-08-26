@@ -4,7 +4,7 @@ import type { Localized } from "@/lib/types";
  * Reference architecture diagrams, layered on top of `services.ts` without
  * touching it — same principle as `lib/domains.ts`. Each diagram is authored
  * as a plain Mermaid flowchart string, and `services` lists the exact
- * `Service.name` values that appear in it, used to cross-link from
+ * `Service.key` values that appear in it, used to cross-link from
  * DetailPanel ("aparece en estas arquitecturas").
  */
 
@@ -12,7 +12,7 @@ export type Architecture = {
   id: string;
   title: Localized;
   description: Localized;
-  /** Service.name values (from data/services.ts) that appear in this diagram. */
+  /** Service.key values (from data/services.ts) that appear in this diagram. */
   services: string[];
   mermaid: Localized;
 };
@@ -25,7 +25,7 @@ export const ARCHITECTURES: Architecture[] = [
       es: "Un Application Load Balancer reparte tráfico entre instancias EC2 en un Auto Scaling Group, que leen y escriben en una base RDS Multi-AZ.",
       en: "An Application Load Balancer spreads traffic across EC2 instances in an Auto Scaling Group, which read and write to a Multi-AZ RDS database.",
     },
-    services: ["EC2", "Auto Scaling", "RDS", "ELB"],
+    services: ["ec2", "auto-scaling", "rds", "elb"],
     mermaid: {
       es: `flowchart LR
     U[Usuario] --> ALB[Elastic Load Balancing]
@@ -56,7 +56,7 @@ export const ARCHITECTURES: Architecture[] = [
       es: "Un cliente llama a API Gateway, que invoca una función Lambda; Lambda lee y escribe en DynamoDB. Sin servidores que administrar ni pagar en reposo.",
       en: "A client calls API Gateway, which invokes a Lambda function; Lambda reads and writes to DynamoDB. No servers to manage, and nothing paid while idle.",
     },
-    services: ["API Gateway", "Lambda", "DynamoDB", "S3"],
+    services: ["api-gateway", "lambda", "dynamodb", "s3"],
     mermaid: {
       es: `flowchart LR
     U[Cliente] --> APIGW[API Gateway]
@@ -77,7 +77,7 @@ export const ARCHITECTURES: Architecture[] = [
       es: "El tráfico entra por un Internet Gateway hasta un servidor web en la subred pública; la base de datos vive aislada en la subred privada, solo accesible desde el servidor web.",
       en: "Traffic enters through an Internet Gateway to a web server in the public subnet; the database lives isolated in the private subnet, reachable only from the web server.",
     },
-    services: ["VPC", "EC2", "RDS"],
+    services: ["vpc", "ec2", "rds"],
     mermaid: {
       es: `flowchart LR
     I[Internet] --> IGW[Internet Gateway]
@@ -114,7 +114,7 @@ export const ARCHITECTURES: Architecture[] = [
       es: "Los archivos del sitio (HTML, CSS, imágenes) viven en un bucket S3; CloudFront los distribuye desde ubicaciones cercanas al usuario, con baja latencia y sin servidores.",
       en: "The site's files (HTML, CSS, images) live in an S3 bucket; CloudFront distributes them from locations close to the user, with low latency and no servers.",
     },
-    services: ["S3", "CloudFront"],
+    services: ["s3", "cloudfront"],
     mermaid: {
       es: `flowchart LR
     U[Usuario] --> CF[CloudFront]
@@ -131,7 +131,7 @@ export const ARCHITECTURES: Architecture[] = [
       es: "En vez de aprovisionar para el pico (capacidad fija, con desperdicio o cuellos de botella), un Auto Scaling Group agrega y quita instancias EC2 según la demanda real.",
       en: "Instead of provisioning for the peak (fixed capacity, with waste or bottlenecks), an Auto Scaling Group adds and removes EC2 instances based on real demand.",
     },
-    services: ["EC2", "Auto Scaling"],
+    services: ["ec2", "auto-scaling"],
     mermaid: {
       es: `flowchart TB
     subgraph Fijo[Capacidad fija tradicional]
@@ -166,7 +166,7 @@ export const ARCHITECTURES: Architecture[] = [
       es: "La aplicación escribe siempre en la instancia primaria (AZ A), que replica de forma síncrona a un standby (AZ B) para failover automático, y de forma asíncrona a read replicas (AZ C) para descargar lecturas.",
       en: "The application always writes to the primary instance (AZ A), which replicates synchronously to a standby (AZ B) for automatic failover, and asynchronously to read replicas (AZ C) to offload reads.",
     },
-    services: ["RDS"],
+    services: ["rds"],
     mermaid: {
       es: `flowchart LR
     APP[Aplicación] -- escritura --> PRIM[(RDS primaria - AZ A)]
@@ -187,7 +187,7 @@ export const ARCHITECTURES: Architecture[] = [
       es: "ECS orquesta los contenedores, pero Fargate se encarga de la capacidad: no hay instancias EC2 que administrar. Un balanceador reparte tráfico entre las tareas.",
       en: "ECS orchestrates the containers, but Fargate handles capacity: there are no EC2 instances to manage. A load balancer spreads traffic across the tasks.",
     },
-    services: ["ECS", "Fargate", "ELB"],
+    services: ["ecs", "fargate", "elb"],
     mermaid: {
       es: `flowchart LR
     U[Usuario] --> ALB[Elastic Load Balancing]
@@ -210,7 +210,7 @@ export const ARCHITECTURES: Architecture[] = [
       es: "El productor no llama directo al consumidor: publica en SNS, que reparte a varias colas SQS. Cada consumidor procesa a su propio ritmo, sin bloquear al productor ni perder mensajes si está caído.",
       en: "The producer doesn't call the consumer directly: it publishes to SNS, which fans out to several SQS queues. Each consumer processes at its own pace, without blocking the producer or losing messages if it's down.",
     },
-    services: ["SNS", "SQS", "Lambda"],
+    services: ["sns", "sqs", "lambda"],
     mermaid: {
       es: `flowchart LR
     P[Servicio productor] --> SNS[SNS - topic]
@@ -233,7 +233,7 @@ export const ARCHITECTURES: Architecture[] = [
       es: "CloudWatch mide una métrica (por ejemplo CPU promedio) de las instancias; cuando cruza el umbral, dispara una alarma que le dice al Auto Scaling Group que agregue o quite capacidad.",
       en: "CloudWatch measures a metric (e.g. average CPU) across the instances; when it crosses the threshold, it fires an alarm that tells the Auto Scaling Group to add or remove capacity.",
     },
-    services: ["CloudWatch", "Auto Scaling", "EC2"],
+    services: ["cloudwatch", "auto-scaling", "ec2"],
     mermaid: {
       es: `flowchart LR
     subgraph ASG[Auto Scaling Group]
@@ -262,7 +262,7 @@ export const ARCHITECTURES: Architecture[] = [
       es: "El tráfico entra primero por CloudFront; Shield filtra ataques DDoS a nivel de red, y WAF inspecciona cada request HTTP contra reglas (SQL injection, IPs bloqueadas) antes de dejarlo pasar al origen.",
       en: "Traffic enters through CloudFront first; Shield filters network-level DDoS attacks, and WAF inspects every HTTP request against rules (SQL injection, blocked IPs) before letting it through to the origin.",
     },
-    services: ["CloudFront", "WAF", "Shield"],
+    services: ["cloudfront", "waf", "shield"],
     mermaid: {
       es: `flowchart LR
     U[Internet] --> SH[Shield - anti-DDoS]
@@ -283,7 +283,7 @@ export const ARCHITECTURES: Architecture[] = [
       es: "Organizations agrupa las cuentas (prod, dev, seguridad) bajo facturación consolidada. Dentro de cada cuenta, IAM define roles con permisos mínimos en vez de compartir credenciales de la cuenta raíz.",
       en: "Organizations groups the accounts (prod, dev, security) under consolidated billing. Inside each account, IAM defines roles with minimal permissions instead of sharing root account credentials.",
     },
-    services: ["Organizations", "IAM"],
+    services: ["organizations", "iam"],
     mermaid: {
       es: `flowchart TB
     ORG[Organizations - cuenta de gestión]
@@ -307,6 +307,6 @@ export const ARCHITECTURES: Architecture[] = [
   },
 ];
 
-export function architecturesUsing(serviceName: string): Architecture[] {
-  return ARCHITECTURES.filter((a) => a.services.includes(serviceName));
+export function architecturesUsing(serviceKey: string): Architecture[] {
+  return ARCHITECTURES.filter((a) => a.services.includes(serviceKey));
 }

@@ -21,7 +21,7 @@ export default function DetailPanel({ node, onSelect, onClose }: Props) {
   // Remount the folds on every service so they always start collapsed.
   const foldKey = node?.id ?? "none";
   const rels = node ? relatedIds(node.id) : [];
-  const archs = node ? architecturesUsing(node.name) : [];
+  const archs = node ? architecturesUsing(node.key) : [];
 
   useEffect(() => {
     if (!node) return;
@@ -65,7 +65,7 @@ export default function DetailPanel({ node, onSelect, onClose }: Props) {
             >
               {pick(locale, node.cat)}
             </span>
-            <h2 className="mb-[.4rem] mt-0 font-sans text-2xl font-bold tracking-tight text-white">{node.name}</h2>
+            <h2 className="mb-[.4rem] mt-0 font-sans text-2xl font-bold tracking-tight text-white">{pick(locale, node.name)}</h2>
             <p className="mb-[.8rem] text-[.86rem] leading-[1.55] text-muted">{pick(locale, node.d)}</p>
 
             {node.long && (
@@ -74,6 +74,18 @@ export default function DetailPanel({ node, onSelect, onClose }: Props) {
                 className="long-copy mb-4 text-[.84rem] leading-[1.6] text-ink-2"
                 dangerouslySetInnerHTML={{ __html: pick(locale, node.long) }}
               />
+            )}
+
+            {node.list && node.list.length > 0 && (
+              <ul className="m-0 mb-4 list-disc pl-[1.05rem] marker:text-(--pc-accent)">
+                {node.list.map((item, i) => (
+                  <li key={i} className="mb-[.35rem] text-[.8rem] leading-[1.45] text-ink-2">
+                    <span className="panel-accent font-mono text-[.72rem]">{pick(locale, item.t)}</span>
+                    {" — "}
+                    {pick(locale, item.d)}
+                  </li>
+                ))}
+              </ul>
             )}
 
             <Fold key={`use-${foldKey}`} title={t("whenToUse")} show={!!node.use?.length}>
@@ -120,7 +132,7 @@ export default function DetailPanel({ node, onSelect, onClose }: Props) {
                       onClick={() => onSelect(rid)}
                       className="mb-[.12rem] mr-[.2rem] mt-[.12rem] inline-block rounded-full border border-line px-2 py-[.15rem] font-mono text-[.72rem] text-ink-2 hover:border-[var(--pc-accent)] hover:text-[var(--pc-accent)]"
                     >
-                      {byId[rid].name}
+                      {pick(locale, byId[rid].name)}
                     </button>
                   ))}
                 </div>

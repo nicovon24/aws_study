@@ -51,7 +51,8 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
           .filter(
             ({ svc }) =>
               !query ||
-              svc.name.toLowerCase().includes(query) ||
+              svc.name.es.toLowerCase().includes(query) ||
+              svc.name.en.toLowerCase().includes(query) ||
               pick(locale, svc.d).toLowerCase().includes(query),
           );
         shown += items.length;
@@ -70,14 +71,7 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
 
   return (
     <main className="flex min-h-0 flex-1">
-      <AnimatedFilterSidebar
-        focus={focus}
-        onFocusChange={(f) => {
-          onFocusChange(f);
-          setShowFilters(false);
-        }}
-        show={showFilters}
-      />
+      <AnimatedFilterSidebar focus={focus} onFocusChange={onFocusChange} show={showFilters} />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex shrink-0 flex-wrap items-center gap-3.5 border-b border-line bg-panel px-4 py-3.5 sm:px-6">
@@ -142,7 +136,7 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
                           active ? "border-transparent" : "border-line bg-panel-2"
                         }`}
                       >
-                        <span className="text-sm font-bold text-white">{svc.name}</span>
+                        <span className="text-sm font-bold text-white">{pick(locale, svc.name)}</span>
                         <span className="text-[11.5px] leading-[1.45] text-muted-2">
                           {d.length > 74 ? `${d.slice(0, 74)}…` : d}
                         </span>

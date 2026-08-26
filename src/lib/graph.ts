@@ -4,7 +4,7 @@ import type { Category, Node } from "./types";
 
 /** Every service flattened, indexed by `${categoryIndex}-${serviceIndex}`. */
 export const byId: Record<string, Node> = {};
-const byName: Record<string, Node> = {};
+const byKey: Record<string, Node> = {};
 
 /** Category lookup by its stable slug — resolves a `MapFocus` category slug back to its display data. */
 export const catBySlug: Record<string, Category> = {};
@@ -15,7 +15,7 @@ DATA.forEach((cat, ci) => {
     const id = `${ci}-${si}`;
     const node: Node = { id, ci, si, cat: cat.cat, catSlug: cat.slug, accent: cat.accent, ...svc };
     byId[id] = node;
-    byName[svc.name] = node;
+    byKey[svc.key] = node;
   });
 });
 
@@ -23,8 +23,8 @@ export const totalServices = Object.keys(byId).length;
 
 /** Relations resolved to ids; pairs naming a service that does not exist are dropped. */
 export const relPairs: [string, string][] = RELATIONS.filter(
-  ([a, b]) => byName[a] && byName[b],
-).map(([a, b]) => [byName[a].id, byName[b].id]);
+  ([a, b]) => byKey[a] && byKey[b],
+).map(([a, b]) => [byKey[a].id, byKey[b].id]);
 
 export function relatedIds(id: string): string[] {
   const out = new Set<string>();

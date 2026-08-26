@@ -127,8 +127,7 @@ function Inner({
   onSelect,
   showFilters,
   onToggleFilters,
-  onCloseFilters,
-}: Props & { showFilters: boolean; onToggleFilters: () => void; onCloseFilters: () => void }) {
+}: Props & { showFilters: boolean; onToggleFilters: () => void }) {
   const { layout, recenter } = useMindMapLayout(focus);
   const { setCenter } = useReactFlow();
   const { locale } = useLocale();
@@ -195,10 +194,7 @@ function Inner({
     <div className="flex min-w-0 flex-1">
       <AnimatedFilterSidebar
         focus={focus}
-        onFocusChange={(f) => {
-          onFocusChange(f);
-          onCloseFilters();
-        }}
+        onFocusChange={onFocusChange}
         show={showFilters}
         onAnimationComplete={recenter}
       />
@@ -275,7 +271,6 @@ export default function MindMapView({ focus, onFocusChange, selectedId, onSelect
           onSelect={onSelect}
           showFilters={showFilters}
           onToggleFilters={() => setShowFilters((v) => !v)}
-          onCloseFilters={() => setShowFilters(false)}
         />
       </ReactFlowProvider>
       <DetailPanel node={selectedId ? byId[selectedId] : null} onSelect={onSelect} onClose={() => onSelect(null)} />

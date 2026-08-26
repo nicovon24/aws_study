@@ -27,7 +27,10 @@ export default function MapSearch({ onPick }: Props) {
     if (!query) return [];
     return Object.values(byId)
       .filter(
-        (n) => n.name.toLowerCase().includes(query) || pickLocale(locale, n.d).toLowerCase().includes(query),
+        (n) =>
+          n.name.es.toLowerCase().includes(query) ||
+          n.name.en.toLowerCase().includes(query) ||
+          pickLocale(locale, n.d).toLowerCase().includes(query),
       )
       .slice(0, MAX_RESULTS);
   }, [query, locale]);
@@ -69,7 +72,7 @@ export default function MapSearch({ onPick }: Props) {
               >
                 <span className="flex items-center gap-2 text-sm font-bold text-white">
                   <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: n.accent }} />
-                  {n.name}
+                  {pickLocale(locale, n.name)}
                 </span>
                 <span className="truncate text-[11.5px] text-muted-2">{pickLocale(locale, n.d)}</span>
               </button>

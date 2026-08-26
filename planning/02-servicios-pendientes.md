@@ -1,6 +1,6 @@
 # Servicios pendientes de agregar al mapa
 
-Estado al 2026-08-21: `aws-map-v4.html` tiene **80 servicios** en 15 categorías, todos con documentación completa (`long`, `use`, `avoid`, `concepts`) y 119 relaciones sin huérfanas.
+Estado al 2026-08-26: `src/data/services.ts` tiene **94 entradas** (80 servicios originales + 12 servicios y 2 conceptos de la tanda "en curso") en 15 categorías, todos con documentación completa (`long`, `use`, `avoid`, `concepts`) y relaciones sin huérfanas en `src/data/relations.ts`.
 
 Este archivo lista lo que **falta** para cobertura completa de CLF-C02, ordenado por prioridad. Cada entrada indica en qué categoría va y por qué importa.
 
@@ -30,42 +30,45 @@ Método de inserción que funciona (los heredocs de bash rompen con las comillas
 
 ---
 
-## En curso — próxima tanda a agregar
+## Hecho — tanda "en curso" (2026-08-26)
 
-Prioridad Glue, CDK, Outposts primero; resto de la tanda sigue después.
+Los 12 servicios y 2 conceptos de la tanda anterior ya están en `src/data/services.ts` con `long`/`use`/`avoid`/`concepts` completos, verificados contra `docs.aws.amazon.com` con el MCP `aws-documentation`, y con relaciones en `src/data/relations.ts`. Build y `tsc --noEmit` pasan limpios.
 
-| Servicio | Categoría | Por qué |
+| Servicio | Categoría | Nota de la verificación |
 |---|---|---|
-| **Glue** | Analítica | ETL serverless. Ya se menciona en Athena y EMR |
-| **CDK** | Herramientas dev | Ya se menciona en CloudFormation. IaC en lenguaje de programación |
-| **Outposts** | Cómputo | AWS en tu datacenter. Modelo híbrido |
-| **Amazon Q** | Machine Learning | Asistente de IA de AWS. Incorporado al temario reciente |
-| **X-Ray** | Administración | Trazado distribuido. Ya se menciona en CloudWatch |
-| **CloudWatch Logs Insights** | Administración | Podría ser ficha propia o quedar como concepto |
-| **DAX** | Bases de datos | Caché de DynamoDB. Ya se menciona en ElastiCache |
-| **DocumentDB** | Bases de datos | Compatible con MongoDB |
-| **MemoryDB** | Bases de datos | Redis durable |
-| **Audit Manager** | Seguridad y detección | Ya se menciona en Artifact |
-| **Migration Hub** | Migración y transferencia | Completa la categoría junto a DMS y DataSync |
-| **Elastic Disaster Recovery** | Migración y transferencia | DR. Concepto RTO/RPO del examen |
-| **Backup** | Almacenamiento | Backup centralizado entre servicios |
+| **Glue** | Analítica | ETL serverless sobre Spark; Data Catalog compartido con Athena/EMR/Redshift Spectrum |
+| **CDK** | Herramientas dev | Sintetiza a CloudFormation; hereda su rollback y drift detection |
+| **Outposts** | Cómputo | Rack o server físico administrado por AWS como extensión de una Region |
+| **Amazon Q** | Machine Learning | Dos caras: Q Developer (IDE/código) y Q Business (empresarial, permission-aware). Soporte de los plugins de IDE termina 2027-04-30 |
+| **X-Ray** | Administración | Trazado distribuido; complementa a CloudWatch, no lo reemplaza |
+| **DAX** | Bases de datos | Caché in-memory específico de DynamoDB, microsegundos, consistencia eventual |
+| **DocumentDB** | Bases de datos | Compatible con API de MongoDB 3.6/4.0; motor propio de AWS por debajo |
+| **MemoryDB** | Bases de datos | Redis/Valkey durable como base primaria, no solo caché (a diferencia de ElastiCache) |
+| **Audit Manager** | Seguridad y detección | **Cerrado a nuevos clientes** (dato verificado en docs); existentes lo siguen usando |
+| **Migration Hub** | Migración y transferencia | **Cerrado a nuevos clientes desde 2025-11-07**; alternativa AWS Transform |
+| **Elastic Disaster Recovery** | Migración y transferencia | RTO en minutos, RPO en segundos vía staging area de bajo costo |
+| **Backup** | Almacenamiento | Backup centralizado por tags entre EC2/EBS/RDS/DynamoDB/EFS/FSx y más |
+| **Ventajas de la nube** | Fundamentos (concepto) | Los 6 beneficios oficiales del whitepaper `aws-overview` |
+| **Las 7 R de migración** | Fundamentos (concepto) | Rehost, Replatform, Repurchase, Refactor, Retire, Retain, Relocate |
 
-Conceptos sin servicio, misma tanda (van a Fundamentos):
+Nota: **CloudWatch Logs Insights** se decidió dejar como concepto dentro de la ficha existente de CloudWatch (ya estaba ahí desde antes) en vez de ficha propia — no amerita el espacio.
 
-- **Ventajas de la nube** — los seis beneficios que enumera AWS
-- **Las 7 R de migración** — Rehost, Replatform, Repurchase, Refactor, Retire, Retain, Relocate
+## Hecho — tanda "redes + Security Hub + IA texto/voz + conceptos sueltos" (2026-08-26)
 
-## Prioridad alta — aparecen con frecuencia en el examen
+7 servicios y 3 conceptos, verificados contra docs oficiales, con relaciones en `RELATIONS[]`. Build y `tsc --noEmit` limpios.
 
-| Servicio | Categoría | Por qué |
+| Servicio/concepto | Categoría | Nota |
 |---|---|---|
-| **Global Accelerator** | Redes y CDN | Red global anycast. Se contrasta con CloudFront en preguntas |
-| **Transit Gateway** | Redes y CDN | Ya se menciona en la ficha de VPC, no existe como servicio |
-| **Site-to-Site VPN** | Redes y CDN | Ya se menciona en Direct Connect. Par clásico VPN vs DX |
-| **Security Hub** | Seguridad y detección | Ya se menciona en GuardDuty. Centraliza hallazgos |
-| **Polly** | Machine Learning | Texto a voz. Uno de los servicios de IA que suele aparecer |
-| **Translate** | Machine Learning | Traducción automática |
-| **Transcribe** | Machine Learning | Voz a texto |
+| **Global Accelerator** | Redes y CDN | Anycast; failover instantáneo entre Regions, distinto de CloudFront (cachea, no acelera red) |
+| **Transit Gateway** | Redes y CDN | Hub-and-spoke; reemplaza peering punto a punto entre muchas VPCs |
+| **Site-to-Site VPN** | Redes y CDN | IPsec por internet, 2 túneles; par clásico con Direct Connect |
+| **Security Hub** | Seguridad y detección | Centraliza GuardDuty/Inspector/Macie + estándares (CIS, PCI DSS, NIST) |
+| **Polly / Translate / Transcribe** | Machine Learning | Trío TTS / traducción / STT; se combinan entre sí en casos de uso |
+| **RTO / RPO** | Fundamentos (concepto) | Tiempo de inactividad vs datos perdidos; ligado a Elastic Disaster Recovery |
+| **CapEx vs OpEx** | Fundamentos (concepto) | Parte explícita del Task 1.4 del temario oficial (economía de la nube) |
+| **Escalado vertical vs horizontal** | Fundamentos (concepto) | Scale up vs scale out; distinto de escalabilidad vs elasticidad |
+
+Dataset total: **104 servicios/conceptos**.
 
 ## Prioridad baja — completitud
 

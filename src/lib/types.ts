@@ -6,10 +6,16 @@ export type Localized = { es: string; en: string };
 export type Concept = { t: Localized; d: Localized };
 
 export type Service = {
-  name: string;
+  /**
+   * Stable identifier for relations/architectures — independent of the display name and
+   * distinct from `Node.id` (the `${ci}-${si}` positional id used by the map/detail panel).
+   */
+  key: string;
+  name: Localized;
   d: Localized;
   link: string;
   long?: Localized;
+  list?: Concept[];
   use?: Localized[];
   avoid?: Localized[];
   concepts?: Concept[];

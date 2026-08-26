@@ -130,7 +130,7 @@ export async function computeMindLayout(focus: MapFocus, locale: Locale): Promis
       nodes.push({
         id: n.id!,
         kind: isCat ? "category" : "service",
-        label: isCat ? pick(locale, cat.cat) : (byId[n.id!]?.name ?? n.id!),
+        label: isCat ? pick(locale, cat.cat) : (byId[n.id!] ? pick(locale, byId[n.id!].name) : n.id!),
         slug: isCat ? cat.slug : undefined,
         x,
         y,

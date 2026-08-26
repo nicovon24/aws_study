@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import DATA from "@/data/services";
 import { useLocale } from "@/hooks";
 import { DOMAIN_META } from "@/lib/domains";
 import { buildDeck, nodesInScope, type Flashcard, type FlashcardMode } from "@/lib/flashcards";
@@ -68,19 +67,6 @@ export default function PracticeView({ focus, onFocusChange, onNavigate }: Props
                 onClick={() => onFocusChange({ kind: "domain", n })}
               >
                 {pick(locale, DOMAIN_META[n].name)}
-              </Pill>
-            ))}
-          </div>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {DATA.map((cat) => (
-              <Pill
-                key={cat.slug}
-                active={focus.kind === "category" && focus.slug === cat.slug}
-                color={cat.accent}
-                small
-                onClick={() => onFocusChange({ kind: "category", slug: cat.slug })}
-              >
-                {pick(locale, cat.cat)}
               </Pill>
             ))}
           </div>
@@ -207,7 +193,7 @@ function FlashcardSession({
   }
 
   const isDescriptionMode = mode === "guess-description";
-  const questionText = isDescriptionMode ? card.correct.name : pick(locale, card.correct.d);
+  const questionText = isDescriptionMode ? pick(locale, card.correct.name) : pick(locale, card.correct.d);
 
   return (
     <main className="flex flex-1 flex-col items-center overflow-auto px-10 py-10">
@@ -234,7 +220,7 @@ function FlashcardSession({
 
       <div className="grid w-full max-w-[640px] gap-3 sm:grid-cols-1">
         {card.options.map((opt) => {
-          const label = isDescriptionMode ? pick(locale, opt.d) : opt.name;
+          const label = isDescriptionMode ? pick(locale, opt.d) : pick(locale, opt.name);
           const isCorrect = opt.id === card.correct.id;
           const isPicked = opt.id === pickedId;
           const revealed = pickedId != null;
