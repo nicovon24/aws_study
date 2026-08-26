@@ -66,7 +66,7 @@ export const RELATIONS: [string, string][] = [
   ["security-hub","guardduty"],["security-hub","inspector"],["security-hub","macie"],
   ["polly","translate"],["transcribe","translate"],["transcribe","polly"],
   ["rto-rpo","elastic-disaster-recovery"],["rto-rpo","backup"],
-  ["aws-best-practices","pricing-model"],["aws-best-practices","auto-scaling"],["aws-best-practices","well-architected"],
+  ["cloud-design-fundamentals","pricing-model"],["cloud-design-fundamentals","auto-scaling"],["cloud-design-fundamentals","well-architected"],
 ];
 
 export default RELATIONS;
