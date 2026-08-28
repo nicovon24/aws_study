@@ -69,22 +69,21 @@ export default function Header({ view, onNavigate, children }: Props) {
         <LocaleToggle />
       </div>
 
-      <nav className="ml-2 hidden gap-0.5 lg:flex">
+      <nav className="ml-4 hidden gap-1.5 lg:flex">
         {TABS.map((t) => (
           <button
             key={t.key}
             type="button"
             onClick={() => onNavigate(t.key)}
-            className={`flex items-center gap-1.5 rounded-t-[3px] border-0 border-b-2 px-2.5 pb-1.75 pt-2.25 font-sans text-sm font-semibold whitespace-nowrap ${
+            className={`rounded-t-[3px] border-0 border-b-2 px-3.5 pb-1.75 pt-2.25 font-sans text-sm font-semibold whitespace-nowrap ${
               view === t.key
                 ? "border-accent bg-[#1f2d47] text-white"
                 : "border-transparent text-muted-2 hover:text-ink-2"
             }`}
           >
-            <t.icon size={15} strokeWidth={2.2} />
             {pick(locale, UI[t.label])}
             {t.key === "favorites" && signedIn && favorites.size > 0 && (
-              <span className="text-muted-2">({favorites.size})</span>
+              <span className="ml-1.5 text-muted-2">({favorites.size})</span>
             )}
           </button>
         ))}
