@@ -1,93 +1,66 @@
-# AWS Prep
+# AWS Prep V2
 
-Aplicación de estudio para **AWS Certified Cloud Practitioner (CLF-C02)**.
-La versión estable actual es **V1 (`v1.0.0`)** y está dedicada exclusivamente
-a esa certificación.
+Plataforma bilingüe de estudio para **AWS Certified Cloud Practitioner
+(CLF-C02)** y **AWS Certified AI Practitioner (AIF-C01)**. El examen activo se
+conserva en la URL y controla panel, catálogo, mapa, práctica y progreso.
 
-Incluye 129 servicios y conceptos organizados por los cuatro dominios del
-examen, con contenido en español e inglés.
+## Funcionalidades
 
-## Funcionalidades de V1
+- Registro tipado de certificaciones y dominios con ponderaciones.
+- Catálogo canónico compartido, con servicios, conceptos y comparaciones.
+- Contenido AIF-C01 trazable y flujo editorial staged/reviewed/published.
+- Mapa y catálogo filtrados por certificación, dominio, categoría y prioridad.
+- Flashcards, práctica guiada con explicación y simulacro ponderado.
+- Resumen de errores y progreso persistente por usuario, examen y dominio.
+- Favoritos y notas compatibles con documentos V1 basados en `serviceKey`.
+- Experiencia responsive, teclado, movimiento reducido y skeletons para esperas reales.
 
-- Panel de estudio por dominio y peso del examen.
-- Catálogo buscable con filtros por dominio, categoría y prioridad.
-- Mapa interactivo de servicios y sus relaciones.
-- Flashcards configurables por alcance y cantidad.
-- Ejemplos visuales de arquitecturas AWS.
-- Selector de idioma español/inglés.
-- Inicio de sesión con Google, favoritos y notas persistidas en MongoDB.
-- Interfaz adaptable a escritorio y dispositivos móviles.
-
-## Stack
-
-- Next.js 16 (App Router), React 19 y TypeScript.
-- Tailwind CSS v4 y Framer Motion.
-- NextAuth con Google y MongoDB para cuentas, favoritos y notas.
-- Dataset de estudio versionado localmente en `src/data/`.
-
-## Cómo ejecutar
+## Ejecución
 
 ```bash
 npm install
 npm run dev
 ```
 
-La aplicación queda disponible en `http://localhost:3000`.
+La aplicación queda disponible en `http://localhost:3000`. Las funciones de
+cuenta requieren `MONGODB_URI`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` y
+`AUTH_SECRET` en `.env.local`.
 
-Para habilitar autenticación, favoritos y notas se necesitan estas variables
-en `.env.local`:
-
-```dotenv
-MONGODB_URI=
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-```
-
-Comandos de validación:
+## Validación
 
 ```bash
-npm run build
-npx tsc --noEmit
+npm run verify
 ```
+
+El gate ejecuta validación editorial offline, pruebas del registro y banco,
+TypeScript y build de producción. `npm run content:report` funciona sin conexión
+a AWS MCP.
 
 ## Vistas
 
-- `/`: panel CLF-C02.
-- `/catalogo`: catálogo de servicios y conceptos.
-- `/mapa`: mapa interactivo.
-- `/practicar`: sesiones de flashcards.
-- `/arquitecturas`: escenarios visuales.
-- `/favoritos`: contenido guardado por el usuario autenticado.
+- `/`: ruta de aprendizaje del examen activo.
+- `/catalogo` y `/mapa`: conocimiento aplicable al examen.
+- `/practicar`: flashcards, práctica guiada y simulacro.
+- `/progreso`: actividad y desempeño por dominio del usuario autenticado.
+- `/arquitecturas`: patrones visuales.
+- `/favoritos`: elementos guardados.
 
-## Estructura principal
+## Agregar una tercera certificación
 
-```text
-src/
-  app/          # rutas, layout y endpoints de autenticación/datos
-  components/   # layout, vistas, UI compartida, diagramas y skeletons
-  data/         # catálogo, relaciones y arquitecturas
-  hooks/        # idioma, favoritos, notas y comportamiento de vistas
-  lib/          # dominios CLF-C02, grafo, flashcards, auth y utilidades
-```
+1. Crear un `ExamDefinition` en `src/data/exams/` con dominios, pesos y objetivos.
+2. Registrar el examen en `src/data/exams/index.ts`.
+3. Reutilizar claves de `src/data/services.ts`; agregar solo contenido canónico faltante.
+4. Asignar `ExamItem` con dominio, prioridad y `objectiveIds`.
+5. Registrar fuentes y consultas en `content/sources/manifest.json`.
+6. Ejecutar `npm run verify`; el registro detecta pesos, referencias y objetivos sin cobertura.
 
-## Alcance y limitaciones de V1
+## Datos, migración y rollback
 
-- V1 cubre solamente CLF-C02; todavía no permite elegir otras certificaciones.
-- El paso de simulacro permanece marcado como próximamente.
-- Las flashcards usan el catálogo actual y no guardan historial de resultados.
-- Los distractores de las flashcards todavía no se agrupan por servicios
-  similares; esa mejora está planificada para V2.
-- Las funciones de cuenta requieren Google OAuth y una instancia de MongoDB
-  correctamente configurados.
-
-El diseño de la plataforma multi-certificación pertenece a V2 y no forma parte
-del tag `v1.0.0`.
-
-## Contenido
-
-El catálogo canónico vive en `src/data/services.ts`. Las relaciones entre
-servicios están en `src/data/relations.ts`, y la asignación a los dominios del
-examen CLF-C02 está en `src/lib/domains.ts`.
+El contenido publicado vive versionado en el repositorio; MCP se usa solamente
+para curación. Las sesiones se guardan idempotentemente en `practiceSessions`
+con índice único `{ userId, sessionId }`. V2 sigue leyendo favoritos y notas V1
+por `serviceKey`. El tag `v1.0.0` es el rollback de aplicación y no requiere una
+migración destructiva de datos.
 
 Proyecto personal de estudio, no afiliado ni patrocinado por Amazon Web
 Services, Inc.

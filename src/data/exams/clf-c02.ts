@@ -48,6 +48,7 @@ export const CLF_C02: ExamDefinition = {
   ],
   items: DATA.flatMap((category) => {
     const domainId = CLF_C02_CATEGORY_DOMAINS[category.slug];
+    if (!domainId) return [];
     return category.items.map((item) => ({ itemKey: item.key, domainId, priority: item.priority ?? 2 }));
   }),
 };

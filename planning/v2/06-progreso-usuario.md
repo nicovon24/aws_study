@@ -1,6 +1,11 @@
 # Fase 5 — Progreso por usuario y certificación
 
-Estado: propuesto.
+Estado: implementado y verificado el 2026-08-28.
+
+Evidencia: `/api/progress` recalcula aciertos desde el banco conocido, limita
+payloads, filtra por usuario y guarda sesiones idempotentes con índice único.
+`/progreso` muestra actividad y desempeño por dominio/examen. Favoritos aceptan
+`itemKey` y mantienen lectura/escritura compatible con `serviceKey` de V1.
 
 ## Objetivo
 

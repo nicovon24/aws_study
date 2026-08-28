@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useExam, useLocale } from "@/hooks";
 import { buildDeck, nodesInScope, type Flashcard, type FlashcardMode } from "@/lib/flashcards";
 import { pick } from "@/lib/locale";
+import { buildMockExam, buildQuestionBank, QUESTION_BANK_VERSION, seededShuffle } from "@/lib/practice";
 import { UI } from "@/lib/uiStrings";
-import type { MapFocus, View } from "@/lib/types";
+import type { MapFocus, PracticeQuestion, PracticeSessionResult, View } from "@/lib/types";
 import { AccentButton, BackIcon, IconButton, Input, Pill } from "@/components/ui";
 
 type Props = {
@@ -21,6 +22,7 @@ export default function PracticeView({ focus, onFocusChange, onNavigate }: Props
   const { exam } = useExam();
   const [mode, setMode] = useState<FlashcardMode>("guess-description");
   const [deck, setDeck] = useState<Flashcard[] | null>(null);
+  const [questionSession, setQuestionSession] = useState<{ mode: "practice" | "mock"; questions: PracticeQuestion[] } | null>(null);
 
   const available = useMemo(() => nodesInScope(focus, exam.id).length, [exam.id, focus]);
   const [count, setCount] = useState<number | null>(null);
@@ -33,9 +35,12 @@ export default function PracticeView({ focus, onFocusChange, onNavigate }: Props
   if (deck) {
     return <FlashcardSession mode={mode} deck={deck} onExit={() => setDeck(null)} />;
   }
+  if (questionSession) {
+    return <QuestionSession examId={exam.id} {...questionSession} onExit={() => setQuestionSession(null)} />;
+  }
 
   return (
-    <main className="flex-1 overflow-auto px-10 py-8 pb-[60px]">
+    <main className="flex-1 overflow-auto px-4 py-8 pb-[60px] sm:px-10">
       <div className="mx-auto max-w-[720px]">
         <IconButton
           onClick={() => onNavigate("dashboard")}
@@ -146,6 +151,73 @@ export default function PracticeView({ focus, onFocusChange, onNavigate }: Props
           count={count}
           onStart={(cards) => setDeck(cards)}
         />
+        <div className="mt-4 flex flex-wrap gap-3 border-t border-line pt-6">
+          <AccentButton
+            disabled={buildQuestionBank(exam.id).length === 0}
+            onClick={() => setQuestionSession({ mode: "practice", questions: seededShuffle(buildQuestionBank(exam.id), `${exam.id}:${Date.now()}`).slice(0, Math.min(count ?? 10, buildQuestionBank(exam.id).length)) })}
+          >
+            {locale === "es" ? "Práctica guiada" : "Guided practice"}
+          </AccentButton>
+          <AccentButton
+            disabled={buildQuestionBank(exam.id).length === 0}
+            onClick={() => setQuestionSession({ mode: "mock", questions: buildMockExam(exam.id, Math.min(count ?? 20, buildQuestionBank(exam.id).length), `${Date.now()}`) })}
+          >
+            {pick(locale, UI.stepMock)}
+          </AccentButton>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function QuestionSession({ examId, mode, questions, onExit }: { examId: string; mode: "practice" | "mock"; questions: PracticeQuestion[]; onExit: () => void }) {
+  const { locale } = useLocale();
+  const [index, setIndex] = useState(0);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [answers, setAnswers] = useState<PracticeSessionResult["answers"]>([]);
+  const [startedAt] = useState(() => new Date().toISOString());
+  const question = questions[index];
+
+  if (!question) {
+    const correct = answers.filter((answer) => answer.correct).length;
+    const incorrect = answers.filter((answer) => !answer.correct);
+    const result: PracticeSessionResult = {
+      sessionId: `${examId}-${startedAt}`,
+      examId,
+      mode,
+      startedAt,
+      completedAt: new Date().toISOString(),
+      bankVersion: QUESTION_BANK_VERSION,
+      answers,
+    };
+    return (
+      <main className="flex flex-1 items-center justify-center overflow-auto px-6 py-10">
+        <div className="w-full max-w-[720px] rounded-xl border border-line bg-panel-2 p-7">
+          <h1 className="text-2xl font-bold">{locale === "es" ? "Resumen de sesión" : "Session summary"}</h1>
+          <p className="mt-2 text-muted">{correct} / {answers.length} {locale === "es" ? "respuestas correctas" : "correct answers"}</p>
+          {incorrect.length > 0 && <div className="mt-5"><h2 className="font-semibold">{locale === "es" ? "Para revisar" : "Review"}</h2><ul className="mt-2 space-y-2 text-sm text-muted">{incorrect.map((answer) => <li key={answer.questionId}>{questions.find((candidate) => candidate.id === answer.questionId)?.explanation[locale]}</li>)}</ul></div>}
+          <div className="mt-6 flex gap-3">
+            <AccentButton onClick={() => { fetch("/api/progress", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(result) }).catch(() => undefined); onExit(); }}>{pick(locale, UI.backToSetup)}</AccentButton>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  const revealed = answers.some((answer) => answer.questionId === question.id);
+  const isCorrect = [...selected].sort().join("|") === [...question.correctOptionIds].sort().join("|");
+  return (
+    <main className="flex flex-1 flex-col items-center overflow-auto px-6 py-8">
+      <div className="mb-5 flex w-full max-w-[720px] items-center justify-between"><IconButton onClick={onExit} aria-label={pick(locale, UI.back)}><BackIcon /></IconButton><span className="font-mono text-xs text-muted-2">{index + 1} / {questions.length}</span></div>
+      <div className="w-full max-w-[720px] rounded-xl border border-line bg-panel-2 p-6">
+        <div className="mb-2 font-mono text-[11px] uppercase text-accent">{question.skill} · {question.difficulty}</div>
+        <h1 className="text-lg font-semibold leading-relaxed">{question.prompt[locale]}</h1>
+        <div className="mt-5 grid gap-3">{question.options.map((option) => {
+          const checked = selected.includes(option.id);
+          const correctOption = question.correctOptionIds.includes(option.id);
+          return <button key={option.id} type="button" disabled={revealed} onClick={() => setSelected(question.type === "single-choice" ? [option.id] : checked ? selected.filter((id) => id !== option.id) : [...selected, option.id])} className={`rounded-lg border px-4 py-3 text-left text-sm ${revealed ? correctOption ? "border-[#2ee6a8] bg-[#2ee6a8]/10" : checked ? "border-danger bg-danger/10" : "border-line opacity-60" : checked ? "border-accent bg-accent/10" : "border-line hover:border-accent/60"}`}>{option.label[locale]}</button>;
+        })}</div>
+        {!revealed ? <AccentButton disabled={selected.length === 0} className="mt-5" onClick={() => setAnswers((current) => [...current, { questionId: question.id, selectedOptionIds: selected, correct: isCorrect }])}>{locale === "es" ? "Responder" : "Answer"}</AccentButton> : <div className="mt-5 rounded-lg border border-line bg-bg/40 p-4"><p className="font-semibold">{isCorrect ? (locale === "es" ? "Correcto" : "Correct") : (locale === "es" ? "Incorrecto" : "Incorrect")}</p><p className="mt-1 text-sm text-muted">{question.explanation[locale]}</p><AccentButton className="mt-4" onClick={() => { setSelected([]); setIndex((value) => value + 1); }}>{pick(locale, UI.next)}</AccentButton></div>}
       </div>
     </main>
   );

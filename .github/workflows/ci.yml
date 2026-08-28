@@ -41,8 +41,5 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Check TypeScript
-        run: npm run typecheck
-
-      - name: Build application
-        run: npm run build
+      - name: Verify content, tests, types and build
+        run: npm run verify

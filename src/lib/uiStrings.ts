@@ -8,6 +8,7 @@ export const UI: Record<string, Localized> = {
   navMap: { es: "Mapa", en: "Map" },
   navArchitectures: { es: "Arquitecturas", en: "Architectures" },
   navPractice: { es: "Practicar", en: "Practice" },
+  navProgress: { es: "Progreso", en: "Progress" },
   navFavorites: { es: "Favoritos", en: "Favorites" },
   openMenu: { es: "abrir menú", en: "open menu" },
   closeMenu: { es: "cerrar menú", en: "close menu" },

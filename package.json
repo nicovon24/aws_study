@@ -1,13 +1,15 @@
 {
   "name": "aws-map",
-  "version": "2.0.0-beta.0",
+  "version": "2.0.0-beta.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "verify": "npm run typecheck && npm run build",
+    "content:report": "node scripts/content-report.mjs",
+    "test": "vitest run",
+    "verify": "npm run content:report && npm run test && npm run typecheck && npm run build",
     "prepare": "husky"
   },
   "dependencies": {
@@ -30,6 +32,7 @@
     "@types/react-dom": "^19",
     "husky": "^9.1.7",
     "tailwindcss": "^4.1.13",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.11"
   }
 }

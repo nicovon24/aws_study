@@ -1,6 +1,7 @@
 # AWS Prep V2 — Roadmap multi-certificación
 
-Estado: en ejecución. Fases 0, 1 y 2 completadas; Fase 3 es el próximo bloque.
+Estado: beta V2 implementada. Fases 0 a 5 completas; Fase 6 aprobada localmente
+y pendiente de smoke test/despliegue y tag estable.
 
 Última actualización: 2026-08-28.
 
@@ -18,10 +19,10 @@ Estados utilizados: `LISTO`, `EN CURSO`, `PENDIENTE` y `BLOQUEADO`.
 | 0 | Cierre y versionado de V1 | LISTO | 100% | Build, prueba visual, documentación, commit y tag `v1.0.0` | Publicar commit/tag en GitHub cuando se autorice | `01-cierre-v1.md` |
 | 1 | Fundaciones multi-examen | LISTO | 100% | Registro, ids dinámicos, CLF-C02 migrado, metadata pedagógica y validaciones | — | `02-fundaciones-multi-examen.md` |
 | 2 | Selector, navegación y UX | LISTO | 100% | Selector responsive, URL/localStorage, navegación, filtros por examen, estados vacíos y movimiento reducido | — | `03-selector-y-navegacion.md` |
-| 3 | AWS MCP y contenido AIF-C01 | PENDIENTE | 0% | Fuentes iniciales y reglas editoriales definidas | Pipeline de fuentes, revisión y contenido estructurado AIF-C01 | `04-contenido-aif-c01.md` |
-| 4 | Preguntas, flashcards y simulacros | PENDIENTE | 0% | Modelo conceptual y estrategia de distractores definidos | Banco de preguntas, `similarTo`, grupos, sesiones y simulacro ponderado | `05-practica-y-simulacros.md` |
-| 5 | Progreso de usuario | PENDIENTE | 0% | Compatibilidad objetivo documentada | Persistencia, métricas por examen y migración compatible | `06-progreso-usuario.md` |
-| 6 | Validación y release V2 | PENDIENTE | 0% | Gates de release definidos | Validación integral, documentación y tag `v2.0.0` | `07-validacion-y-release.md` |
+| 3 | AWS MCP y contenido AIF-C01 | LISTO | 100% | Fuentes auditables, 20 elementos, cinco dominios y cobertura 1.1–5.2 | — | `04-contenido-aif-c01.md` |
+| 4 | Preguntas, flashcards y simulacros | LISTO | 100% | Motor determinístico, distractores plausibles, feedback, revisión y simulacro ponderado | — | `05-practica-y-simulacros.md` |
+| 5 | Progreso de usuario | LISTO | 100% | Sesiones idempotentes, métricas por examen/dominio y compatibilidad V1 | — | `06-progreso-usuario.md` |
+| 6 | Validación y release V2 | EN CURSO | 85% | Beta `2.0.0-beta.1`, CI, pruebas, build, docs y smoke local | Smoke test del despliegue real, versión estable y tag autorizado | `07-validacion-y-release.md` |
 
 ### Seguimiento por entregable
 
@@ -36,24 +37,24 @@ Estados utilizados: `LISTO`, `EN CURSO`, `PENDIENTE` y `BLOQUEADO`.
 | NAV-01 | Selector CLF-C02/AIF-C01 | 2 | LISTO | Selector accesible en Header desktop y drawer mobile |
 | NAV-02 | Persistencia del examen activo | 2 | LISTO | URL tiene precedencia y `localStorage` restaura la última selección |
 | NAV-03 | Enlaces compartibles con foco correcto | 2 | LISTO | Tabs preservan `exam`; dominio/categoría inválidos se normalizan |
-| SRC-01 | Flujo editorial con AWS Knowledge MCP | 3 | PENDIENTE | Descubrimiento y actualización reproducibles |
-| SRC-02 | Proveniencia de contenido | 3 | PENDIENTE | URL, fecha, examen y revisión registrados |
-| SRC-03 | Revisión antes de publicar | 3 | PENDIENTE | Contenido MCP entra como `staged`, nunca directo a producción |
-| CNT-01 | Cinco dominios completos de AIF-C01 | 3 | PENDIENTE | Matriz dominio → objetivo → contenido |
+| SRC-01 | Flujo editorial con AWS Knowledge MCP | 3 | LISTO | Consultas reproducibles, manifest y reporte offline versionados |
+| SRC-02 | Proveniencia de contenido | 3 | LISTO | URL, fecha, examen, consulta, topics y estado editorial registrados |
+| SRC-03 | Revisión antes de publicar | 3 | LISTO | Promoción explícita staged/reviewed/published validada |
+| CNT-01 | Cinco dominios completos de AIF-C01 | 3 | LISTO | 20 elementos y cobertura de task statements 1.1–5.2 validada |
 | CNT-02 | Reutilizar servicios compartidos | 1–3 | LISTO | Exámenes referencian claves del catálogo sin duplicar servicios |
 | CNT-03 | Prioridad específica por examen | 1–3 | LISTO | Prioridad leída desde `ExamItem`; campo V1 queda como fallback temporal |
-| PRC-01 | Práctica para servicios y conceptos | 4 | PENDIENTE | Motor común de preguntas |
-| PRC-02 | Explicaciones y resumen | 4 | PENDIENTE | Feedback correcto/incorrecto y cierre de sesión |
-| PRC-03 | Simulacro ponderado | 4 | PENDIENTE | Distribución por pesos del examen activo |
-| PRC-04 | Distractores plausibles | 4 | PENDIENTE | `similarTo`, familias y grupos validados |
-| PRC-05 | Tipos de ejercicio diferenciados | 4 | PENDIENTE | Aprendizaje, comparación, escenario y examen |
-| EDU-01 | Recorrido completo por certificación | 4–6 | PENDIENTE | Aprender → practicar → simular → revisar para CLF-C02 y AIF-C01 |
-| USR-01 | Preservar favoritos y notas V1 | 5 | PENDIENTE | Compatibilidad por `serviceKey` demostrada |
-| USR-02 | Progreso por usuario y examen | 5 | PENDIENTE | Resultados por certificación, dominio y objetivo |
-| UX-01 | Skeletons consistentes | 2–6 | EN CURSO | Loader de hidratación y skeleton de cálculo del mapa solo durante esperas reales; ampliar con futuras cargas de contenido |
-| UX-02 | Animaciones accesibles | 2–6 | EN CURSO | Loader y mapa respetan movimiento reducido; continuar auditoría en fases con sesiones y simulacros |
-| REL-01 | Gates técnicos V2 | 6 | EN CURSO | GitHub Actions ejecuta instalación limpia, tipos y build; Husky valida tipos antes de cada commit. Faltan lint y pruebas automatizadas |
-| REL-02 | Validación manual V2 | 6 | PENDIENTE | Flujos principales aprobados en desktop y mobile |
+| PRC-01 | Práctica para servicios y conceptos | 4 | LISTO | Motor común genera banco desde StudyItem/ExamItem |
+| PRC-02 | Explicaciones y resumen | 4 | LISTO | Feedback, explicación, score y revisión de errores |
+| PRC-03 | Simulacro ponderado | 4 | LISTO | Distribución determinística según pesos del examen |
+| PRC-04 | Distractores plausibles | 4 | LISTO | `similarTo`, familias y grupos antes de fallback |
+| PRC-05 | Tipos de ejercicio diferenciados | 4 | LISTO | Habilidad y dificultad etiquetadas; modos práctica/simulacro |
+| EDU-01 | Recorrido completo por certificación | 4–6 | LISTO | Aprender → practicar → simular → revisar disponible en ambos exámenes |
+| USR-01 | Preservar favoritos y notas V1 | 5 | LISTO | APIs mantienen compatibilidad `serviceKey`/`itemKey` |
+| USR-02 | Progreso por usuario y examen | 5 | LISTO | Sesiones y métricas por certificación y dominio |
+| UX-01 | Skeletons consistentes | 2–6 | LISTO | Hidratación, mapa, catálogo y progreso reservan geometría solo durante esperas reales |
+| UX-02 | Animaciones accesibles | 2–6 | LISTO | Movimiento reducido global, feedback textual y drawer oculto fuera del árbol accesible |
+| REL-01 | Gates técnicos V2 | 6 | LISTO | CI ejecuta contenido, 7 pruebas, tipos y build; Husky conserva el gate previo al commit |
+| REL-02 | Validación manual V2 | 6 | EN CURSO | Flujos AIF-C01 aprobados localmente en desktop/mobile; falta smoke del despliegue real |
 
 ### Regla de actualización
 

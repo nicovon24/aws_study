@@ -2,6 +2,18 @@
 
 Los cambios relevantes del proyecto se documentan en este archivo.
 
+## [2.0.0-beta.1] - 2026-08-28
+
+- Experiencia multi-certificación CLF-C02/AIF-C01 con URL persistente.
+- Contenido estructurado AIF-C01 para sus cinco dominios y objetivos.
+- Flujo editorial de fuentes oficiales con validación offline.
+- Práctica guiada, explicaciones, simulacro ponderado y revisión.
+- Progreso persistente por examen y dominio, compatible con datos V1.
+- Gate unificado de contenido, pruebas, tipos y build.
+
+Limitaciones: la beta requiere smoke test en el despliegue real antes de cambiar
+la versión a `2.0.0` y crear el tag estable.
+
 ## [1.0.0] - 2026-08-28
 
 Primera versión estable de AWS Prep, enfocada en AWS Certified Cloud

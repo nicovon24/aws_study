@@ -96,12 +96,17 @@ export function validateExamRegistry(): string[] {
     examIds.add(exam.id);
 
     const domainIds = new Set<string>();
+    const objectiveIds = new Set<string>();
     const domainNumbers = new Set<number>();
     for (const domain of exam.domains) {
       if (domainIds.has(domain.id)) issues.push(`${exam.id}: duplicate domain id ${domain.id}`);
       if (domainNumbers.has(domain.number)) issues.push(`${exam.id}: duplicate domain number ${domain.number}`);
       domainIds.add(domain.id);
       domainNumbers.add(domain.number);
+      for (const objective of domain.objectives ?? []) {
+        if (objectiveIds.has(objective.id)) issues.push(`${exam.id}: duplicate objective ${objective.id}`);
+        objectiveIds.add(objective.id);
+      }
     }
 
     const weight = exam.domains.reduce((total, domain) => total + domain.weight, 0);
@@ -112,7 +117,15 @@ export function validateExamRegistry(): string[] {
       if (itemKeys.has(item.itemKey)) issues.push(`${exam.id}: duplicate item ${item.itemKey}`);
       if (!catalogKeys.has(item.itemKey)) issues.push(`${exam.id}: missing catalog item ${item.itemKey}`);
       if (!domainIds.has(item.domainId)) issues.push(`${exam.id}: unknown domain ${item.domainId}`);
+      for (const objectiveId of item.objectiveIds ?? []) {
+        if (!objectiveIds.has(objectiveId)) issues.push(`${exam.id}: unknown objective ${objectiveId}`);
+      }
       itemKeys.add(item.itemKey);
+    }
+    for (const objectiveId of objectiveIds) {
+      if (!exam.items.some((item) => item.objectiveIds?.includes(objectiveId))) {
+        issues.push(`${exam.id}: objective ${objectiveId} has no study item`);
+      }
     }
   }
 

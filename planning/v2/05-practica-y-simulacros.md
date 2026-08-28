@@ -1,6 +1,12 @@
 # Fase 4 — Práctica V2 y simulacros
 
-Estado: propuesto.
+Estado: implementado y verificado el 2026-08-28.
+
+Evidencia: motor determinístico en `src/lib/practice.ts`, banco generado desde
+el catálogo tipado, distractores priorizados por similitud/grupo, práctica
+guiada, explicaciones, revisión y simulacro ponderado conectados en
+`PracticeView`. Las pruebas automatizadas cubren registro, bancos, semillas,
+ponderación, duplicados y familias plausibles.
 
 ## Objetivo
 

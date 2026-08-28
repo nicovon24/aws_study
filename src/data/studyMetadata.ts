@@ -24,6 +24,22 @@ const GROUPS = {
     "polly",
     "translate",
   ],
+  "ai-core-concepts": [
+    "ai-ml-genai",
+    "supervised-unsupervised-reinforcement",
+    "ml-lifecycle",
+    "tokens-embeddings-vectors",
+    "foundation-models",
+    "genai-limitations",
+    "rag-vs-fine-tuning",
+    "prompt-engineering",
+    "fm-evaluation",
+    "responsible-ai",
+    "bias-and-fairness",
+    "ai-security-governance",
+    "bedrock-guardrails",
+  ],
+  "ai-security-controls": ["iam", "kms", "cloudtrail", "macie", "bedrock-guardrails", "ai-security-governance"],
 } as const;
 
 function groupMetadata(
@@ -50,6 +66,8 @@ export const STUDY_METADATA: Record<string, StudyItemMetadata> = {
   ...groupMetadata("databases-purpose-built", "database", "purpose-built-databases"),
   ...groupMetadata("identity-access-governance", "security", "identity-and-governance"),
   ...groupMetadata("ai-ml-managed-services", "ai-ml", "managed-ai-services"),
+  ...groupMetadata("ai-core-concepts", "ai-concepts", "ai-practitioner-concepts"),
+  ...groupMetadata("ai-security-controls", "ai-security", "ai-security-and-governance"),
 };
 
 export function studyMetadataFor(itemKey: string): StudyItemMetadata {

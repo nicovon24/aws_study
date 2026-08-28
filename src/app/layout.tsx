@@ -19,9 +19,9 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AWS Prep — CLF-C02",
+  title: "AWS Prep — CLF-C02 y AIF-C01",
   description:
-    "Mapa interactivo de servicios AWS para el track CLF-C02. Proyecto personal de estudio, no afiliado ni patrocinado por Amazon Web Services, Inc.",
+    "Plataforma de estudio multi-certificación para AWS Certified Cloud Practitioner y AWS Certified AI Practitioner.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

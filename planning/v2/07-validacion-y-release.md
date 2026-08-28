@@ -1,6 +1,7 @@
 # Fase 6 — Validación, documentación y release V2
 
-Estado: propuesto.
+Estado: beta implementada y verificada localmente el 2026-08-28. Pendiente
+smoke test sobre despliegue real y autorización del tag estable `v2.0.0`.
 
 ## Objetivo
 
@@ -100,20 +101,20 @@ Requisitos: `REL-01`, `REL-02`, `UX-01`, `UX-02` y cierre de todos los requisito
 
 ## Checklist de aceptación final
 
-- [ ] `VER-01`
-- [ ] `EXM-01`, `EXM-02`, `EXM-03`
-- [ ] `NAV-01`, `NAV-02`, `NAV-03`
-- [ ] `CNT-01`, `CNT-02`, `CNT-03`
-- [ ] `AWS-01`, `AWS-02`
-- [ ] `SRC-01`, `SRC-02`, `SRC-03`
-- [ ] `PRC-01`, `PRC-02`, `PRC-03`
-- [ ] `PRC-04`, `PRC-05`
-- [ ] `EDU-01`
-- [ ] `USR-01`, `USR-02`
-- [ ] `REL-01`, `REL-02`
-- [ ] `UX-01`, `UX-02`
-- [ ] No quedan bloqueantes conocidos.
-- [ ] El rollback está documentado.
+- [x] `VER-01`
+- [x] `EXM-01`, `EXM-02`, `EXM-03`
+- [x] `NAV-01`, `NAV-02`, `NAV-03`
+- [x] `CNT-01`, `CNT-02`, `CNT-03`
+- [x] `AWS-01`, `AWS-02`
+- [x] `SRC-01`, `SRC-02`, `SRC-03`
+- [x] `PRC-01`, `PRC-02`, `PRC-03`
+- [x] `PRC-04`, `PRC-05`
+- [x] `EDU-01`
+- [x] `USR-01`, `USR-02`
+- [x] `REL-01`; [ ] `REL-02` requiere smoke test del despliegue real
+- [x] `UX-01`, `UX-02`
+- [x] No quedan bloqueantes conocidos en código o contenido local.
+- [x] El rollback está documentado.
 - [ ] V2 está etiquetada desde el commit verificado.
 
 ## Criterios de aceptación

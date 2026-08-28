@@ -23,7 +23,7 @@ export default function DashboardView({ onStudy, onNavigate }: Props) {
   const totalItems = exam.items.length;
 
   return (
-    <main className="flex-1 overflow-auto px-10 py-8 pb-[60px]">
+    <main className="flex-1 overflow-auto px-4 py-8 pb-[60px] sm:px-10">
       <div className="mx-auto max-w-[1180px]">
         <p className="mb-4 max-w-[620px] text-[13px] text-muted-2">
           {pick(locale, UI.dashboardIntro)}{" "}
@@ -125,14 +125,15 @@ function StudySteps({ onNavigate }: { onNavigate: (v: View) => void }) {
         <span className="text-[26px] font-black text-[#f2b544]">2</span>
         <span className="text-[15px] font-bold text-ink-2">{pick(locale, UI.stepPractice)}</span>
       </button>
-      <div
-        className="-ml-[14px] flex cursor-not-allowed items-center gap-[10px] bg-[#1b2740] px-[30px] py-3 opacity-60 max-sm:ml-0 max-sm:w-full max-sm:px-5"
+      <button
+        type="button"
+        onClick={() => onNavigate("practice")}
+        className="-ml-[14px] flex items-center gap-[10px] bg-[#1b2740] px-[30px] py-3 hover:bg-[#233350] max-sm:ml-0 max-sm:w-full max-sm:px-5"
         style={{ clipPath: "polygon(16px 0,100% 0,100% 100%,16px 100%,0 50%)" }}
-        title={pick(locale, UI.stepMockSoon)}
       >
         <span className="text-[26px] font-black text-[#2ee6a8]">3</span>
         <span className="text-[15px] font-bold text-muted">{pick(locale, UI.stepMock)}</span>
-      </div>
+      </button>
     </div>
   );
 }

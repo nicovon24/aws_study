@@ -1,6 +1,16 @@
 # Fase 3 — Fuentes AWS MCP y contenido AI Practitioner (AIF-C01)
 
-Estado: propuesto.
+Estado: implementado y verificado el 2026-08-28.
+
+Avance verificado: guía movida a `content/guides/aif-c01.md`, modelo
+`ContentSource` incorporado, consultas/fuentes iniciales registradas en
+`content/sources/manifest.json` y reporte offline disponible mediante
+`npm run content:report`.
+
+Resultado final: 20 elementos AIF-C01 cubren los cinco dominios y los task
+statements 1.1–5.2. El registro valida pesos, referencias y objetivos sin
+cobertura; los conceptos viven en el catálogo canónico y los servicios
+compartidos conservan su `key`.
 
 ## Objetivo
 

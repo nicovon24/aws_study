@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "sources": [
+    {
+      "id": "aws-aif-c01-exam-guide",
+      "provider": "aws-docs",
+      "url": "https://docs.aws.amazon.com/aws-certification/latest/ai-practitioner-01.html",
+      "title": "AWS Certified AI Practitioner (AIF-C01) exam guide",
+      "fetchedAt": "2026-08-28",
+      "reviewedAt": "2026-08-28",
+      "status": "published",
+      "examIds": ["aif-c01"],
+      "query": "AWS Certified AI Practitioner AIF-C01 exam guide domains task statements objectives revisions",
+      "topics": ["domains", "weights", "task-statements", "objectives", "question-types"]
+    },
+    {
+      "id": "aws-aif-c01-in-scope",
+      "provider": "aws-docs",
+      "url": "https://docs.aws.amazon.com/aws-certification/latest/ai-practitioner-01/aif-01-in-scope-services.html",
+      "title": "AIF-C01 in-scope AWS services",
+      "fetchedAt": "2026-08-28",
+      "status": "staged",
+      "examIds": ["aif-c01"],
+      "query": "AIF-C01 in-scope and out-of-scope services grouped by category",
+      "topics": ["in-scope-services", "service-categories", "scope-diff"]
+    },
+    {
+      "id": "aws-aif-c01-revisions",
+      "provider": "aws-docs",
+      "url": "https://docs.aws.amazon.com/aws-certification/latest/ai-practitioner-01/aif-01-revisions.html",
+      "title": "AIF-C01 revisions",
+      "fetchedAt": "2026-08-28",
+      "status": "staged",
+      "examIds": ["aif-c01"],
+      "query": "AIF-C01 change history objective and in-scope service revisions",
+      "topics": ["revisions", "objective-changes", "scope-changes"]
+    },
+    {
+      "id": "aws-clf-c02-in-scope",
+      "provider": "aws-docs",
+      "url": "https://docs.aws.amazon.com/aws-certification/latest/cloud-practitioner-02/clf-02-in-scope-services.html",
+      "title": "CLF-C02 in-scope AWS services",
+      "fetchedAt": "2026-08-28",
+      "status": "staged",
+      "examIds": ["clf-c02"],
+      "query": "CLF-C02 in-scope services grouped by category for shared-service comparison",
+      "topics": ["in-scope-services", "shared-services", "scope-diff"]
+    }
+  ]
+}

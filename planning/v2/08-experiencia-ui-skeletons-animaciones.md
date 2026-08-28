@@ -1,6 +1,6 @@
 # Contrato transversal — Skeletons y animaciones V2
 
-Estado: propuesto.
+Estado: implementado para el alcance V2 y verificado el 2026-08-28.
 
 Este documento atraviesa las Fases 2 a 6. No es una fase independiente: define
 reglas de experiencia que deben aplicarse cuando cada vista sea modificada.

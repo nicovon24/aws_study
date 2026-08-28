@@ -8,6 +8,55 @@ export type ExamId = string;
 export type ExamDomainId = string;
 export type StudyPriority = 1 | 2 | 3;
 export type StudyItemKind = "service" | "concept" | "comparison" | "scenario";
+export type ContentSourceStatus = "staged" | "reviewed" | "published" | "stale";
+
+export type ContentSource = {
+  id: string;
+  provider: "aws-knowledge-mcp" | "aws-docs" | "manual";
+  url: string;
+  title: string;
+  fetchedAt: string;
+  reviewedAt?: string;
+  status: ContentSourceStatus;
+  examIds?: ExamId[];
+  query?: string;
+  topics?: string[];
+  checksum?: string;
+  notes?: string;
+};
+
+export type QuestionType = "single-choice" | "multiple-choice" | "ordering" | "matching";
+export type PracticeSkill = "recall" | "compare" | "scenario" | "troubleshoot" | "choose-best";
+export type PracticeDifficulty = "basic" | "intermediate" | "exam-like";
+
+export type PracticeOption = { id: string; label: Localized; itemKey?: string };
+
+export type PracticeQuestion = {
+  id: string;
+  examId: ExamId;
+  domainId: ExamDomainId;
+  objectiveIds: string[];
+  type: "single-choice" | "multiple-choice";
+  prompt: Localized;
+  explanation: Localized;
+  sourceItemKeys: string[];
+  relatedItemKeys?: string[];
+  distractorGroupIds: string[];
+  skill: PracticeSkill;
+  difficulty: PracticeDifficulty;
+  options: PracticeOption[];
+  correctOptionIds: string[];
+};
+
+export type PracticeSessionResult = {
+  sessionId: string;
+  examId: ExamId;
+  mode: "practice" | "mock";
+  startedAt: string;
+  completedAt: string;
+  bankVersion: string;
+  answers: { questionId: string; selectedOptionIds: string[]; correct: boolean }[];
+};
 
 export type ExamDomain = {
   id: ExamDomainId;
@@ -15,7 +64,7 @@ export type ExamDomain = {
   name: Localized;
   weight: number;
   color: string;
-  objectives?: Localized[];
+  objectives?: { id: string; name: Localized }[];
 };
 
 export type ExamItem = {
@@ -65,6 +114,7 @@ export type Service = {
   familyIds?: string[];
   similarTo?: string[];
   distractorGroupIds?: string[];
+  sourceIds?: string[];
 };
 
 export type Category = {
@@ -87,7 +137,7 @@ export type Node = Service & {
 
 export type { Locale };
 
-export type View = "dashboard" | "map" | "catalog" | "practice" | "architectures" | "favorites";
+export type View = "dashboard" | "map" | "catalog" | "practice" | "progress" | "architectures" | "favorites";
 
 /**
  * What the Map (and Catalog, and Practice scope picker) currently shows:

@@ -8,6 +8,7 @@ import {
   LogOut,
   Map as MapIcon,
   Network,
+  ChartNoAxesColumnIncreasing,
   Star,
   House,
 } from "lucide-react";
@@ -33,6 +34,7 @@ const TABS: { key: View; label: keyof typeof UI; icon: typeof House }[] = [
   { key: "map", label: "navMap", icon: MapIcon },
   { key: "architectures", label: "navArchitectures", icon: Network },
   { key: "practice", label: "navPractice", icon: Dumbbell },
+  { key: "progress", label: "navProgress", icon: ChartNoAxesColumnIncreasing },
   { key: "favorites", label: "navFavorites", icon: Star },
 ];
 
@@ -154,6 +156,8 @@ export default function Header({ view, onNavigate, children }: Props) {
         }`}
       />
       <div
+        aria-hidden={!open}
+        inert={!open}
         className={`fixed inset-y-0 left-0 z-70 flex w-full flex-col overflow-y-auto bg-panel-2 bg-repeat pb-6 pt-16 transition-transform duration-220 ease-out lg:hidden ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
