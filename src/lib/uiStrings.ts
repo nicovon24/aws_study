@@ -28,8 +28,8 @@ export const UI: Record<string, Localized> = {
   dashboardEyebrow: { es: "tu ruta de estudio", en: "your study path" },
   dashboardTitle: { es: "AWS Certified Cloud Practitioner", en: "AWS Certified Cloud Practitioner" },
   dashboardSubtitle: {
-    es: "80 servicios y conceptos organizados en los 4 dominios del examen. Estudiá por dominio y explorá el mapa.",
-    en: "80 services and concepts organized across the exam's 4 domains. Study by domain and explore the map.",
+    es: "129 servicios y conceptos organizados en los 4 dominios del examen. Estudiá por dominio y explorá el mapa.",
+    en: "129 services and concepts organized across the exam's 4 domains. Study by domain and explore the map.",
   },
   stepLearn: { es: "Aprender", en: "Learn" },
   stepPractice: { es: "Practicar", en: "Practice" },
