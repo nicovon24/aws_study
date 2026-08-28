@@ -1,10 +1,20 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useCallback, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 
-/** Signed-in user's favorite service keys, with optimistic toggle. Empty/no-op when signed out. */
-export function useFavorites() {
+type FavoritesCtx = {
+  favorites: Set<string>;
+  isFavorite: (k: string) => boolean;
+  toggle: (serviceKey: string) => void;
+  signedIn: boolean;
+  loaded: boolean;
+};
+
+const Ctx = createContext<FavoritesCtx | null>(null);
+
+/** Wraps the app; fetches the signed-in user's favorites once and shares them everywhere. */
+export function FavoritesProvider({ children }: { children: ReactNode }) {
   const { status } = useSession();
   const signedIn = status === "authenticated";
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
@@ -46,5 +56,19 @@ export function useFavorites() {
     [signedIn],
   );
 
-  return { favorites, isFavorite: (k: string) => favorites.has(k), toggle, signedIn, loaded };
+  const value: FavoritesCtx = {
+    favorites,
+    isFavorite: (k: string) => favorites.has(k),
+    toggle,
+    signedIn,
+    loaded,
+  };
+
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+}
+
+export function useFavorites() {
+  const ctx = useContext(Ctx);
+  if (!ctx) throw new Error("useFavorites must be used within FavoritesProvider");
+  return ctx;
 }

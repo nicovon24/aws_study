@@ -1,10 +1,20 @@
 "use client";
 
-import { Cloud, LogIn, LogOut } from "lucide-react";
+import {
+  Cloud,
+  Dumbbell,
+  LayoutGrid,
+  LogIn,
+  LogOut,
+  Map as MapIcon,
+  Network,
+  Star,
+  House,
+} from "lucide-react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { LocaleToggle } from "@/components/ui";
-import { useLocale } from "@/hooks";
+import { useFavorites, useLocale } from "@/hooks";
 import { pick } from "@/lib/locale";
 import { UI } from "@/lib/uiStrings";
 import type { View } from "@/lib/types";
@@ -16,18 +26,19 @@ type Props = {
   children?: React.ReactNode;
 };
 
-const TABS: { key: View; label: keyof typeof UI }[] = [
-  { key: "dashboard", label: "navHome" },
-  { key: "catalog", label: "navCatalog" },
-  { key: "map", label: "navMap" },
-  { key: "architectures", label: "navArchitectures" },
-  { key: "practice", label: "navPractice" },
-  { key: "favorites", label: "navFavorites" },
+const TABS: { key: View; label: keyof typeof UI; icon: typeof House }[] = [
+  { key: "dashboard", label: "navHome", icon: House },
+  { key: "catalog", label: "navCatalog", icon: LayoutGrid },
+  { key: "map", label: "navMap", icon: MapIcon },
+  { key: "architectures", label: "navArchitectures", icon: Network },
+  { key: "practice", label: "navPractice", icon: Dumbbell },
+  { key: "favorites", label: "navFavorites", icon: Star },
 ];
 
 export default function Header({ view, onNavigate, children }: Props) {
   const { locale } = useLocale();
   const { data: session, status } = useSession();
+  const { favorites, signedIn } = useFavorites();
   const [open, setOpen] = useState(false);
 
   // Close the drawer whenever the view changes (nav tap, or programmatic navigation).
@@ -58,19 +69,23 @@ export default function Header({ view, onNavigate, children }: Props) {
         <LocaleToggle />
       </div>
 
-      <nav className="ml-2 hidden gap-1 md:flex">
+      <nav className="ml-2 hidden gap-0.5 lg:flex">
         {TABS.map((t) => (
           <button
             key={t.key}
             type="button"
             onClick={() => onNavigate(t.key)}
-            className={`rounded-t-[3px] border-0 border-b-2 px-4 pb-1.75 pt-2.25 font-sans text-sm font-semibold ${
+            className={`flex items-center gap-1.5 rounded-t-[3px] border-0 border-b-2 px-2.5 pb-1.75 pt-2.25 font-sans text-sm font-semibold whitespace-nowrap ${
               view === t.key
                 ? "border-accent bg-[#1f2d47] text-white"
                 : "border-transparent text-muted-2 hover:text-ink-2"
             }`}
           >
+            <t.icon size={15} strokeWidth={2.2} />
             {pick(locale, UI[t.label])}
+            {t.key === "favorites" && signedIn && favorites.size > 0 && (
+              <span className="text-muted-2">({favorites.size})</span>
+            )}
           </button>
         ))}
       </nav>
@@ -79,7 +94,7 @@ export default function Header({ view, onNavigate, children }: Props) {
         <button
           type="button"
           onClick={() => (session ? signOut() : signIn("google"))}
-          className="ml-auto hidden shrink-0 items-center gap-2 rounded-md border border-line bg-panel px-3 py-1.5 font-mono text-xs text-muted-2 hover:border-muted-2/70 hover:text-ink-2 md:flex"
+          className="ml-auto hidden shrink-0 items-center gap-2 rounded-md border border-line bg-panel px-3 py-1.5 font-mono text-xs text-muted-2 hover:border-muted-2/70 hover:text-ink-2 lg:flex"
         >
           {session ? (
             <>
@@ -105,7 +120,7 @@ export default function Header({ view, onNavigate, children }: Props) {
         aria-label={open ? pick(locale, UI.closeMenu) : pick(locale, UI.openMenu)}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line bg-panel text-ink-2 md:hidden"
+        className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line bg-panel text-ink-2 lg:hidden"
       >
         <span className="relative block h-3.5 w-4.5">
           <span
@@ -129,12 +144,12 @@ export default function Header({ view, onNavigate, children }: Props) {
       {/* Mobile drawer: full-width nav + (when provided) view-specific filters. */}
       <div
         onClick={() => setOpen(false)}
-        className={`fixed inset-0 z-65 bg-black/50 transition-opacity duration-200 md:hidden ${
+        className={`fixed inset-0 z-65 bg-black/50 transition-opacity duration-200 lg:hidden ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       />
       <div
-        className={`fixed inset-y-0 left-0 z-70 flex w-full flex-col overflow-y-auto bg-panel-2 bg-repeat pb-6 pt-16 transition-transform duration-220 ease-out md:hidden ${
+        className={`fixed inset-y-0 left-0 z-70 flex w-full flex-col overflow-y-auto bg-panel-2 bg-repeat pb-6 pt-16 transition-transform duration-220 ease-out lg:hidden ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
         style={{
@@ -161,11 +176,15 @@ export default function Header({ view, onNavigate, children }: Props) {
               key={t.key}
               type="button"
               onClick={() => onNavigate(t.key)}
-              className={`rounded-md px-4 py-3 text-left font-sans text-[15px] font-semibold ${
+              className={`flex items-center gap-2.5 rounded-md px-4 py-3 text-left font-sans text-[15px] font-semibold ${
                 view === t.key ? "bg-[#1f2d47] text-white" : "text-muted-2 hover:bg-[#1b2740]/60 hover:text-ink-2"
               }`}
             >
+              <t.icon size={17} strokeWidth={2.2} />
               {pick(locale, UI[t.label])}
+              {t.key === "favorites" && signedIn && favorites.size > 0 && (
+                <span className="text-muted-2">({favorites.size})</span>
+              )}
             </button>
           ))}
         </nav>

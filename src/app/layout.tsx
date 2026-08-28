@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Source_Sans_3 } from "next/font/google";
-import { LocaleProvider } from "@/hooks";
+import { LocaleProvider, FavoritesProvider } from "@/hooks";
 import AuthProvider from "@/components/providers/AuthProvider";
 import "./globals.css";
 
@@ -31,7 +31,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <AuthProvider>
-          <LocaleProvider>{children}</LocaleProvider>
+          <LocaleProvider>
+            <FavoritesProvider>{children}</FavoritesProvider>
+          </LocaleProvider>
         </AuthProvider>
       </body>
     </html>
