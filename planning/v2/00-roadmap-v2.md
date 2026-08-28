@@ -52,7 +52,7 @@ Estados utilizados: `LISTO`, `EN CURSO`, `PENDIENTE` y `BLOQUEADO`.
 | USR-02 | Progreso por usuario y examen | 5 | PENDIENTE | Resultados por certificación, dominio y objetivo |
 | UX-01 | Skeletons consistentes | 2–6 | EN CURSO | Loader de hidratación y skeleton de cálculo del mapa solo durante esperas reales; ampliar con futuras cargas de contenido |
 | UX-02 | Animaciones accesibles | 2–6 | EN CURSO | Loader y mapa respetan movimiento reducido; continuar auditoría en fases con sesiones y simulacros |
-| REL-01 | Gates técnicos V2 | 6 | PENDIENTE | Build, tipos, lint y pruebas aprobados |
+| REL-01 | Gates técnicos V2 | 6 | EN CURSO | GitHub Actions ejecuta instalación limpia, tipos y build; Husky valida tipos antes de cada commit. Faltan lint y pruebas automatizadas |
 | REL-02 | Validación manual V2 | 6 | PENDIENTE | Flujos principales aprobados en desktop y mobile |
 
 ### Regla de actualización

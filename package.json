@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "typecheck": "tsc --noEmit",
+    "verify": "npm run typecheck && npm run build",
+    "prepare": "husky"
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^3.11.3",
@@ -26,6 +28,7 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "husky": "^9.1.7",
     "tailwindcss": "^4.1.13",
     "typescript": "^5"
   }
