@@ -1,7 +1,8 @@
 # Fase 6 — Validación, documentación y release V2
 
-Estado: beta implementada y verificada localmente el 2026-08-28. Pendiente
-smoke test sobre despliegue real y autorización del tag estable `v2.0.0`.
+Estado: release `v2.0.0` autorizado y mergeado a `main` el 2026-08-28. `npm run
+verify` (contenido, tests, tipos, build) pasó antes del merge. Smoke test sobre
+el despliegue real pendiente de confirmar por el usuario post-deploy.
 
 ## Objetivo
 
@@ -111,11 +112,11 @@ Requisitos: `REL-01`, `REL-02`, `UX-01`, `UX-02` y cierre de todos los requisito
 - [x] `PRC-04`, `PRC-05`
 - [x] `EDU-01`
 - [x] `USR-01`, `USR-02`
-- [x] `REL-01`; [ ] `REL-02` requiere smoke test del despliegue real
+- [x] `REL-01`; [ ] `REL-02` pendiente de confirmar smoke test sobre el despliegue real
 - [x] `UX-01`, `UX-02`
 - [x] No quedan bloqueantes conocidos en código o contenido local.
 - [x] El rollback está documentado.
-- [ ] V2 está etiquetada desde el commit verificado.
+- [x] V2 está etiquetada desde el commit verificado (`v2.0.0`).
 
 ## Criterios de aceptación
 
