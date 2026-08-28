@@ -1,6 +1,7 @@
 "use client";
 
-import { Cloud } from "lucide-react";
+import { Cloud, LogIn, LogOut } from "lucide-react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { LocaleToggle } from "@/components/ui";
 import { useLocale } from "@/hooks";
@@ -21,10 +22,12 @@ const TABS: { key: View; label: keyof typeof UI }[] = [
   { key: "map", label: "navMap" },
   { key: "architectures", label: "navArchitectures" },
   { key: "practice", label: "navPractice" },
+  { key: "favorites", label: "navFavorites" },
 ];
 
 export default function Header({ view, onNavigate, children }: Props) {
   const { locale } = useLocale();
+  const { data: session, status } = useSession();
   const [open, setOpen] = useState(false);
 
   // Close the drawer whenever the view changes (nav tap, or programmatic navigation).
@@ -71,6 +74,31 @@ export default function Header({ view, onNavigate, children }: Props) {
           </button>
         ))}
       </nav>
+
+      {status !== "loading" && (
+        <button
+          type="button"
+          onClick={() => (session ? signOut() : signIn("google"))}
+          className="ml-auto hidden shrink-0 items-center gap-2 rounded-md border border-line bg-panel px-3 py-1.5 font-mono text-xs text-muted-2 hover:border-muted-2/70 hover:text-ink-2 md:flex"
+        >
+          {session ? (
+            <>
+              {session.user?.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={session.user.image} alt="" className="h-5 w-5 rounded-full" />
+              ) : (
+                <LogOut size={14} />
+              )}
+              {pick(locale, UI.signOut)}
+            </>
+          ) : (
+            <>
+              <LogIn size={14} />
+              {pick(locale, UI.signIn)}
+            </>
+          )}
+        </button>
+      )}
 
       <button
         type="button"
@@ -141,6 +169,33 @@ export default function Header({ view, onNavigate, children }: Props) {
             </button>
           ))}
         </nav>
+
+        {status !== "loading" && (
+          <div className="px-4 pt-2">
+            <button
+              type="button"
+              onClick={() => (session ? signOut() : signIn("google"))}
+              className="flex w-full items-center gap-2 rounded-md border border-line bg-panel px-4 py-3 text-left font-sans text-[15px] font-semibold text-muted-2 hover:text-ink-2"
+            >
+              {session ? (
+                <>
+                  {session.user?.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={session.user.image} alt="" className="h-5 w-5 rounded-full" />
+                  ) : (
+                    <LogOut size={16} />
+                  )}
+                  {pick(locale, UI.signOut)}
+                </>
+              ) : (
+                <>
+                  <LogIn size={16} />
+                  {pick(locale, UI.signIn)}
+                </>
+              )}
+            </button>
+          </div>
+        )}
 
         {children && (
           <div className="mt-2 border-t border-line px-4 pt-4" onClick={() => setOpen(false)}>

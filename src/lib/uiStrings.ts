@@ -8,8 +8,11 @@ export const UI: Record<string, Localized> = {
   navMap: { es: "Mapa", en: "Map" },
   navArchitectures: { es: "Arquitecturas", en: "Architectures" },
   navPractice: { es: "Practicar", en: "Practice" },
+  navFavorites: { es: "Favoritos", en: "Favorites" },
   openMenu: { es: "abrir menú", en: "open menu" },
   closeMenu: { es: "cerrar menú", en: "close menu" },
+  signIn: { es: "Iniciar sesión", en: "Sign in" },
+  signOut: { es: "Cerrar sesión", en: "Sign out" },
 
   // AppShell footer
   disclaimer: {
@@ -47,6 +50,21 @@ export const UI: Record<string, Localized> = {
   // CatalogView
   searchServiceOrConcept: { es: "Buscar servicio o concepto…", en: "Search service or concept…" },
   itemsVisible: { es: "items visibles", en: "items visible" },
+  priorityHigh: { es: "Alta", en: "High" },
+  priorityMedium: { es: "Media", en: "Medium" },
+  priorityLow: { es: "Baja", en: "Low" },
+  priorityHighTooltip: {
+    es: "Servicios fundamentales para el examen.",
+    en: "Core services for the exam.",
+  },
+  priorityMediumTooltip: {
+    es: "Servicios que suelen aparecer en el examen, con menor peso.",
+    en: "Services that often show up on the exam, with less weight.",
+  },
+  priorityLowTooltip: {
+    es: "Servicios de nicho, baja probabilidad de aparecer.",
+    en: "Niche services, low chance of appearing.",
+  },
 
   // MapSearch
   searchService: { es: "Buscar servicio…", en: "Search service…" },
@@ -97,4 +115,29 @@ export const UI: Record<string, Localized> = {
   relatedTo: { es: "Se relaciona con", en: "Related to" },
   appearsInArchitectures: { es: "Aparece en estas arquitecturas", en: "Appears in these architectures" },
   officialDoc: { es: "↗ doc oficial", en: "↗ official docs" },
+
+  // Favorites & notes
+  addToFavorites: { es: "Agregar a favoritos", en: "Add to favorites" },
+  removeFromFavorites: { es: "Quitar de favoritos", en: "Remove from favorites" },
+  signInToUseFavorites: { es: "Iniciá sesión para guardar favoritos", en: "Sign in to save favorites" },
+  myNote: { es: "Mi nota", en: "My note" },
+  notePlaceholder: { es: "Escribí tu nota acá…", en: "Write your note here…" },
+  signInToUseNotes: { es: "Iniciá sesión para escribir notas", en: "Sign in to write notes" },
+  noteSaving: { es: "Guardando…", en: "Saving…" },
+  noteSaved: { es: "Guardado", en: "Saved" },
+  onlyFavorites: { es: "Solo favoritos", en: "Favorites only" },
+  onlyFavoritesTooltip: {
+    es: "Mostrar solo los servicios que marcaste como favoritos.",
+    en: "Show only the services you marked as favorites.",
+  },
+  priorityFilterLabel: { es: "Prioridad:", en: "Priority:" },
+  favoritesSignInPrompt: {
+    es: "Iniciá sesión con Google para guardar y ver tus servicios favoritos.",
+    en: "Sign in with Google to save and see your favorite services.",
+  },
+  favoritesEmpty: {
+    es: "Todavía no marcaste ningún favorito. Abrí un servicio en el catálogo y tocá la estrella.",
+    en: "You haven't marked any favorites yet. Open a service in the catalog and tap the star.",
+  },
+  favoritesCount: { es: "favoritos", en: "favorites" },
 };

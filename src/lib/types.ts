@@ -19,6 +19,8 @@ export type Service = {
   use?: Localized[];
   avoid?: Localized[];
   concepts?: Concept[];
+  /** Study priority: 1 = high (exam pillar, very likely to be tested), 2 = medium, 3 = low (niche). Omitted = treated as medium. */
+  priority?: 1 | 2 | 3;
 };
 
 export type Category = {
@@ -41,7 +43,7 @@ export type Node = Service & {
 
 export type { Locale };
 
-export type View = "dashboard" | "map" | "catalog" | "practice" | "architectures";
+export type View = "dashboard" | "map" | "catalog" | "practice" | "architectures" | "favorites";
 
 /**
  * What the Map (and Catalog, and Practice scope picker) currently shows:

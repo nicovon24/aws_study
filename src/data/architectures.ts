@@ -305,6 +305,132 @@ export const ARCHITECTURES: Architecture[] = [
     end`,
     },
   },
+  {
+    id: "dr-elastic-disaster-recovery",
+    title: { es: "Recuperación ante desastres con Elastic Disaster Recovery", en: "Disaster recovery with Elastic Disaster Recovery" },
+    description: {
+      es: "Los servidores on-premise replican continuamente a una staging area de bajo costo en AWS. Ante un desastre, se lanzan instancias de recuperación en minutos con el estado más reciente.",
+      en: "On-premise servers continuously replicate to a low-cost staging area in AWS. When disaster strikes, recovery instances launch within minutes with the most recent state.",
+    },
+    services: ["elastic-disaster-recovery", "ec2", "s3"],
+    mermaid: {
+      es: `flowchart LR
+    ON[Servidores on-premise] -- réplica continua --> STG[(Staging area - bajo costo)]
+    STG --> DRS[Elastic Disaster Recovery]
+    DRS -. desastre .-> REC[EC2 - instancias de recuperación]
+    STG --> S3[(S3 - snapshots)]`,
+      en: `flowchart LR
+    ON[On-premise servers] -- continuous replication --> STG[(Staging area - low cost)]
+    STG --> DRS[Elastic Disaster Recovery]
+    DRS -. disaster .-> REC[EC2 - recovery instances]
+    STG --> S3[(S3 - snapshots)]`,
+    },
+  },
+  {
+    id: "migracion-heterogenea-dms-sct",
+    title: { es: "Migración heterogénea de base de datos con SCT + DMS", en: "Heterogeneous database migration with SCT + DMS" },
+    description: {
+      es: "SCT convierte el esquema y el código SQL de un motor a otro (por ejemplo Oracle a Aurora PostgreSQL); DMS migra los datos después, con replicación continua hasta el corte final.",
+      en: "SCT converts the schema and SQL code from one engine to another (for example Oracle to Aurora PostgreSQL); DMS migrates the data afterward, with continuous replication until the final cutover.",
+    },
+    services: ["sct", "dms", "aurora"],
+    mermaid: {
+      es: `flowchart LR
+    SRC[(Origen - Oracle)] --> SCT[Schema Conversion Tool]
+    SCT -- esquema convertido --> DST[(Aurora PostgreSQL)]
+    SRC -- datos, réplica continua --> DMS[Database Migration Service]
+    DMS --> DST`,
+      en: `flowchart LR
+    SRC[(Source - Oracle)] --> SCT[Schema Conversion Tool]
+    SCT -- converted schema --> DST[(Aurora PostgreSQL)]
+    SRC -- data, continuous replication --> DMS[Database Migration Service]
+    DMS --> DST`,
+    },
+  },
+  {
+    id: "contact-center-connect-lex",
+    title: { es: "Centro de contacto con Connect + Lex", en: "Contact center with Connect + Lex" },
+    description: {
+      es: "Amazon Connect maneja el enrutamiento omnicanal de la llamada o chat; un bot de Lex atiende la conversación con lenguaje natural antes de escalar a un agente humano si hace falta.",
+      en: "Amazon Connect handles the call or chat's omnichannel routing; a Lex bot handles the conversation in natural language before escalating to a human agent if needed.",
+    },
+    services: ["connect", "lex", "cloudwatch"],
+    mermaid: {
+      es: `flowchart LR
+    U[Cliente] --> CON[Connect - flujo de contacto]
+    CON --> LEX[Lex - bot conversacional]
+    LEX -- resuelto --> FIN[Fin de la interacción]
+    LEX -- no resuelto --> AG[Agente humano]
+    CON --> CW[CloudWatch - métricas del centro]`,
+      en: `flowchart LR
+    U[Customer] --> CON[Connect - contact flow]
+    CON --> LEX[Lex - conversational bot]
+    LEX -- resolved --> FIN[End of interaction]
+    LEX -- unresolved --> AG[Human agent]
+    CON --> CW[CloudWatch - contact center metrics]`,
+    },
+  },
+  {
+    id: "escritorios-virtuales-workspaces",
+    title: { es: "Escritorios virtuales con WorkSpaces y Directory Service", en: "Virtual desktops with WorkSpaces and Directory Service" },
+    description: {
+      es: "Cada usuario se autentica contra un Active Directory administrado y recibe un escritorio virtual persistente, accesible desde cualquier dispositivo sin que los datos salgan de AWS.",
+      en: "Each user authenticates against a managed Active Directory and gets a persistent virtual desktop, accessible from any device with no data leaving AWS.",
+    },
+    services: ["workspaces", "directory-service"],
+    mermaid: {
+      es: `flowchart LR
+    U[Usuario remoto] -- login --> DS[Directory Service - AD administrado]
+    DS --> WS[WorkSpaces - escritorio persistente]
+    U -. streaming .-> WS`,
+      en: `flowchart LR
+    U[Remote user] -- login --> DS[Directory Service - managed AD]
+    DS --> WS[WorkSpaces - persistent desktop]
+    U -. streaming .-> WS`,
+    },
+  },
+  {
+    id: "fullstack-amplify-cognito",
+    title: { es: "App full-stack con Amplify, Cognito y AppSync", en: "Full-stack app with Amplify, Cognito and AppSync" },
+    description: {
+      es: "Amplify hostea el frontend con CI/CD desde Git; Cognito maneja login de usuarios; el frontend consulta datos vía una API GraphQL de AppSync respaldada por DynamoDB.",
+      en: "Amplify hosts the frontend with Git-based CI/CD; Cognito handles user login; the frontend queries data through an AppSync GraphQL API backed by DynamoDB.",
+    },
+    services: ["amplify", "cognito", "dynamodb"],
+    mermaid: {
+      es: `flowchart LR
+    DEV[Push a Git] --> AMP[Amplify - build y hosting]
+    U[Usuario] --> AMP
+    U --> COG[Cognito - login]
+    AMP -- GraphQL --> API[API de datos]
+    API --> DDB[(DynamoDB)]`,
+      en: `flowchart LR
+    DEV[Git push] --> AMP[Amplify - build and hosting]
+    U[User] --> AMP
+    U --> COG[Cognito - login]
+    AMP -- GraphQL --> API[Data API]
+    API --> DDB[(DynamoDB)]`,
+    },
+  },
+  {
+    id: "busqueda-logs-opensearch",
+    title: { es: "Búsqueda y análisis de logs con Kinesis + OpenSearch", en: "Search and log analytics with Kinesis + OpenSearch" },
+    description: {
+      es: "Los logs de la aplicación entran a Kinesis en tiempo real, se entregan a un dominio de OpenSearch, y se visualizan en dashboards para detectar errores o patrones apenas ocurren.",
+      en: "Application logs stream into Kinesis in real time, get delivered to an OpenSearch domain, and are visualized in dashboards to spot errors or patterns as they happen.",
+    },
+    services: ["kinesis", "opensearch"],
+    mermaid: {
+      es: `flowchart LR
+    APP[Aplicación] -- logs --> KIN[Kinesis - stream]
+    KIN --> OS[OpenSearch - domain]
+    OS --> DASH[Dashboard - búsqueda y alertas]`,
+      en: `flowchart LR
+    APP[Application] -- logs --> KIN[Kinesis - stream]
+    KIN --> OS[OpenSearch - domain]
+    OS --> DASH[Dashboard - search and alerts]`,
+    },
+  },
 ];
 
 export function architecturesUsing(serviceKey: string): Architecture[] {

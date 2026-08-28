@@ -4,7 +4,7 @@ import type { Category, Node } from "./types";
 
 /** Every service flattened, indexed by `${categoryIndex}-${serviceIndex}`. */
 export const byId: Record<string, Node> = {};
-const byKey: Record<string, Node> = {};
+export const byKey: Record<string, Node> = {};
 
 /** Category lookup by its stable slug — resolves a `MapFocus` category slug back to its display data. */
 export const catBySlug: Record<string, Category> = {};

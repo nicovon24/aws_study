@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Source_Sans_3 } from "next/font/google";
 import { LocaleProvider } from "@/hooks";
+import AuthProvider from "@/components/providers/AuthProvider";
 import "./globals.css";
 
 const sourceSans = Source_Sans_3({
@@ -23,9 +24,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={`${sourceSans.variable} ${jetBrainsMono.variable}`}>
+    <html lang="es" className={`${sourceSans.variable} ${jetBrainsMono.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Tells the Dark Reader extension to leave this page alone — the app already ships its own dark theme. */}
+        <meta name="darkreader-lock" />
+      </head>
       <body>
-        <LocaleProvider>{children}</LocaleProvider>
+        <AuthProvider>
+          <LocaleProvider>{children}</LocaleProvider>
+        </AuthProvider>
       </body>
     </html>
   );

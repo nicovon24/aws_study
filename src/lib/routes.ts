@@ -7,6 +7,7 @@ export const VIEW_PATH: Record<View, string> = {
   catalog: "/catalogo",
   practice: "/practicar",
   architectures: "/arquitecturas",
+  favorites: "/favoritos",
 };
 
 export function viewFromPathname(pathname: string): View {
@@ -14,5 +15,6 @@ export function viewFromPathname(pathname: string): View {
   if (pathname.startsWith("/catalogo")) return "catalog";
   if (pathname.startsWith("/practicar")) return "practice";
   if (pathname.startsWith("/arquitecturas")) return "architectures";
+  if (pathname.startsWith("/favoritos")) return "favorites";
   return "dashboard";
 }

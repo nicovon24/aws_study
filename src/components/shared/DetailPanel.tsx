@@ -1,9 +1,10 @@
 "use client";
 
+import { Star } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { architecturesUsing } from "@/data/architectures";
-import { useLocale } from "@/hooks";
+import { useFavorites, useLocale, useNote } from "@/hooks";
 import { byId, relatedIds } from "@/lib/graph";
 import { pick } from "@/lib/locale";
 import { UI } from "@/lib/uiStrings";
@@ -22,6 +23,9 @@ export default function DetailPanel({ node, onSelect, onClose }: Props) {
   const foldKey = node?.id ?? "none";
   const rels = node ? relatedIds(node.id) : [];
   const archs = node ? architecturesUsing(node.key) : [];
+  const { isFavorite, toggle, signedIn: favSignedIn } = useFavorites();
+  const note = useNote(node?.key ?? null);
+  const favorited = node ? isFavorite(node.key) : false;
 
   useEffect(() => {
     if (!node) return;
@@ -55,16 +59,29 @@ export default function DetailPanel({ node, onSelect, onClose }: Props) {
               ✕
             </button>
 
-            <span
-              className="mb-3 inline-block rounded-[3px] border px-2 py-[3px] font-mono text-[10.5px] uppercase tracking-[.06em]"
-              style={{
-                color: node.accent,
-                borderColor: `${node.accent}55`,
-                background: `${node.accent}14`,
-              }}
-            >
-              {pick(locale, node.cat)}
-            </span>
+            <div className="mb-3 flex items-center gap-2">
+              <span
+                className="inline-block rounded-[3px] border px-2 py-[3px] font-mono text-[10.5px] uppercase tracking-[.06em]"
+                style={{
+                  color: node.accent,
+                  borderColor: `${node.accent}55`,
+                  background: `${node.accent}14`,
+                }}
+              >
+                {pick(locale, node.cat)}
+              </span>
+              <button
+                type="button"
+                onClick={() => toggle(node.key)}
+                disabled={!favSignedIn}
+                title={favSignedIn ? t(favorited ? "removeFromFavorites" : "addToFavorites") : t("signInToUseFavorites")}
+                className={`ml-auto flex h-7 w-7 items-center justify-center rounded-md border border-line text-muted-2 transition-colors ${
+                  favSignedIn ? "hover:border-[#e0c341]/60 hover:text-[#e0c341]" : "cursor-not-allowed opacity-40"
+                }`}
+              >
+                <Star size={15} fill={favorited ? "#e0c341" : "none"} color={favorited ? "#e0c341" : "currentColor"} />
+              </button>
+            </div>
             <h2 className="mb-[.4rem] mt-0 font-sans text-2xl font-bold tracking-tight text-white">{pick(locale, node.name)}</h2>
             <p className="mb-[.8rem] text-[.86rem] leading-[1.55] text-muted">{pick(locale, node.d)}</p>
 
@@ -157,6 +174,28 @@ export default function DetailPanel({ node, onSelect, onClose }: Props) {
                 </div>
               </>
             )}
+
+            <div className="mb-4">
+              <div className="mb-[.35rem] flex items-center justify-between">
+                <span className="block text-[.72rem] uppercase tracking-[.04em] text-muted-2">{t("myNote")}</span>
+                {note.signedIn && note.status !== "idle" && (
+                  <span className="font-mono text-[.65rem] text-muted-2">
+                    {note.status === "saving" ? t("noteSaving") : t("noteSaved")}
+                  </span>
+                )}
+              </div>
+              <textarea
+                key={foldKey}
+                value={note.content}
+                onChange={(e) => note.setContent(e.target.value)}
+                disabled={!note.signedIn}
+                placeholder={note.signedIn ? pick(locale, UI.notePlaceholder) : t("signInToUseNotes")}
+                rows={3}
+                className={`w-full resize-y rounded border border-line bg-panel px-2.5 py-2 text-[.8rem] leading-[1.5] text-ink-2 outline-none placeholder:text-muted-2 focus:border-[var(--pc-accent)] ${
+                  note.signedIn ? "" : "cursor-not-allowed opacity-50"
+                }`}
+              />
+            </div>
 
             <a
               href={node.link}

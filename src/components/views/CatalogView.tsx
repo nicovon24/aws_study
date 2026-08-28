@@ -1,17 +1,17 @@
 "use client";
 
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, Star } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import DATA from "@/data/services";
-import { useLocale } from "@/hooks";
+import { useFavorites, useLocale } from "@/hooks";
 import { DOMAIN_META, domainOf } from "@/lib/domains";
 import { byId, catBySlug } from "@/lib/graph";
 import { pick } from "@/lib/locale";
 import { UI } from "@/lib/uiStrings";
 import type { MapFocus } from "@/lib/types";
-import { AnimatedFilterSidebar, DetailPanel } from "@/components/shared";
+import { AnimatedFilterSidebar, DetailPanel, FavoriteStar, PriorityFilter } from "@/components/shared";
 import { CatalogSkeleton } from "@/components/skeletons";
-import { IconButton, Input } from "@/components/ui";
+import { IconButton, Input, Pill, PriorityBadge } from "@/components/ui";
 
 type Props = {
   focus: MapFocus;
@@ -30,7 +30,14 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
   const { locale } = useLocale();
   const [q, setQ] = useState("");
   const [showFilters, setShowFilters] = useState(true);
+  const [onlyFavorites, setOnlyFavorites] = useState(false);
+  const [priorities, setPriorities] = useState<Set<1 | 2 | 3>>(new Set([1, 2, 3]));
   const query = q.trim().toLowerCase();
+  const { isFavorite, signedIn: favSignedIn } = useFavorites();
+
+  useEffect(() => {
+    if (!favSignedIn) setOnlyFavorites(false);
+  }, [favSignedIn]);
 
   // Filtering is actually instant here, but a brief skeleton keeps the same
   // loading language as the mind map when switching category/domain focus.
@@ -54,13 +61,17 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
               svc.name.es.toLowerCase().includes(query) ||
               svc.name.en.toLowerCase().includes(query) ||
               pick(locale, svc.d).toLowerCase().includes(query),
-          );
+          )
+          .filter(({ svc }) => !onlyFavorites || isFavorite(svc.key))
+          .filter(({ svc }) => priorities.has(svc.priority ?? 2))
+          .sort((a, b) => (a.svc.priority ?? 2) - (b.svc.priority ?? 2));
         shown += items.length;
         return { cat, items };
       })
       .filter((col) => col.items.length > 0);
     return { cols, shown };
-  }, [query, focus, locale]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, focus, locale, onlyFavorites, isFavorite, priorities]);
 
   const focusLabel =
     focus.kind === "domain"
@@ -89,6 +100,19 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
             placeholder={pick(locale, UI.searchServiceOrConcept)}
             className="w-full sm:w-70"
           />
+          {favSignedIn && (
+            <Pill
+              active={onlyFavorites}
+              color="#e0c341"
+              title={pick(locale, UI.onlyFavoritesTooltip)}
+              onClick={() => setOnlyFavorites((v) => !v)}
+              className="flex items-center gap-1.5"
+            >
+              <Star size={11} fill={onlyFavorites ? "#e0c341" : "none"} />
+              {pick(locale, UI.onlyFavorites)}
+            </Pill>
+          )}
+          <PriorityFilter value={priorities} onChange={setPriorities} />
           {focusLabel && (
             <button
               type="button"
@@ -122,25 +146,31 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
                     const active = id === selectedId;
                     const d = pick(locale, svc.d);
                     return (
-                      <button
+                      <div
                         key={id}
-                        type="button"
+                        role="button"
+                        tabIndex={0}
                         onClick={() => onSelect(id)}
+                        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onSelect(id)}
                         title={d}
                         style={{
                           borderLeftColor: active ? cat.accent : `${cat.accent}88`,
                           background: active ? `${cat.accent}14` : undefined,
                           boxShadow: active ? `0 0 0 1px ${cat.accent}66` : undefined,
                         }}
-                        className={`flex w-full flex-col gap-1 rounded border border-l-[3px] px-2.75 py-2.25 text-left font-sans transition-all duration-150 hover:border-muted-2/60 hover:bg-[#1b2740] ${
+                        className={`flex w-full cursor-pointer flex-col gap-1 rounded border border-l-[3px] px-2.75 py-2.25 text-left font-sans transition-all duration-150 hover:border-muted-2/60 hover:bg-[#1b2740] ${
                           active ? "border-transparent" : "border-line bg-panel-2"
                         }`}
                       >
-                        <span className="text-sm font-bold text-white">{pick(locale, svc.name)}</span>
+                        <span className="flex items-center gap-1.5">
+                          <span className="min-w-0 flex-1 truncate text-sm font-bold text-white">{pick(locale, svc.name)}</span>
+                          <FavoriteStar serviceKey={svc.key} />
+                        </span>
                         <span className="text-[11.5px] leading-[1.45] text-muted-2">
                           {d.length > 74 ? `${d.slice(0, 74)}…` : d}
                         </span>
-                      </button>
+                        <PriorityBadge priority={svc.priority ?? 2} />
+                      </div>
                     );
                   })}
                 </div>

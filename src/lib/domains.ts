@@ -36,6 +36,7 @@ export const CATEGORY_DOMAIN: Record<string, DomainNumber> = {
   "machine-learning": 3,
   integration: 3,
   "dev-tools": 3,
+  "end-user-computing": 3,
   "cost-support": 4,
 };
 
