@@ -38,6 +38,11 @@ export function getExamItems(examId: ExamId): ExamItem[] {
   return getExam(examId).items;
 }
 
+export function getExamItemKeys(examId: ExamId): Set<string> {
+  getExam(examId);
+  return new Set(ITEM_BY_EXAM.get(examId)?.keys() ?? []);
+}
+
 export function getExamItem(examId: ExamId, itemKey: string): ExamItem | null {
   getExam(examId);
   return ITEM_BY_EXAM.get(examId)?.get(itemKey) ?? null;
@@ -45,6 +50,36 @@ export function getExamItem(examId: ExamId, itemKey: string): ExamItem | null {
 
 export function getExamItemsForDomain(examId: ExamId, domainId: string): ExamItem[] {
   return getExam(examId).items.filter((item) => item.domainId === domainId);
+}
+
+export function getCategoryItemsForExam(examId: ExamId, categorySlug: string) {
+  const category = DATA.find((candidate) => candidate.slug === categorySlug);
+  if (!category) return [];
+  const examKeys = getExamItemKeys(examId);
+  return category.items.filter((item) => examKeys.has(item.key));
+}
+
+export function getCategoryItemsForDomain(examId: ExamId, categorySlug: string, domainId: string) {
+  const category = DATA.find((candidate) => candidate.slug === categorySlug);
+  if (!category) return [];
+  return category.items.filter((item) => getExamItem(examId, item.key)?.domainId === domainId);
+}
+
+export function categoryBelongsToExam(examId: ExamId, categorySlug: string): boolean {
+  return getCategoryItemsForExam(examId, categorySlug).length > 0;
+}
+
+export function getCategoriesForExam(examId: ExamId) {
+  return DATA.map((category) => ({ ...category, items: getCategoryItemsForExam(examId, category.slug) })).filter(
+    (category) => category.items.length > 0,
+  );
+}
+
+export function getCategoriesForDomain(examId: ExamId, domainId: string) {
+  return DATA.map((category) => ({
+    ...category,
+    items: getCategoryItemsForDomain(examId, category.slug, domainId),
+  })).filter((category) => category.items.length > 0);
 }
 
 export function getItemPriority(examId: ExamId, itemKey: string): StudyPriority | null {

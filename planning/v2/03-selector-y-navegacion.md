@@ -1,6 +1,8 @@
 # Fase 2 — Selector, navegación y estados visuales
 
-Estado: propuesto.
+Estado: implementado.
+
+Implementado el 2026-08-28 en la rama `v2`.
 
 ## Objetivo
 
@@ -86,3 +88,31 @@ Requisitos: `NAV-01`, `NAV-02`, `NAV-03`, `UX-01`, `UX-02`.
 - La carga y el cambio de contexto se sienten consistentes en mobile y desktop.
 
 Ver contrato transversal en `08-experiencia-ui-skeletons-animaciones.md`.
+
+## Resultado implementado
+
+- `ExamProvider` centraliza examen activo, URL canónica y preferencia local.
+- El selector aparece junto a la marca en desktop y en el drawer mobile.
+- Header, Dashboard, metadata cliente, dominios y cantidades usan el examen activo.
+- Home, catálogo, mapa, arquitecturas, práctica y favoritos filtran por examen.
+- AIF-C01 expone sus cinco dominios y un estado explícito mientras su contenido
+  se incorpora en la Fase 3; no recibe datos de CLF-C02 por fallback silencioso.
+- El cambio de examen limpia dominio, categoría, servicio y arquitectura
+  incompatibles.
+- Los skeletons se usan durante hidratación o cálculo real; se retiró la espera
+  artificial del catálogo.
+- Las animaciones principales de carga y mapa respetan
+  `prefers-reduced-motion`.
+
+## Evidencia de cierre
+
+- `npx tsc --noEmit`: aprobado.
+- `npm run build`: aprobado con Next.js 16.3.2; diez rutas generadas.
+- Prueba visual desktop: CLF-C02 conserva 129 elementos y sus conteos 8/21/89/11.
+- Prueba visual AIF-C01: muestra 0 elementos, cinco dominios y el estado de
+  contenido en preparación.
+- Prueba mobile: una URL sin `exam` restauró AIF-C01 desde almacenamiento local.
+- Prueba de precedencia: `?exam=clf-c02` reemplazó la preferencia AIF-C01.
+- Prueba defensiva: examen y dominio inválidos se normalizaron a CLF-C02 y foco
+  global.
+- No se realizó push; `main` permanece en `v1.0.0`.

@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Source_Sans_3 } from "next/font/google";
-import { LocaleProvider, FavoritesProvider } from "@/hooks";
+import { Suspense } from "react";
+import { ExamProvider, LocaleProvider, FavoritesProvider } from "@/hooks";
 import AuthProvider from "@/components/providers/AuthProvider";
+import { Loader } from "@/components/skeletons";
 import "./globals.css";
 
 const sourceSans = Source_Sans_3({
@@ -32,7 +34,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <AuthProvider>
           <LocaleProvider>
-            <FavoritesProvider>{children}</FavoritesProvider>
+            <Suspense fallback={<Loader label="AWS PREP" />}>
+              <ExamProvider>
+                <FavoritesProvider>{children}</FavoritesProvider>
+              </ExamProvider>
+            </Suspense>
           </LocaleProvider>
         </AuthProvider>
       </body>

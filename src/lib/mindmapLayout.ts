@@ -3,8 +3,8 @@
 // runs synchronously with no worker setup, which is fine at this graph size.
 import ELK from "elkjs/lib/elk.bundled";
 import type { ElkNode } from "elkjs/lib/elk-api";
+import { getExamItem } from "@/data/exams";
 import DATA from "@/data/services";
-import { domainIdOf } from "./domains";
 import { byId } from "./graph";
 import { pick, type Locale } from "./locale";
 import type { MapFocus } from "./types";
@@ -48,12 +48,11 @@ export type MindLayout = {
   edges: MindEdge[];
 };
 
-/** Whether a category should be drawn for the current focus. */
-function catActive(focus: MapFocus, cat: (typeof DATA)[number]): boolean {
-  if (focus.kind === "all") return true;
-  if (focus.kind === "domain") return domainIdOf(cat.slug) === focus.domainId;
-  return cat.slug === focus.slug;
-}
+type ActiveCategory = {
+  ci: number;
+  cat: (typeof DATA)[number];
+  items: { si: number; svc: (typeof DATA)[number]["items"][number] }[];
+};
 
 /**
  * Builds an elk tree for one half of the mindmap: fake root -> categories -> services.
@@ -62,12 +61,12 @@ function catActive(focus: MapFocus, cat: (typeof DATA)[number]): boolean {
  * (category node containing its services) triggers an UnsupportedGraphException
  * unless every level also sets hierarchyHandling, which is unnecessary here.
  */
-function buildElkTree(cats: { ci: number; cat: (typeof DATA)[number] }[]): ElkNode {
+function buildElkTree(cats: ActiveCategory[]): ElkNode {
   const children: ElkNode[] = [];
   const edges: NonNullable<ElkNode["edges"]> = [];
-  for (const { ci, cat } of cats) {
+  for (const { ci, items } of cats) {
     children.push({ id: `cat-${ci}`, width: CAT_W, height: CAT_H });
-    cat.items.forEach((_svc, si) => {
+    items.forEach(({ si }) => {
       children.push({ id: `${ci}-${si}`, width: SVC_W, height: SVC_H });
       edges.push({ id: `e-cat${ci}-${ci}-${si}`, sources: [`cat-${ci}`], targets: [`${ci}-${si}`] });
     });
@@ -91,8 +90,20 @@ function buildElkTree(cats: { ci: number; cat: (typeof DATA)[number] }[]): ElkNo
  * to the left and right (alternating), each with its services laid out by elk
  * in a horizontal tree, then the left half is mirrored back onto the root.
  */
-export async function computeMindLayout(focus: MapFocus, locale: Locale): Promise<MindLayout> {
-  const activeCats = DATA.map((cat, ci) => ({ ci, cat })).filter(({ cat }) => catActive(focus, cat));
+export async function computeMindLayout(focus: MapFocus, locale: Locale, examId: string): Promise<MindLayout> {
+  const activeCats = DATA.map((cat, ci) => ({
+    ci,
+    cat,
+    items: cat.items
+      .map((svc, si) => ({ svc, si }))
+      .filter(({ svc }) => {
+        const examItem = getExamItem(examId, svc.key);
+        if (!examItem) return false;
+        if (focus.kind === "domain") return examItem.domainId === focus.domainId;
+        if (focus.kind === "category") return cat.slug === focus.slug;
+        return true;
+      }),
+  })).filter(({ items }) => items.length > 0);
 
   const left = activeCats.filter((_, i) => i % 2 === 0);
   const right = activeCats.filter((_, i) => i % 2 === 1);

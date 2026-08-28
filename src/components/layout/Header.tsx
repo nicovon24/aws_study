@@ -13,8 +13,9 @@ import {
 } from "lucide-react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
+import { EXAMS } from "@/data/exams";
 import { LocaleToggle } from "@/components/ui";
-import { useFavorites, useLocale } from "@/hooks";
+import { useExam, useFavorites, useLocale } from "@/hooks";
 import { pick } from "@/lib/locale";
 import { UI } from "@/lib/uiStrings";
 import type { View } from "@/lib/types";
@@ -37,6 +38,7 @@ const TABS: { key: View; label: keyof typeof UI; icon: typeof House }[] = [
 
 export default function Header({ view, onNavigate, children }: Props) {
   const { locale } = useLocale();
+  const { exam, setExam } = useExam();
   const { data: session, status } = useSession();
   const { favorites, signedIn } = useFavorites();
   const [open, setOpen] = useState(false);
@@ -63,9 +65,13 @@ export default function Header({ view, onNavigate, children }: Props) {
           <span className="text-[22px] font-black tracking-tight text-white">AWS</span>
           <span className="text-[17px] font-bold text-white">Prep</span>
         </span>
-        <span className="hidden whitespace-nowrap rounded border border-line bg-panel px-1.75 py-0.5 font-mono text-[11px] text-muted-2 sm:inline">
-          CLF-C02
-        </span>
+        <ExamSelect
+          id="exam-selector-desktop"
+          value={exam.id}
+          onChange={setExam}
+          label={pick(locale, UI.examSelector)}
+          className="hidden sm:block"
+        />
         <LocaleToggle />
       </div>
 
@@ -169,7 +175,20 @@ export default function Header({ view, onNavigate, children }: Props) {
           </span>
         </button>
 
-        <nav className="flex flex-col gap-1 px-4 pt-4">
+        <div className="px-4 pb-2 pt-4 sm:hidden">
+        <ExamSelect
+          id="exam-selector-mobile"
+          value={exam.id}
+          onChange={(examId) => {
+            setExam(examId);
+            setOpen(false);
+          }}
+            label={pick(locale, UI.examSelector)}
+            className="w-full"
+          />
+        </div>
+
+        <nav className="flex flex-col gap-1 px-4 pt-2 sm:pt-4">
           {TABS.map((t) => (
             <button
               key={t.key}
@@ -222,5 +241,35 @@ export default function Header({ view, onNavigate, children }: Props) {
         )}
       </div>
     </header>
+  );
+}
+
+function ExamSelect({
+  id,
+  value,
+  onChange,
+  label,
+  className = "",
+}: {
+  id: string;
+  value: string;
+  onChange: (examId: string) => void;
+  label: string;
+  className?: string;
+}) {
+  return (
+    <select
+      id={id}
+      aria-label={label}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      className={`rounded border border-line bg-panel px-2 py-1 font-mono text-[11px] text-ink-2 outline-none focus:border-accent ${className}`}
+    >
+      {EXAMS.map((exam) => (
+        <option key={exam.id} value={exam.id}>
+          {exam.code}
+        </option>
+      ))}
+    </select>
   );
 }

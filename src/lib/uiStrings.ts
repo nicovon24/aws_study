@@ -13,6 +13,12 @@ export const UI: Record<string, Localized> = {
   closeMenu: { es: "cerrar menú", en: "close menu" },
   signIn: { es: "Iniciar sesión", en: "Sign in" },
   signOut: { es: "Cerrar sesión", en: "Sign out" },
+  examSelector: { es: "Seleccionar certificación", en: "Select certification" },
+  examContentPreparing: { es: "Contenido en preparación.", en: "Content in preparation." },
+  examContentPreparingDetail: {
+    es: "La certificación ya está registrada; sus materiales se incorporarán en la siguiente fase.",
+    en: "The certification is registered; its study materials will be added in the next phase.",
+  },
 
   // AppShell footer
   disclaimer: {
@@ -22,8 +28,8 @@ export const UI: Record<string, Localized> = {
 
   // DashboardView
   dashboardIntro: {
-    es: "App de estudio y repaso para certificaciones AWS. Por ahora cubre el",
-    en: "Study and review app for AWS certifications. For now it covers the",
+    es: "App de estudio y repaso para la certificación",
+    en: "Study and review app for the certification",
   },
   dashboardEyebrow: { es: "tu ruta de estudio", en: "your study path" },
   dashboardTitle: { es: "AWS Certified Cloud Practitioner", en: "AWS Certified Cloud Practitioner" },

@@ -14,7 +14,11 @@ function ArquitecturasPageInner() {
   const selectedId = searchParams.get("id");
 
   function onSelect(id: string | null) {
-    router.replace(id ? `${pathname}?id=${encodeURIComponent(id)}` : pathname, { scroll: false });
+    const params = new URLSearchParams(searchParams.toString());
+    if (id) params.set("id", id);
+    else params.delete("id");
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }
 
   return (

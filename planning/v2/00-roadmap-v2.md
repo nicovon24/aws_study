@@ -1,6 +1,6 @@
 # AWS Prep V2 — Roadmap multi-certificación
 
-Estado: en ejecución. Fases 0 y 1 completadas; Fase 2 es el próximo bloque.
+Estado: en ejecución. Fases 0, 1 y 2 completadas; Fase 3 es el próximo bloque.
 
 Última actualización: 2026-08-28.
 
@@ -17,7 +17,7 @@ Estados utilizados: `LISTO`, `EN CURSO`, `PENDIENTE` y `BLOQUEADO`.
 |---|---|---|---:|---|---|---|
 | 0 | Cierre y versionado de V1 | LISTO | 100% | Build, prueba visual, documentación, commit y tag `v1.0.0` | Publicar commit/tag en GitHub cuando se autorice | `01-cierre-v1.md` |
 | 1 | Fundaciones multi-examen | LISTO | 100% | Registro, ids dinámicos, CLF-C02 migrado, metadata pedagógica y validaciones | — | `02-fundaciones-multi-examen.md` |
-| 2 | Selector, navegación y UX | PENDIENTE | 0% | Contrato de navegación y UX definido | Selector responsive, URL persistente, skeletons y transiciones | `03-selector-y-navegacion.md` |
+| 2 | Selector, navegación y UX | LISTO | 100% | Selector responsive, URL/localStorage, navegación, filtros por examen, estados vacíos y movimiento reducido | — | `03-selector-y-navegacion.md` |
 | 3 | AWS MCP y contenido AIF-C01 | PENDIENTE | 0% | Fuentes iniciales y reglas editoriales definidas | Pipeline de fuentes, revisión y contenido estructurado AIF-C01 | `04-contenido-aif-c01.md` |
 | 4 | Preguntas, flashcards y simulacros | PENDIENTE | 0% | Modelo conceptual y estrategia de distractores definidos | Banco de preguntas, `similarTo`, grupos, sesiones y simulacro ponderado | `05-practica-y-simulacros.md` |
 | 5 | Progreso de usuario | PENDIENTE | 0% | Compatibilidad objetivo documentada | Persistencia, métricas por examen y migración compatible | `06-progreso-usuario.md` |
@@ -33,9 +33,9 @@ Estados utilizados: `LISTO`, `EN CURSO`, `PENDIENTE` y `BLOQUEADO`.
 | EXM-03 | Migrar CLF-C02 sin regresiones | 1 | LISTO | Conteos 8/21/89/11, URLs, mapa y flashcards comparados con V1 |
 | AWS-01 | Catálogo canónico independiente de exámenes | 1 | LISTO | Servicios mantienen claves globales y `CatalogScope` admite `all-aws` |
 | AWS-02 | Pertenencia y prioridad por examen | 1 | LISTO | `ExamItem` concentra dominio y prioridad con fallback V1 reversible |
-| NAV-01 | Selector CLF-C02/AIF-C01 | 2 | PENDIENTE | Selector usable en desktop y mobile |
-| NAV-02 | Persistencia del examen activo | 2 | PENDIENTE | URL y almacenamiento local sincronizados |
-| NAV-03 | Enlaces compartibles con foco correcto | 2 | PENDIENTE | Navegación restaurable por URL |
+| NAV-01 | Selector CLF-C02/AIF-C01 | 2 | LISTO | Selector accesible en Header desktop y drawer mobile |
+| NAV-02 | Persistencia del examen activo | 2 | LISTO | URL tiene precedencia y `localStorage` restaura la última selección |
+| NAV-03 | Enlaces compartibles con foco correcto | 2 | LISTO | Tabs preservan `exam`; dominio/categoría inválidos se normalizan |
 | SRC-01 | Flujo editorial con AWS Knowledge MCP | 3 | PENDIENTE | Descubrimiento y actualización reproducibles |
 | SRC-02 | Proveniencia de contenido | 3 | PENDIENTE | URL, fecha, examen y revisión registrados |
 | SRC-03 | Revisión antes de publicar | 3 | PENDIENTE | Contenido MCP entra como `staged`, nunca directo a producción |
@@ -50,8 +50,8 @@ Estados utilizados: `LISTO`, `EN CURSO`, `PENDIENTE` y `BLOQUEADO`.
 | EDU-01 | Recorrido completo por certificación | 4–6 | PENDIENTE | Aprender → practicar → simular → revisar para CLF-C02 y AIF-C01 |
 | USR-01 | Preservar favoritos y notas V1 | 5 | PENDIENTE | Compatibilidad por `serviceKey` demostrada |
 | USR-02 | Progreso por usuario y examen | 5 | PENDIENTE | Resultados por certificación, dominio y objetivo |
-| UX-01 | Skeletons consistentes | 2–6 | PENDIENTE | Estados de carga sin saltos importantes |
-| UX-02 | Animaciones accesibles | 2–6 | PENDIENTE | Movimiento reducido y rendimiento comprobados |
+| UX-01 | Skeletons consistentes | 2–6 | EN CURSO | Loader de hidratación y skeleton de cálculo del mapa solo durante esperas reales; ampliar con futuras cargas de contenido |
+| UX-02 | Animaciones accesibles | 2–6 | EN CURSO | Loader y mapa respetan movimiento reducido; continuar auditoría en fases con sesiones y simulacros |
 | REL-01 | Gates técnicos V2 | 6 | PENDIENTE | Build, tipos, lint y pruebas aprobados |
 | REL-02 | Validación manual V2 | 6 | PENDIENTE | Flujos principales aprobados en desktop y mobile |
 
@@ -86,7 +86,7 @@ contenido general de AWS aunque todavía no esté asociado a un examen.
 - **V2 estable (`v2.0.0`)**: CLF-C02 y AIF-C01 utilizables de punta a punta,
   sin regresiones conocidas sobre las capacidades de V1.
 - El tag de V1 fue creado antes de integrar contenido o código propio de AIF-C01.
-- El desarrollo de V2 continúa en la rama `feat/v2-multi-exam`, creada después
+- El desarrollo de V2 continúa en la rama `v2`, creada después
   del tag estable de V1.
 
 ## Principios de arquitectura

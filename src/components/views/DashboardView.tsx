@@ -1,7 +1,7 @@
 "use client";
 
-import { useLocale } from "@/hooks";
-import { categoriesInDomain, DEFAULT_EXAM } from "@/lib/domains";
+import { getCategoriesForDomain } from "@/data/exams";
+import { useExam, useLocale } from "@/hooks";
 import { pick } from "@/lib/locale";
 import { UI } from "@/lib/uiStrings";
 import type { MapFocus, View } from "@/lib/types";
@@ -14,24 +14,37 @@ type Props = {
 
 export default function DashboardView({ onStudy, onNavigate }: Props) {
   const { locale } = useLocale();
-  const domains = DEFAULT_EXAM.domains.map((meta) => {
-    const cats = categoriesInDomain(meta.id);
+  const { exam } = useExam();
+  const domains = exam.domains.map((meta) => {
+    const cats = getCategoriesForDomain(exam.id, meta.id);
     const count = cats.reduce((acc, c) => acc + c.items.length, 0);
     return { meta, cats, count };
   });
+  const totalItems = exam.items.length;
 
   return (
     <main className="flex-1 overflow-auto px-10 py-8 pb-[60px]">
       <div className="mx-auto max-w-[1180px]">
         <p className="mb-4 max-w-[620px] text-[13px] text-muted-2">
           {pick(locale, UI.dashboardIntro)}{" "}
-          <span className="text-ink-2">AWS Certified Cloud Practitioner</span>.
+          <span className="text-ink-2">{pick(locale, exam.name)}</span>.
         </p>
         <div className="mb-[6px] font-mono text-xs uppercase tracking-[.12em] text-accent">
           {pick(locale, UI.dashboardEyebrow)}
         </div>
-        <h1 className="mb-1 text-[34px] font-bold tracking-tight">{pick(locale, UI.dashboardTitle)}</h1>
-        <p className="mb-7 max-w-[620px] text-[15px] text-muted">{pick(locale, UI.dashboardSubtitle)}</p>
+        <h1 className="mb-1 text-[34px] font-bold tracking-tight">{pick(locale, exam.name)}</h1>
+        <p className="mb-7 max-w-[620px] text-[15px] text-muted">
+          {locale === "es"
+            ? `${totalItems} servicios y conceptos organizados en ${exam.domains.length} dominios del examen.`
+            : `${totalItems} services and concepts organized across ${exam.domains.length} exam domains.`}
+        </p>
+
+        {totalItems === 0 && (
+          <div className="mb-7 rounded-lg border border-accent/35 bg-accent/8 px-4 py-3 text-sm text-ink-2">
+            <strong className="text-white">{pick(locale, UI.examContentPreparing)}</strong>{" "}
+            {pick(locale, UI.examContentPreparingDetail)}
+          </div>
+        )}
 
         <StudySteps onNavigate={onNavigate} />
 

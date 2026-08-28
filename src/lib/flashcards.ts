@@ -1,6 +1,5 @@
 import DATA from "@/data/services";
-import { DEFAULT_EXAM_ID, getExamItems } from "@/data/exams";
-import { domainIdOf } from "./domains";
+import { DEFAULT_EXAM_ID, getExamItem, getExamItems } from "@/data/exams";
 import { byId } from "./graph";
 import type { MapFocus, Node } from "./types";
 
@@ -21,20 +20,20 @@ function shuffle<T>(arr: T[]): T[] {
   return out;
 }
 
-function scopeMatches(focus: MapFocus, catSlug: string): boolean {
+function scopeMatches(focus: MapFocus, examId: string, node: Node): boolean {
   if (focus.kind === "all") return true;
-  if (focus.kind === "domain") return domainIdOf(catSlug) === focus.domainId;
-  return catSlug === focus.slug;
+  if (focus.kind === "domain") return getExamItem(examId, node.key)?.domainId === focus.domainId;
+  return node.catSlug === focus.slug;
 }
 
 /** Every service belonging to the chosen scope, as flashcard subjects. */
-export function nodesInScope(focus: MapFocus): Node[] {
-  const examItemKeys = new Set(getExamItems(DEFAULT_EXAM_ID).map((item) => item.itemKey));
-  return DATA.filter((cat) => scopeMatches(focus, cat.slug)).flatMap((cat) => {
+export function nodesInScope(focus: MapFocus, examId = DEFAULT_EXAM_ID): Node[] {
+  const examItemKeys = new Set(getExamItems(examId).map((item) => item.itemKey));
+  return DATA.flatMap((cat) => {
     const ci = DATA.indexOf(cat);
     return cat.items
       .map((_svc, si) => byId[`${ci}-${si}`])
-      .filter((node) => examItemKeys.has(node.key));
+      .filter((node) => examItemKeys.has(node.key) && scopeMatches(focus, examId, node));
   });
 }
 
@@ -42,10 +41,11 @@ export function nodesInScope(focus: MapFocus): Node[] {
  * Shuffled deck: one card per node in scope (capped at `count`, when given),
  * options drawn from the whole dataset.
  */
-export function buildDeck(focus: MapFocus, mode: FlashcardMode, count?: number): Flashcard[] {
-  const scoped = shuffle(nodesInScope(focus));
+export function buildDeck(focus: MapFocus, mode: FlashcardMode, count?: number, examId = DEFAULT_EXAM_ID): Flashcard[] {
+  const scoped = shuffle(nodesInScope(focus, examId));
   const picked = count != null ? scoped.slice(0, count) : scoped;
-  const allNodes = Object.values(byId);
+  const examKeys = new Set(getExamItems(examId).map((item) => item.itemKey));
+  const allNodes = Object.values(byId).filter((node) => examKeys.has(node.key));
   return picked.map((correct) => ({
     correct,
     options: buildOptions(correct, allNodes),

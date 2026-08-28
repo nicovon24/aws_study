@@ -3,7 +3,8 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect } from "react";
 import { ARCHITECTURES } from "@/data/architectures";
-import { useLocale } from "@/hooks";
+import { getExamItemKeys } from "@/data/exams";
+import { useExam, useLocale } from "@/hooks";
 import { pick } from "@/lib/locale";
 import { UI } from "@/lib/uiStrings";
 import { MermaidDiagram } from "@/components/diagrams";
@@ -15,7 +16,12 @@ type Props = {
 
 export default function ArchitecturesView({ selectedId, onSelect }: Props) {
   const { locale } = useLocale();
-  const active = ARCHITECTURES.find((a) => a.id === selectedId) ?? null;
+  const { exam } = useExam();
+  const examKeys = getExamItemKeys(exam.id);
+  const architectures = ARCHITECTURES.filter((architecture) =>
+    architecture.services.some((serviceKey) => examKeys.has(serviceKey)),
+  );
+  const active = architectures.find((a) => a.id === selectedId) ?? null;
 
   useEffect(() => {
     if (!active) return;
@@ -35,8 +41,14 @@ export default function ArchitecturesView({ selectedId, onSelect }: Props) {
         <h1 className="mb-1 text-[34px] font-bold tracking-tight">{pick(locale, UI.archTitle)}</h1>
         <p className="mb-7 max-w-[620px] text-[15px] text-muted">{pick(locale, UI.archSubtitle)}</p>
 
+        {architectures.length === 0 ? (
+          <div className="rounded-xl border border-accent/30 bg-accent/8 p-5 text-sm">
+            <p className="font-semibold text-white">{pick(locale, UI.examContentPreparing)}</p>
+            <p className="mt-1 text-muted-2">{pick(locale, UI.examContentPreparingDetail)}</p>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {ARCHITECTURES.map((a) => (
+          {architectures.map((a) => (
             <button
               key={a.id}
               type="button"
@@ -49,6 +61,7 @@ export default function ArchitecturesView({ selectedId, onSelect }: Props) {
             </button>
           ))}
         </div>
+        )}
       </div>
 
       <AnimatePresence>

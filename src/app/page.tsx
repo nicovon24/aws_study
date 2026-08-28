@@ -2,46 +2,30 @@
 
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense } from "react";
 import { AppShell } from "@/components/layout";
-import { Loader } from "@/components/skeletons";
-import { focusToParams, useUrlFocus } from "@/hooks";
+import { focusToParams, useExam, useUrlFocus } from "@/hooks";
 import { VIEW_PATH } from "@/lib/routes";
 
 // The map view sizes itself from the live stage dimensions, so there is
 // nothing meaningful to render on the server — load it in the browser only.
 const DashboardView = dynamic(() => import("@/components/views/DashboardView"), { ssr: false });
 
-const MIN_LOADER_MS = 1200;
-
 function DashboardPageInner() {
   const router = useRouter();
-  const { focus, setFocus } = useUrlFocus();
-  const [showLoader, setShowLoader] = useState(true);
-
-  useEffect(() => {
-    const t = setTimeout(() => setShowLoader(false), MIN_LOADER_MS);
-    return () => clearTimeout(t);
-  }, []);
+  const { urlFor } = useExam();
+  const { focus } = useUrlFocus();
 
   function goStudy(f: typeof focus) {
     const params = new URLSearchParams();
     focusToParams(f, params);
-    const qs = params.toString();
-    router.push(qs ? `${VIEW_PATH.map}?${qs}` : VIEW_PATH.map);
+    router.push(urlFor(VIEW_PATH.map, params));
   }
 
   return (
-    <>
-      <AppShell>
-        <DashboardView onStudy={goStudy} onNavigate={(v) => router.push(VIEW_PATH[v])} />
-      </AppShell>
-      {showLoader && (
-        <div className="fixed inset-0 z-[100]">
-          <Loader />
-        </div>
-      )}
-    </>
+    <AppShell>
+      <DashboardView onStudy={goStudy} onNavigate={(v) => router.push(urlFor(VIEW_PATH[v]))} />
+    </AppShell>
   );
 }
 

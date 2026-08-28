@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useLocale } from "@/hooks";
+import { useExam, useLocale } from "@/hooks";
 import { pick } from "@/lib/locale";
 import { VIEW_PATH, viewFromPathname } from "@/lib/routes";
 import { UI } from "@/lib/uiStrings";
@@ -16,6 +16,7 @@ type Props = {
 /** Shared header + checkered background wrapper used by every route/page. */
 export default function AppShell({ drawerContent, children }: Props) {
   const { locale } = useLocale();
+  const { urlFor } = useExam();
   const router = useRouter();
   const pathname = usePathname();
   const view = viewFromPathname(pathname);
@@ -29,7 +30,7 @@ export default function AppShell({ drawerContent, children }: Props) {
         backgroundSize: "73px 73px,73px 73px,18.25px 18.25px,18.25px 18.25px",
       }}
     >
-      <Header view={view} onNavigate={(v) => router.push(VIEW_PATH[v])}>
+      <Header view={view} onNavigate={(v) => router.push(urlFor(VIEW_PATH[v]))}>
         {drawerContent}
       </Header>
       {children}

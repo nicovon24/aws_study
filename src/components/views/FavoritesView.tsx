@@ -3,8 +3,8 @@
 import { Star } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
 import { useMemo, useState } from "react";
-import { DEFAULT_EXAM_ID, getItemPriority } from "@/data/exams";
-import { useFavorites, useLocale } from "@/hooks";
+import { getExamItem, getItemPriority } from "@/data/exams";
+import { useExam, useFavorites, useLocale } from "@/hooks";
 import { byId, byKey, catBySlug } from "@/lib/graph";
 import { pick } from "@/lib/locale";
 import { UI } from "@/lib/uiStrings";
@@ -18,6 +18,7 @@ type Props = {
 
 export default function FavoritesView({ selectedId, onSelect }: Props) {
   const { locale } = useLocale();
+  const { exam } = useExam();
   const { status } = useSession();
   const { favorites, loaded } = useFavorites();
   const [priorities, setPriorities] = useState<Set<1 | 2 | 3>>(new Set([1, 2, 3]));
@@ -26,7 +27,8 @@ export default function FavoritesView({ selectedId, onSelect }: Props) {
     const nodes = [...favorites]
       .map((key) => byKey[key])
       .filter(Boolean)
-      .filter((node) => priorities.has(getItemPriority(DEFAULT_EXAM_ID, node.key) ?? node.priority ?? 2));
+      .filter((node) => Boolean(getExamItem(exam.id, node.key)))
+      .filter((node) => priorities.has(getItemPriority(exam.id, node.key) ?? node.priority ?? 2));
     const map = new Map<string, typeof nodes>();
     for (const node of nodes) {
       const list = map.get(node.catSlug) ?? [];
@@ -36,7 +38,7 @@ export default function FavoritesView({ selectedId, onSelect }: Props) {
     return [...map.entries()]
       .map(([slug, items]) => ({ cat: catBySlug[slug], items }))
       .filter((g) => g.cat);
-  }, [favorites, priorities]);
+  }, [exam.id, favorites, priorities]);
 
   const total = groups.reduce((n, g) => n + g.items.length, 0);
 
@@ -66,7 +68,12 @@ export default function FavoritesView({ selectedId, onSelect }: Props) {
               </p>
               <AccentButton onClick={() => signIn("google")}>{pick(locale, UI.signIn)}</AccentButton>
             </EmptyState>
-          ) : !loaded ? null : total === 0 ? (
+          ) : !loaded ? null : exam.items.length === 0 ? (
+            <EmptyState>
+              <p className="font-semibold text-white">{pick(locale, UI.examContentPreparing)}</p>
+              <p className="max-w-sm text-sm leading-relaxed text-muted">{pick(locale, UI.examContentPreparingDetail)}</p>
+            </EmptyState>
+          ) : total === 0 ? (
             <EmptyState>
               <p className="max-w-sm text-sm leading-relaxed text-muted">{pick(locale, UI.favoritesEmpty)}</p>
             </EmptyState>
@@ -109,7 +116,7 @@ export default function FavoritesView({ selectedId, onSelect }: Props) {
                             {d.length > 74 ? `${d.slice(0, 74)}…` : d}
                           </span>
                           <PriorityBadge
-                            priority={getItemPriority(DEFAULT_EXAM_ID, node.key) ?? node.priority ?? 2}
+                            priority={getItemPriority(exam.id, node.key) ?? node.priority ?? 2}
                           />
                         </div>
                       );

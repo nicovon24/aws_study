@@ -19,9 +19,9 @@ import ReactFlow, {
 } from "reactflow";
 import { AnimatedFilterSidebar, DetailPanel } from "@/components/shared";
 import { MindMapSkeleton } from "@/components/skeletons";
-import { useLocale, useMindMapLayout } from "@/hooks";
-import { domainById } from "@/lib/domains";
-import { byId, catBySlug, totalServices } from "@/lib/graph";
+import { getExamDomain } from "@/data/exams";
+import { useExam, useLocale, useMindMapLayout } from "@/hooks";
+import { byId, catBySlug } from "@/lib/graph";
 import { pick } from "@/lib/locale";
 import { UI } from "@/lib/uiStrings";
 import type { MapFocus } from "@/lib/types";
@@ -62,6 +62,7 @@ function AllSideHandles() {
 
 function MindNode({ data }: NodeProps<NodeData>) {
   const { kind, label, accent, selected, onClick } = data;
+  const { exam } = useExam();
 
   if (kind === "root") {
     return (
@@ -71,7 +72,7 @@ function MindNode({ data }: NodeProps<NodeData>) {
       >
         <AllSideHandles />
         <span className="text-[19px] font-black">aws</span>
-        <span className="font-mono text-[9.5px] text-muted-2">{totalServices} items</span>
+        <span className="font-mono text-[9.5px] text-muted-2">{exam.items.length} items</span>
       </div>
     );
   }
@@ -132,6 +133,7 @@ function Inner({
   const { layout, recenter } = useMindMapLayout(focus);
   const { setCenter } = useReactFlow();
   const { locale } = useLocale();
+  const { exam } = useExam();
 
   // Set when a search result is picked; once the layout that should contain
   // it finishes computing, the camera zooms onto that node and this clears
@@ -200,6 +202,12 @@ function Inner({
         onAnimationComplete={recenter}
       />
       <div className="relative min-w-0 flex-1">
+        {exam.items.length === 0 && (
+          <div className="absolute left-1/2 top-20 z-20 w-[min(90%,34rem)] -translate-x-1/2 rounded-xl border border-accent/30 bg-panel/95 p-5 text-sm shadow-xl">
+            <p className="font-semibold text-white">{pick(locale, UI.examContentPreparing)}</p>
+            <p className="mt-1 text-muted-2">{pick(locale, UI.examContentPreparingDetail)}</p>
+          </div>
+        )}
         {layout ? (
           <ReactFlow
             nodes={nodes}
@@ -247,7 +255,7 @@ function Inner({
               className="flex items-center gap-2 rounded-full border border-accent/50 bg-accent/10 py-1.5 pl-3 pr-2.5 font-mono text-[11px] text-accent hover:border-accent hover:bg-accent/20"
             >
               {focus.kind === "domain"
-                ? `${pick(locale, UI.domainChip)} ${domainById(focus.domainId)?.number ?? ""}`
+                ? `${pick(locale, UI.domainChip)} ${getExamDomain(exam.id, focus.domainId)?.number ?? ""}`
                 : pick(locale, catBySlug[focus.slug]?.cat ?? { es: "", en: "" })}
               <span aria-hidden className="text-[13px] leading-none">
                 ✕

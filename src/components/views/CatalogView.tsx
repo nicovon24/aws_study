@@ -2,16 +2,14 @@
 
 import { PanelLeftClose, PanelLeftOpen, Star } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { DEFAULT_EXAM_ID, getExamDomain, getItemPriority } from "@/data/exams";
+import { getExamDomain, getExamItem, getItemPriority } from "@/data/exams";
 import DATA from "@/data/services";
-import { useFavorites, useLocale } from "@/hooks";
-import { domainIdOf } from "@/lib/domains";
+import { useExam, useFavorites, useLocale } from "@/hooks";
 import { byId, catBySlug } from "@/lib/graph";
 import { pick } from "@/lib/locale";
 import { UI } from "@/lib/uiStrings";
 import type { MapFocus } from "@/lib/types";
 import { AnimatedFilterSidebar, DetailPanel, FavoriteStar, PriorityFilter } from "@/components/shared";
-import { CatalogSkeleton } from "@/components/skeletons";
 import { IconButton, Input, Pill, PriorityBadge } from "@/components/ui";
 
 type Props = {
@@ -21,14 +19,17 @@ type Props = {
   onSelect: (id: string | null) => void;
 };
 
-function catMatchesFocus(focus: MapFocus, catSlug: string): boolean {
+function itemMatchesFocus(focus: MapFocus, examId: string, catSlug: string, itemKey: string): boolean {
+  const examItem = getExamItem(examId, itemKey);
+  if (!examItem) return false;
   if (focus.kind === "all") return true;
-  if (focus.kind === "domain") return domainIdOf(catSlug) === focus.domainId;
+  if (focus.kind === "domain") return examItem.domainId === focus.domainId;
   return catSlug === focus.slug;
 }
 
 export default function CatalogView({ focus, onFocusChange, selectedId, onSelect }: Props) {
   const { locale } = useLocale();
+  const { exam } = useExam();
   const [q, setQ] = useState("");
   const [showFilters, setShowFilters] = useState(true);
   const [onlyFavorites, setOnlyFavorites] = useState(false);
@@ -40,22 +41,13 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
     if (!favSignedIn) setOnlyFavorites(false);
   }, [favSignedIn]);
 
-  // Filtering is actually instant here, but a brief skeleton keeps the same
-  // loading language as the mind map when switching category/domain focus.
-  const [isFiltering, setIsFiltering] = useState(false);
-  useEffect(() => {
-    setIsFiltering(true);
-    const id = setTimeout(() => setIsFiltering(false), 220);
-    return () => clearTimeout(id);
-  }, [focus]);
-
   const columns = useMemo(() => {
     let shown = 0;
-    const cols = DATA.filter((cat) => catMatchesFocus(focus, cat.slug))
-      .map((cat) => {
+    const cols = DATA.map((cat) => {
         const ci = DATA.indexOf(cat);
         const items = cat.items
           .map((svc, si) => ({ id: `${ci}-${si}`, svc }))
+          .filter(({ svc }) => itemMatchesFocus(focus, exam.id, cat.slug, svc.key))
           .filter(
             ({ svc }) =>
               !query ||
@@ -64,11 +56,11 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
               pick(locale, svc.d).toLowerCase().includes(query),
           )
           .filter(({ svc }) => !onlyFavorites || isFavorite(svc.key))
-          .filter(({ svc }) => priorities.has(getItemPriority(DEFAULT_EXAM_ID, svc.key) ?? svc.priority ?? 2))
+          .filter(({ svc }) => priorities.has(getItemPriority(exam.id, svc.key) ?? svc.priority ?? 2))
           .sort(
             (a, b) =>
-              (getItemPriority(DEFAULT_EXAM_ID, a.svc.key) ?? a.svc.priority ?? 2) -
-              (getItemPriority(DEFAULT_EXAM_ID, b.svc.key) ?? b.svc.priority ?? 2),
+              (getItemPriority(exam.id, a.svc.key) ?? a.svc.priority ?? 2) -
+              (getItemPriority(exam.id, b.svc.key) ?? b.svc.priority ?? 2),
           );
         shown += items.length;
         return { cat, items };
@@ -76,11 +68,11 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
       .filter((col) => col.items.length > 0);
     return { cols, shown };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, focus, locale, onlyFavorites, isFavorite, priorities]);
+  }, [query, focus, exam.id, locale, onlyFavorites, isFavorite, priorities]);
 
   const focusLabel =
     focus.kind === "domain"
-      ? pick(locale, getExamDomain(DEFAULT_EXAM_ID, focus.domainId)?.name ?? { es: "", en: "" })
+      ? pick(locale, getExamDomain(exam.id, focus.domainId)?.name ?? { es: "", en: "" })
       : focus.kind === "category"
         ? (catBySlug[focus.slug] && pick(locale, catBySlug[focus.slug].cat))
         : null;
@@ -134,8 +126,11 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
           </div>
         </div>
 
-        {isFiltering ? (
-          <CatalogSkeleton />
+        {exam.items.length === 0 ? (
+          <div className="m-4 rounded-xl border border-accent/30 bg-accent/8 p-5 text-sm text-muted-1 sm:m-6">
+            <p className="font-semibold text-white">{pick(locale, UI.examContentPreparing)}</p>
+            <p className="mt-1 text-muted-2">{pick(locale, UI.examContentPreparingDetail)}</p>
+          </div>
         ) : (
           <div className="flex-1 overflow-auto px-4 pb-10 pt-4 sm:px-6 sm:pt-5.5">
             <div className="flex flex-col items-stretch gap-3.5 sm:flex-row sm:items-start">
@@ -174,7 +169,7 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
                         <span className="text-[11.5px] leading-[1.45] text-muted-2">
                           {d.length > 74 ? `${d.slice(0, 74)}…` : d}
                         </span>
-                        <PriorityBadge priority={getItemPriority(DEFAULT_EXAM_ID, svc.key) ?? svc.priority ?? 2} />
+                        <PriorityBadge priority={getItemPriority(exam.id, svc.key) ?? svc.priority ?? 2} />
                       </div>
                     );
                   })}

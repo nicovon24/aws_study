@@ -2,7 +2,8 @@
 
 import { useMemo, useRef, useState } from "react";
 import { Input } from "@/components/ui";
-import { useDebouncedValue, useLocale } from "@/hooks";
+import { getExamItem } from "@/data/exams";
+import { useDebouncedValue, useExam, useLocale } from "@/hooks";
 import { byId } from "@/lib/graph";
 import { pick as pickLocale } from "@/lib/locale";
 import { UI } from "@/lib/uiStrings";
@@ -18,6 +19,7 @@ const MAX_RESULTS = 8;
  * matching services (by name or description), picking one centers that node. */
 export default function MapSearch({ onPick }: Props) {
   const { locale } = useLocale();
+  const { exam } = useExam();
   const [raw, setRaw] = useState("");
   const [open, setOpen] = useState(false);
   const query = useDebouncedValue(raw.trim().toLowerCase(), 200);
@@ -26,6 +28,7 @@ export default function MapSearch({ onPick }: Props) {
   const results = useMemo(() => {
     if (!query) return [];
     return Object.values(byId)
+      .filter((n) => Boolean(getExamItem(exam.id, n.key)))
       .filter(
         (n) =>
           n.name.es.toLowerCase().includes(query) ||
@@ -33,7 +36,7 @@ export default function MapSearch({ onPick }: Props) {
           pickLocale(locale, n.d).toLowerCase().includes(query),
       )
       .slice(0, MAX_RESULTS);
-  }, [query, locale]);
+  }, [exam.id, query, locale]);
 
   function pick(node: Node) {
     onPick(node);

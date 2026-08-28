@@ -102,6 +102,11 @@ svg text {
   .service-node:hover .service-pill {
     transform: none;
   }
+  .loader-segment,
+  .loader-bar,
+  .animate-blink {
+    animation: none;
+  }
 }
 
 /* Any clickable control gets a pointer cursor, not just the ones that opt in explicitly. */

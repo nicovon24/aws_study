@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useLocale } from "@/hooks";
-import { DEFAULT_EXAM } from "@/lib/domains";
+import { useExam, useLocale } from "@/hooks";
 import { buildDeck, nodesInScope, type Flashcard, type FlashcardMode } from "@/lib/flashcards";
 import { pick } from "@/lib/locale";
 import { UI } from "@/lib/uiStrings";
@@ -19,10 +18,11 @@ const MODES: FlashcardMode[] = ["guess-description", "guess-service"];
 
 export default function PracticeView({ focus, onFocusChange, onNavigate }: Props) {
   const { locale } = useLocale();
+  const { exam } = useExam();
   const [mode, setMode] = useState<FlashcardMode>("guess-description");
   const [deck, setDeck] = useState<Flashcard[] | null>(null);
 
-  const available = useMemo(() => nodesInScope(focus).length, [focus]);
+  const available = useMemo(() => nodesInScope(focus, exam.id).length, [exam.id, focus]);
   const [count, setCount] = useState<number | null>(null);
 
   // Re-clamp (or clear "all") whenever the scope shrinks below the chosen count.
@@ -59,7 +59,7 @@ export default function PracticeView({ focus, onFocusChange, onNavigate }: Props
             <Pill active={focus.kind === "all"} onClick={() => onFocusChange({ kind: "all" })}>
               {pick(locale, UI.allPill)}
             </Pill>
-            {DEFAULT_EXAM.domains.map((domain) => (
+            {exam.domains.map((domain) => (
               <Pill
                 key={domain.id}
                 active={focus.kind === "domain" && focus.domainId === domain.id}
@@ -133,18 +133,32 @@ export default function PracticeView({ focus, onFocusChange, onNavigate }: Props
           </div>
         </div>
 
-        <StartButton focus={focus} mode={mode} count={count} onStart={(cards) => setDeck(cards)} />
+        {available === 0 && (
+          <div className="mb-6 rounded-lg border border-accent/35 bg-accent/8 px-4 py-3 text-sm text-ink-2">
+            {pick(locale, UI.examContentPreparing)} {pick(locale, UI.examContentPreparingDetail)}
+          </div>
+        )}
+
+        <StartButton
+          examId={exam.id}
+          focus={focus}
+          mode={mode}
+          count={count}
+          onStart={(cards) => setDeck(cards)}
+        />
       </div>
     </main>
   );
 }
 
 function StartButton({
+  examId,
   focus,
   mode,
   count,
   onStart,
 }: {
+  examId: string;
   focus: MapFocus;
   mode: FlashcardMode;
   count: number | null;
@@ -152,11 +166,14 @@ function StartButton({
 }) {
   const { locale } = useLocale();
   const deckSize = useMemo(
-    () => buildDeck(focus, mode, count ?? undefined).length,
-    [focus, mode, count],
+    () => buildDeck(focus, mode, count ?? undefined, examId).length,
+    [examId, focus, mode, count],
   );
   return (
-    <AccentButton disabled={deckSize === 0} onClick={() => onStart(buildDeck(focus, mode, count ?? undefined))}>
+    <AccentButton
+      disabled={deckSize === 0}
+      onClick={() => onStart(buildDeck(focus, mode, count ?? undefined, examId))}
+    >
       {pick(locale, UI.start)} ({deckSize} {pick(locale, deckSize === 1 ? UI.card : UI.cards)})
     </AccentButton>
   );

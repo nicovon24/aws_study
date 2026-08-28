@@ -1,8 +1,7 @@
 "use client";
 
-import DATA from "@/data/services";
-import { useLocale } from "@/hooks";
-import { DEFAULT_EXAM, domainIdOf } from "@/lib/domains";
+import { getCategoriesForDomain } from "@/data/exams";
+import { useExam, useLocale } from "@/hooks";
 import { pick } from "@/lib/locale";
 import { UI } from "@/lib/uiStrings";
 import type { MapFocus } from "@/lib/types";
@@ -14,6 +13,7 @@ type Props = {
 
 export default function CategoryFilters({ focus, onFocusChange }: Props) {
   const { locale } = useLocale();
+  const { exam } = useExam();
   return (
     <>
       <div className="px-2 pb-2.5 font-mono text-[11px] uppercase tracking-widest text-muted-2">
@@ -28,8 +28,8 @@ export default function CategoryFilters({ focus, onFocusChange }: Props) {
         />
       </div>
 
-      {DEFAULT_EXAM.domains.map((domain) => {
-        const cats = DATA.filter((category) => domainIdOf(category.slug) === domain.id);
+      {exam.domains.map((domain) => {
+        const cats = getCategoriesForDomain(exam.id, domain.id);
         return (
           <div key={domain.id} className="mb-3">
             <button

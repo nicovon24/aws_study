@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useReactFlow } from "reactflow";
 import { computeMindLayout, type MindLayout } from "@/lib/mindmapLayout";
 import type { MapFocus } from "@/lib/types";
+import { useExam } from "./useExam";
 import { useLocale } from "./useLocale";
 
 /**
@@ -16,17 +17,18 @@ export function useMindMapLayout(focus: MapFocus) {
   const [layout, setLayout] = useState<MindLayout | null>(null);
   const { setCenter } = useReactFlow();
   const { locale } = useLocale();
+  const { exam } = useExam();
 
   useEffect(() => {
     let cancelled = false;
     setLayout(null);
-    computeMindLayout(focus, locale).then((l) => {
+    computeMindLayout(focus, locale, exam.id).then((l) => {
       if (!cancelled) setLayout(l);
     });
     return () => {
       cancelled = true;
     };
-  }, [focus, locale]);
+  }, [exam.id, focus, locale]);
 
   const recenter = useCallback(() => {
     if (!layout || layout.nodes.length === 0) return;

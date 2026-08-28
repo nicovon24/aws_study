@@ -1,20 +1,21 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo } from "react";
-import { DEFAULT_EXAM_ID, domainIdFromNumber, getExamDomain } from "@/data/exams";
+import { useCallback, useEffect, useMemo } from "react";
+import { categoryBelongsToExam, domainIdFromNumber, getExamDomain } from "@/data/exams";
 import type { MapFocus } from "@/lib/types";
+import { useExam } from "./useExam";
 
-function parseFocus(params: URLSearchParams): MapFocus {
+function parseFocus(params: URLSearchParams, examId: string): MapFocus {
   const domain = params.get("domain");
   if (domain) {
-    if (getExamDomain(DEFAULT_EXAM_ID, domain)) return { kind: "domain", domainId: domain };
+    if (getExamDomain(examId, domain)) return { kind: "domain", domainId: domain };
     const legacyNumber = Number(domain);
-    const domainId = Number.isInteger(legacyNumber) ? domainIdFromNumber(DEFAULT_EXAM_ID, legacyNumber) : null;
+    const domainId = Number.isInteger(legacyNumber) ? domainIdFromNumber(examId, legacyNumber) : null;
     if (domainId) return { kind: "domain", domainId };
   }
   const cat = params.get("cat");
-  if (cat) return { kind: "category", slug: cat };
+  if (cat && categoryBelongsToExam(examId, cat)) return { kind: "category", slug: cat };
   return { kind: "all" };
 }
 
@@ -32,6 +33,7 @@ export function focusToParams(focus: MapFocus, params: URLSearchParams) {
  * Uses router.replace (not push) so filter clicks don't pile up browser history.
  */
 export function useUrlFocus() {
+  const { exam } = useExam();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -41,9 +43,25 @@ export function useUrlFocus() {
   // Memoize on the individual params (not the searchParams object), so
   // selecting a service — which only touches ?service= — doesn't produce a
   // new `focus` reference and re-trigger the mind map's layout recompute.
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally keyed on the raw params, not searchParams itself
-  const focus = useMemo(() => parseFocus(searchParams), [domainParam, catParam]);
+  const focus = useMemo(() => {
+    const focusParams = new URLSearchParams();
+    if (domainParam) focusParams.set("domain", domainParam);
+    if (catParam) focusParams.set("cat", catParam);
+    return parseFocus(focusParams, exam.id);
+  }, [domainParam, catParam, exam.id]);
   const selectedId = searchParams.get("service");
+
+  useEffect(() => {
+    const invalidDomain = domainParam && focus.kind !== "domain";
+    const invalidCategory = catParam && focus.kind !== "category";
+    if (!invalidDomain && !invalidCategory) return;
+    const params = new URLSearchParams(searchParams.toString());
+    if (invalidDomain) params.delete("domain");
+    if (invalidCategory) params.delete("cat");
+    params.delete("service");
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }, [catParam, domainParam, focus.kind, pathname, router, searchParams]);
 
   const setFocus = useCallback(
     (f: MapFocus) => {
