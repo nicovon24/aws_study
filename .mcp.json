@@ -6,6 +6,10 @@
       "env": {
         "FASTMCP_LOG_LEVEL": "ERROR"
       }
+    },
+    "mongodb": {
+      "command": "npx",
+      "args": ["-y", "mongodb-mcp-server", "--connectionString", "${MONGODB_URI}"]
     }
   }
 }

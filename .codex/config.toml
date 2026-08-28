@@ -4,3 +4,7 @@ args = ["awslabs.aws-documentation-mcp-server@latest"]
 
 [mcp_servers.aws-documentation.env]
 FASTMCP_LOG_LEVEL = "ERROR"
+
+[mcp_servers.mongodb]
+command = "npx"
+args = ["-y", "mongodb-mcp-server", "--connectionString", "${MONGODB_URI}"]
