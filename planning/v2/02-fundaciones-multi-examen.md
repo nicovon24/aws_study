@@ -1,17 +1,38 @@
 # Fase 1 — Fundaciones multi-examen
 
-Estado: en curso desde 2026-08-28.
+Estado: implementado y verificado el 2026-08-28.
 
 Avance actual:
 
 - [x] Línea base V1 disponible mediante el tag `v1.0.0`.
 - [x] Rama `feat/v2-multi-exam` creada desde la línea base.
 - [x] Versión de desarrollo cambiada a `2.0.0-beta.0`.
-- [ ] Registro tipado de exámenes.
-- [ ] Migración compatible de CLF-C02.
-- [ ] Vistas con dominios dinámicos.
-- [ ] Selectores e integridad de datos.
-- [ ] Verificación funcional contra V1.
+- [x] Registro tipado de exámenes.
+- [x] Migración compatible de CLF-C02.
+- [x] Vistas con dominios dinámicos.
+- [x] Selectores e integridad de datos.
+- [x] Verificación funcional contra V1.
+
+## Resultado implementado
+
+- Registro en `src/data/exams/` con CLF-C02 y metadata inicial de AIF-C01.
+- Cinco dominios AIF-C01 registrables sin cambiar tipos ni componentes.
+- `MapFocus` usa ids de dominio estables y acepta URLs V1 numéricas.
+- Dashboard, filtros, mapa, catálogo y flashcards iteran configuración dinámica.
+- Prioridad leída desde `ExamItem` con fallback reversible a `Service.priority`.
+- Metadata pedagógica inicial para almacenamiento, bases de datos, gobierno e IA.
+- Validaciones de ids, pesos, referencias, duplicados y relaciones `similarTo`.
+- Claves de servicios y estructuras persistidas de favoritos/notas sin cambios.
+
+## Evidencia de verificación
+
+- `npx tsc --noEmit`: aprobado.
+- `npm run build`: aprobado para las diez rutas existentes.
+- Conteos CLF-C02 preservados: 8, 21, 89 y 11 elementos por dominio.
+- URL heredada `?domain=1` y URL estable `?domain=clf-c02-domain-1`: mismo resultado.
+- Mapa: 129 elementos y filtro de dominio aprobado.
+- Flashcards: alcance por dominio y sesión de cinco tarjetas aprobados.
+- Consola del navegador: sin errores durante el recorrido.
 
 ## Objetivo
 

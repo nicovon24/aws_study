@@ -2,9 +2,10 @@
 
 import { PanelLeftClose, PanelLeftOpen, Star } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { DEFAULT_EXAM_ID, getExamDomain, getItemPriority } from "@/data/exams";
 import DATA from "@/data/services";
 import { useFavorites, useLocale } from "@/hooks";
-import { DOMAIN_META, domainOf } from "@/lib/domains";
+import { domainIdOf } from "@/lib/domains";
 import { byId, catBySlug } from "@/lib/graph";
 import { pick } from "@/lib/locale";
 import { UI } from "@/lib/uiStrings";
@@ -22,7 +23,7 @@ type Props = {
 
 function catMatchesFocus(focus: MapFocus, catSlug: string): boolean {
   if (focus.kind === "all") return true;
-  if (focus.kind === "domain") return domainOf(catSlug) === focus.n;
+  if (focus.kind === "domain") return domainIdOf(catSlug) === focus.domainId;
   return catSlug === focus.slug;
 }
 
@@ -63,8 +64,12 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
               pick(locale, svc.d).toLowerCase().includes(query),
           )
           .filter(({ svc }) => !onlyFavorites || isFavorite(svc.key))
-          .filter(({ svc }) => priorities.has(svc.priority ?? 2))
-          .sort((a, b) => (a.svc.priority ?? 2) - (b.svc.priority ?? 2));
+          .filter(({ svc }) => priorities.has(getItemPriority(DEFAULT_EXAM_ID, svc.key) ?? svc.priority ?? 2))
+          .sort(
+            (a, b) =>
+              (getItemPriority(DEFAULT_EXAM_ID, a.svc.key) ?? a.svc.priority ?? 2) -
+              (getItemPriority(DEFAULT_EXAM_ID, b.svc.key) ?? b.svc.priority ?? 2),
+          );
         shown += items.length;
         return { cat, items };
       })
@@ -75,7 +80,7 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
 
   const focusLabel =
     focus.kind === "domain"
-      ? pick(locale, DOMAIN_META[focus.n].name)
+      ? pick(locale, getExamDomain(DEFAULT_EXAM_ID, focus.domainId)?.name ?? { es: "", en: "" })
       : focus.kind === "category"
         ? (catBySlug[focus.slug] && pick(locale, catBySlug[focus.slug].cat))
         : null;
@@ -169,7 +174,7 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
                         <span className="text-[11.5px] leading-[1.45] text-muted-2">
                           {d.length > 74 ? `${d.slice(0, 74)}…` : d}
                         </span>
-                        <PriorityBadge priority={svc.priority ?? 2} />
+                        <PriorityBadge priority={getItemPriority(DEFAULT_EXAM_ID, svc.key) ?? svc.priority ?? 2} />
                       </div>
                     );
                   })}

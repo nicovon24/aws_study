@@ -1,12 +1,33 @@
 /**
- * CLF-C02 exam domains, layered on top of the existing category dataset without
- * touching `data/services.ts`. Keys below must match `DATA[].slug` exactly.
+ * Compatibility facade for the CLF-C02 domain model during the V2 migration.
+ * New readers use stable domain ids; numeric exports remain temporarily for
+ * older callers and rollback safety.
  */
 
-import type { Localized } from "./types";
+import DATA from "@/data/services";
+import { CLF_C02_CATEGORY_DOMAINS } from "@/data/exams/clf-c02";
+import { CLF_C02, DEFAULT_EXAM_ID, domainIdFromNumber, getExamDomain } from "@/data/exams";
+import type { ExamDomain, Localized } from "./types";
 
-export type DomainNumber = 1 | 2 | 3 | 4;
+export const DEFAULT_EXAM = CLF_C02;
+export const EXAM_DOMAINS = DEFAULT_EXAM.domains;
 
+export function domainIdOf(categorySlug: string): string {
+  return CLF_C02_CATEGORY_DOMAINS[categorySlug] ?? domainIdFromNumber(DEFAULT_EXAM_ID, 3)!;
+}
+
+export function domainById(domainId: string): ExamDomain | null {
+  return getExamDomain(DEFAULT_EXAM_ID, domainId);
+}
+
+export function categoriesInDomain(domainId: string) {
+  return DATA.filter((category) => domainIdOf(category.slug) === domainId);
+}
+
+/** @deprecated Use a stable domain id through `domainIdOf`. */
+export type DomainNumber = number;
+
+/** @deprecated Compatibility shape for V1 readers. */
 export type DomainMeta = {
   n: DomainNumber;
   name: Localized;
@@ -14,32 +35,20 @@ export type DomainMeta = {
   color: string;
 };
 
-export const DOMAIN_META: Record<DomainNumber, DomainMeta> = {
-  1: { n: 1, name: { es: "Conceptos de la nube", en: "Cloud concepts" }, weight: 24, color: "#9aa7c0" },
-  2: { n: 2, name: { es: "Seguridad y cumplimiento", en: "Security and compliance" }, weight: 30, color: "#ff6b6b" },
-  3: { n: 3, name: { es: "Tecnología y servicios", en: "Technology and services" }, weight: 34, color: "#5b9eff" },
-  4: { n: 4, name: { es: "Facturación y soporte", en: "Billing and support" }, weight: 12, color: "#9aa7c0" },
-};
+/** @deprecated Use `EXAM_DOMAINS`. */
+export const DOMAIN_META: Record<number, DomainMeta> = Object.fromEntries(
+  EXAM_DOMAINS.map((domain) => [
+    domain.number,
+    { n: domain.number, name: domain.name, weight: domain.weight, color: domain.color },
+  ]),
+);
 
-export const CATEGORY_DOMAIN: Record<string, DomainNumber> = {
-  fundamentals: 1,
-  "security-identity": 2,
-  "security-detection": 2,
-  compute: 3,
-  containers: 3,
-  storage: 3,
-  "migration-transfer": 3,
-  database: 3,
-  "networking-cdn": 3,
-  administration: 3,
-  analytics: 3,
-  "machine-learning": 3,
-  integration: 3,
-  "dev-tools": 3,
-  "end-user-computing": 3,
-  "cost-support": 4,
-};
+/** @deprecated Use `domainIdOf`. */
+export const CATEGORY_DOMAIN: Record<string, DomainNumber> = Object.fromEntries(
+  DATA.map((category) => [category.slug, domainById(domainIdOf(category.slug))?.number ?? 3]),
+);
 
+/** @deprecated Use `domainIdOf`. */
 export function domainOf(categorySlug: string): DomainNumber {
   return CATEGORY_DOMAIN[categorySlug] ?? 3;
 }

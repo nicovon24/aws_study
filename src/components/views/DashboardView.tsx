@@ -1,8 +1,7 @@
 "use client";
 
-import DATA from "@/data/services";
 import { useLocale } from "@/hooks";
-import { DOMAIN_META, domainOf, type DomainNumber } from "@/lib/domains";
+import { categoriesInDomain, DEFAULT_EXAM } from "@/lib/domains";
 import { pick } from "@/lib/locale";
 import { UI } from "@/lib/uiStrings";
 import type { MapFocus, View } from "@/lib/types";
@@ -15,10 +14,10 @@ type Props = {
 
 export default function DashboardView({ onStudy, onNavigate }: Props) {
   const { locale } = useLocale();
-  const domains = ([1, 2, 3, 4] as DomainNumber[]).map((n) => {
-    const cats = DATA.filter((c) => domainOf(c.slug) === n);
+  const domains = DEFAULT_EXAM.domains.map((meta) => {
+    const cats = categoriesInDomain(meta.id);
     const count = cats.reduce((acc, c) => acc + c.items.length, 0);
-    return { meta: DOMAIN_META[n], cats, count };
+    return { meta, cats, count };
   });
 
   return (
@@ -39,13 +38,13 @@ export default function DashboardView({ onStudy, onNavigate }: Props) {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {domains.map(({ meta, cats, count }) => (
             <div
-              key={meta.n}
+              key={meta.id}
               className="flex flex-col gap-[14px] rounded-lg border border-line bg-panel-2 px-[22px] pb-[18px] pt-5"
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="mb-1 font-mono text-[11px] tracking-widest text-muted-2">
-                    {pick(locale, UI.domainLabel)} {meta.n}
+                    {pick(locale, UI.domainLabel)} {meta.number}
                   </div>
                   <div className="text-[19px] font-bold leading-[1.25]">{pick(locale, meta.name)}</div>
                 </div>
@@ -73,7 +72,11 @@ export default function DashboardView({ onStudy, onNavigate }: Props) {
                 <span className="font-mono text-xs text-muted">
                   {count} {pick(locale, UI.servicesCount)}
                 </span>
-                <AccentButton size="sm" className="ml-auto" onClick={() => onStudy({ kind: "domain", n: meta.n })}>
+                <AccentButton
+                  size="sm"
+                  className="ml-auto"
+                  onClick={() => onStudy({ kind: "domain", domainId: meta.id })}
+                >
                   {pick(locale, UI.study)}
                 </AccentButton>
               </div>

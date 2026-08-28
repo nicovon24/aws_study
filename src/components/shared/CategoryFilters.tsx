@@ -2,7 +2,7 @@
 
 import DATA from "@/data/services";
 import { useLocale } from "@/hooks";
-import { DOMAIN_META, domainOf, type DomainNumber } from "@/lib/domains";
+import { DEFAULT_EXAM, domainIdOf } from "@/lib/domains";
 import { pick } from "@/lib/locale";
 import { UI } from "@/lib/uiStrings";
 import type { MapFocus } from "@/lib/types";
@@ -28,29 +28,31 @@ export default function CategoryFilters({ focus, onFocusChange }: Props) {
         />
       </div>
 
-      {([1, 2, 3, 4] as DomainNumber[]).map((n) => {
-        const meta = DOMAIN_META[n];
-        const cats = DATA.filter((c) => domainOf(c.slug) === n);
+      {DEFAULT_EXAM.domains.map((domain) => {
+        const cats = DATA.filter((category) => domainIdOf(category.slug) === domain.id);
         return (
-          <div key={n} className="mb-3">
+          <div key={domain.id} className="mb-3">
             <button
               type="button"
-              onClick={() => onFocusChange({ kind: "domain", n })}
-              title={`${pick(locale, UI.domainTitle)} ${n} · ${meta.weight}% ${pick(locale, UI.ofExam)}`}
+              onClick={() => onFocusChange({ kind: "domain", domainId: domain.id })}
+              title={`${pick(locale, UI.domainTitle)} ${domain.number} · ${domain.weight}% ${pick(locale, UI.ofExam)}`}
               className={`mb-0.5 flex w-full items-center gap-2.25 rounded px-2.5 py-1.5 font-sans text-[12px] font-bold uppercase tracking-[.04em] transition-colors duration-150 ${
-                focus.kind === "domain" && focus.n === n
+                focus.kind === "domain" && focus.domainId === domain.id
                   ? "bg-[#1b2740] text-white"
                   : "text-muted-2 hover:bg-[#1b2740]/50 hover:text-ink-2"
               }`}
-              style={{ color: focus.kind === "domain" && focus.n === n ? meta.color : undefined }}
+              style={{ color: focus.kind === "domain" && focus.domainId === domain.id ? domain.color : undefined }}
             >
               <span
                 className="h-1.5 w-1.5 shrink-0 rounded-full"
-                style={{ background: meta.color, opacity: focus.kind === "domain" && focus.n === n ? 1 : 0.5 }}
+                style={{
+                  background: domain.color,
+                  opacity: focus.kind === "domain" && focus.domainId === domain.id ? 1 : 0.5,
+                }}
               />
-              <span className="flex-1 text-left">{pick(locale, meta.name)}</span>
+              <span className="flex-1 text-left">{pick(locale, domain.name)}</span>
               <span className="font-mono text-[10px] font-normal normal-case tracking-normal text-muted-2">
-                {meta.weight}%
+                {domain.weight}%
               </span>
             </button>
             <div className="flex flex-col gap-0.5">

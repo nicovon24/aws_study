@@ -4,7 +4,7 @@
 import ELK from "elkjs/lib/elk.bundled";
 import type { ElkNode } from "elkjs/lib/elk-api";
 import DATA from "@/data/services";
-import { domainOf } from "./domains";
+import { domainIdOf } from "./domains";
 import { byId } from "./graph";
 import { pick, type Locale } from "./locale";
 import type { MapFocus } from "./types";
@@ -51,7 +51,7 @@ export type MindLayout = {
 /** Whether a category should be drawn for the current focus. */
 function catActive(focus: MapFocus, cat: (typeof DATA)[number]): boolean {
   if (focus.kind === "all") return true;
-  if (focus.kind === "domain") return domainOf(cat.slug) === focus.n;
+  if (focus.kind === "domain") return domainIdOf(cat.slug) === focus.domainId;
   return cat.slug === focus.slug;
 }
 

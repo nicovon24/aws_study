@@ -1,9 +1,48 @@
-import type { DomainNumber } from "./domains";
 import type { Locale } from "./locale";
 
 export type Localized = { es: string; en: string };
 
 export type Concept = { t: Localized; d: Localized };
+
+export type ExamId = string;
+export type ExamDomainId = string;
+export type StudyPriority = 1 | 2 | 3;
+export type StudyItemKind = "service" | "concept" | "comparison" | "scenario";
+
+export type ExamDomain = {
+  id: ExamDomainId;
+  number: number;
+  name: Localized;
+  weight: number;
+  color: string;
+  objectives?: Localized[];
+};
+
+export type ExamItem = {
+  itemKey: string;
+  domainId: ExamDomainId;
+  priority: StudyPriority;
+  objectiveIds?: string[];
+};
+
+export type ExamDefinition = {
+  id: ExamId;
+  code: string;
+  name: Localized;
+  shortName: Localized;
+  description: Localized;
+  domains: ExamDomain[];
+  items: ExamItem[];
+};
+
+export type CatalogScope = { kind: "all-aws" } | { kind: "exam"; examId: ExamId };
+
+export type StudyItemMetadata = {
+  topicIds: string[];
+  familyIds: string[];
+  similarTo: string[];
+  distractorGroupIds: string[];
+};
 
 export type Service = {
   /**
@@ -19,8 +58,13 @@ export type Service = {
   use?: Localized[];
   avoid?: Localized[];
   concepts?: Concept[];
-  /** Study priority: 1 = high (exam pillar, very likely to be tested), 2 = medium, 3 = low (niche). Omitted = treated as medium. */
-  priority?: 1 | 2 | 3;
+  /** @deprecated V2 reads priority from ExamItem. Kept temporarily as a rollback fallback. */
+  priority?: StudyPriority;
+  kind?: StudyItemKind;
+  topicIds?: string[];
+  familyIds?: string[];
+  similarTo?: string[];
+  distractorGroupIds?: string[];
 };
 
 export type Category = {
@@ -51,7 +95,7 @@ export type View = "dashboard" | "map" | "catalog" | "practice" | "architectures
  */
 export type MapFocus =
   | { kind: "all" }
-  | { kind: "domain"; n: DomainNumber }
+  | { kind: "domain"; domainId: ExamDomainId }
   | { kind: "category"; slug: string };
 
 /** World-space position. `ang` is only set by the circle layouts. */

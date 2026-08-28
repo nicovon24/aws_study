@@ -2,14 +2,16 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
-import type { DomainNumber } from "@/lib/domains";
+import { DEFAULT_EXAM_ID, domainIdFromNumber, getExamDomain } from "@/data/exams";
 import type { MapFocus } from "@/lib/types";
 
 function parseFocus(params: URLSearchParams): MapFocus {
   const domain = params.get("domain");
   if (domain) {
-    const n = Number(domain);
-    if (n >= 1 && n <= 4) return { kind: "domain", n: n as DomainNumber };
+    if (getExamDomain(DEFAULT_EXAM_ID, domain)) return { kind: "domain", domainId: domain };
+    const legacyNumber = Number(domain);
+    const domainId = Number.isInteger(legacyNumber) ? domainIdFromNumber(DEFAULT_EXAM_ID, legacyNumber) : null;
+    if (domainId) return { kind: "domain", domainId };
   }
   const cat = params.get("cat");
   if (cat) return { kind: "category", slug: cat };
@@ -19,7 +21,7 @@ function parseFocus(params: URLSearchParams): MapFocus {
 export function focusToParams(focus: MapFocus, params: URLSearchParams) {
   params.delete("domain");
   params.delete("cat");
-  if (focus.kind === "domain") params.set("domain", String(focus.n));
+  if (focus.kind === "domain") params.set("domain", focus.domainId);
   else if (focus.kind === "category") params.set("cat", focus.slug);
 }
 

@@ -1,5 +1,6 @@
 import DATA from "@/data/services";
-import { domainOf } from "./domains";
+import { DEFAULT_EXAM_ID, getExamItems } from "@/data/exams";
+import { domainIdOf } from "./domains";
 import { byId } from "./graph";
 import type { MapFocus, Node } from "./types";
 
@@ -22,15 +23,18 @@ function shuffle<T>(arr: T[]): T[] {
 
 function scopeMatches(focus: MapFocus, catSlug: string): boolean {
   if (focus.kind === "all") return true;
-  if (focus.kind === "domain") return domainOf(catSlug) === focus.n;
+  if (focus.kind === "domain") return domainIdOf(catSlug) === focus.domainId;
   return catSlug === focus.slug;
 }
 
 /** Every service belonging to the chosen scope, as flashcard subjects. */
 export function nodesInScope(focus: MapFocus): Node[] {
+  const examItemKeys = new Set(getExamItems(DEFAULT_EXAM_ID).map((item) => item.itemKey));
   return DATA.filter((cat) => scopeMatches(focus, cat.slug)).flatMap((cat) => {
     const ci = DATA.indexOf(cat);
-    return cat.items.map((_svc, si) => byId[`${ci}-${si}`]);
+    return cat.items
+      .map((_svc, si) => byId[`${ci}-${si}`])
+      .filter((node) => examItemKeys.has(node.key));
   });
 }
 

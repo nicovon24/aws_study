@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useLocale } from "@/hooks";
-import { DOMAIN_META } from "@/lib/domains";
+import { DEFAULT_EXAM } from "@/lib/domains";
 import { buildDeck, nodesInScope, type Flashcard, type FlashcardMode } from "@/lib/flashcards";
 import { pick } from "@/lib/locale";
 import { UI } from "@/lib/uiStrings";
@@ -59,14 +59,14 @@ export default function PracticeView({ focus, onFocusChange, onNavigate }: Props
             <Pill active={focus.kind === "all"} onClick={() => onFocusChange({ kind: "all" })}>
               {pick(locale, UI.allPill)}
             </Pill>
-            {([1, 2, 3, 4] as const).map((n) => (
+            {DEFAULT_EXAM.domains.map((domain) => (
               <Pill
-                key={n}
-                active={focus.kind === "domain" && focus.n === n}
-                color={DOMAIN_META[n].color}
-                onClick={() => onFocusChange({ kind: "domain", n })}
+                key={domain.id}
+                active={focus.kind === "domain" && focus.domainId === domain.id}
+                color={domain.color}
+                onClick={() => onFocusChange({ kind: "domain", domainId: domain.id })}
               >
-                {pick(locale, DOMAIN_META[n].name)}
+                {pick(locale, domain.name)}
               </Pill>
             ))}
           </div>

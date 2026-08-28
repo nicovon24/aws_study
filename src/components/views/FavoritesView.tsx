@@ -3,6 +3,7 @@
 import { Star } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
 import { useMemo, useState } from "react";
+import { DEFAULT_EXAM_ID, getItemPriority } from "@/data/exams";
 import { useFavorites, useLocale } from "@/hooks";
 import { byId, byKey, catBySlug } from "@/lib/graph";
 import { pick } from "@/lib/locale";
@@ -25,7 +26,7 @@ export default function FavoritesView({ selectedId, onSelect }: Props) {
     const nodes = [...favorites]
       .map((key) => byKey[key])
       .filter(Boolean)
-      .filter((node) => priorities.has(node.priority ?? 2));
+      .filter((node) => priorities.has(getItemPriority(DEFAULT_EXAM_ID, node.key) ?? node.priority ?? 2));
     const map = new Map<string, typeof nodes>();
     for (const node of nodes) {
       const list = map.get(node.catSlug) ?? [];
@@ -107,7 +108,9 @@ export default function FavoritesView({ selectedId, onSelect }: Props) {
                           <span className="text-[11.5px] leading-[1.45] text-muted-2">
                             {d.length > 74 ? `${d.slice(0, 74)}…` : d}
                           </span>
-                          <PriorityBadge priority={node.priority ?? 2} />
+                          <PriorityBadge
+                            priority={getItemPriority(DEFAULT_EXAM_ID, node.key) ?? node.priority ?? 2}
+                          />
                         </div>
                       );
                     })}

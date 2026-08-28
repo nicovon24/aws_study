@@ -1,6 +1,6 @@
 # AWS Prep V2 — Roadmap multi-certificación
 
-Estado: en ejecución. Fase 0 completada; Fase 1 es el próximo bloque.
+Estado: en ejecución. Fases 0 y 1 completadas; Fase 2 es el próximo bloque.
 
 Última actualización: 2026-08-28.
 
@@ -16,7 +16,7 @@ Estados utilizados: `LISTO`, `EN CURSO`, `PENDIENTE` y `BLOQUEADO`.
 | Fase | Trabajo | Estado | Avance | Listo | Falta | Documento |
 |---|---|---|---:|---|---|---|
 | 0 | Cierre y versionado de V1 | LISTO | 100% | Build, prueba visual, documentación, commit y tag `v1.0.0` | Publicar commit/tag en GitHub cuando se autorice | `01-cierre-v1.md` |
-| 1 | Fundaciones multi-examen | EN CURSO | 5% | Diseño, criterios, rama V2 y versión `2.0.0-beta.0` | Registro de exámenes, catálogo canónico y migración compatible de CLF-C02 | `02-fundaciones-multi-examen.md` |
+| 1 | Fundaciones multi-examen | LISTO | 100% | Registro, ids dinámicos, CLF-C02 migrado, metadata pedagógica y validaciones | — | `02-fundaciones-multi-examen.md` |
 | 2 | Selector, navegación y UX | PENDIENTE | 0% | Contrato de navegación y UX definido | Selector responsive, URL persistente, skeletons y transiciones | `03-selector-y-navegacion.md` |
 | 3 | AWS MCP y contenido AIF-C01 | PENDIENTE | 0% | Fuentes iniciales y reglas editoriales definidas | Pipeline de fuentes, revisión y contenido estructurado AIF-C01 | `04-contenido-aif-c01.md` |
 | 4 | Preguntas, flashcards y simulacros | PENDIENTE | 0% | Modelo conceptual y estrategia de distractores definidos | Banco de preguntas, `similarTo`, grupos, sesiones y simulacro ponderado | `05-practica-y-simulacros.md` |
@@ -28,11 +28,11 @@ Estados utilizados: `LISTO`, `EN CURSO`, `PENDIENTE` y `BLOQUEADO`.
 | ID | Entregable | Fase | Estado | Evidencia o próximo resultado |
 |---|---|---:|---|---|
 | VER-01 | Congelar una V1 reproducible | 0 | LISTO | Tag anotado `v1.0.0` sobre commit `eb1013f`; build y recorrido visual aprobados |
-| EXM-01 | Registro tipado de certificaciones | 1 | PENDIENTE | CLF-C02 debe obtener nombre, código y dominios desde configuración |
-| EXM-02 | Eliminar la suposición fija de cuatro dominios | 1 | PENDIENTE | Vistas y tipos deben iterar los dominios del examen activo |
-| EXM-03 | Migrar CLF-C02 sin regresiones | 1 | PENDIENTE | Comparación funcional contra `v1.0.0` |
-| AWS-01 | Catálogo canónico independiente de exámenes | 1 | PENDIENTE | Identidades estables y conocimiento reutilizable |
-| AWS-02 | Pertenencia y prioridad por examen | 1 | PENDIENTE | Mapeo CLF-C02 separado del contenido global |
+| EXM-01 | Registro tipado de certificaciones | 1 | LISTO | Registro con CLF-C02 y metadata AIF-C01 validado durante build |
+| EXM-02 | Eliminar la suposición fija de cuatro dominios | 1 | LISTO | Vistas iteran dominios configurados e ids estables |
+| EXM-03 | Migrar CLF-C02 sin regresiones | 1 | LISTO | Conteos 8/21/89/11, URLs, mapa y flashcards comparados con V1 |
+| AWS-01 | Catálogo canónico independiente de exámenes | 1 | LISTO | Servicios mantienen claves globales y `CatalogScope` admite `all-aws` |
+| AWS-02 | Pertenencia y prioridad por examen | 1 | LISTO | `ExamItem` concentra dominio y prioridad con fallback V1 reversible |
 | NAV-01 | Selector CLF-C02/AIF-C01 | 2 | PENDIENTE | Selector usable en desktop y mobile |
 | NAV-02 | Persistencia del examen activo | 2 | PENDIENTE | URL y almacenamiento local sincronizados |
 | NAV-03 | Enlaces compartibles con foco correcto | 2 | PENDIENTE | Navegación restaurable por URL |
@@ -40,8 +40,8 @@ Estados utilizados: `LISTO`, `EN CURSO`, `PENDIENTE` y `BLOQUEADO`.
 | SRC-02 | Proveniencia de contenido | 3 | PENDIENTE | URL, fecha, examen y revisión registrados |
 | SRC-03 | Revisión antes de publicar | 3 | PENDIENTE | Contenido MCP entra como `staged`, nunca directo a producción |
 | CNT-01 | Cinco dominios completos de AIF-C01 | 3 | PENDIENTE | Matriz dominio → objetivo → contenido |
-| CNT-02 | Reutilizar servicios compartidos | 1–3 | PENDIENTE | Sin duplicar Bedrock, SageMaker y demás elementos existentes |
-| CNT-03 | Prioridad específica por examen | 1–3 | PENDIENTE | Prioridad fuera del servicio canónico |
+| CNT-02 | Reutilizar servicios compartidos | 1–3 | LISTO | Exámenes referencian claves del catálogo sin duplicar servicios |
+| CNT-03 | Prioridad específica por examen | 1–3 | LISTO | Prioridad leída desde `ExamItem`; campo V1 queda como fallback temporal |
 | PRC-01 | Práctica para servicios y conceptos | 4 | PENDIENTE | Motor común de preguntas |
 | PRC-02 | Explicaciones y resumen | 4 | PENDIENTE | Feedback correcto/incorrecto y cierre de sesión |
 | PRC-03 | Simulacro ponderado | 4 | PENDIENTE | Distribución por pesos del examen activo |

@@ -20,7 +20,8 @@ import ReactFlow, {
 import { AnimatedFilterSidebar, DetailPanel } from "@/components/shared";
 import { MindMapSkeleton } from "@/components/skeletons";
 import { useLocale, useMindMapLayout } from "@/hooks";
-import { byId, catBySlug } from "@/lib/graph";
+import { domainById } from "@/lib/domains";
+import { byId, catBySlug, totalServices } from "@/lib/graph";
 import { pick } from "@/lib/locale";
 import { UI } from "@/lib/uiStrings";
 import type { MapFocus } from "@/lib/types";
@@ -70,7 +71,7 @@ function MindNode({ data }: NodeProps<NodeData>) {
       >
         <AllSideHandles />
         <span className="text-[19px] font-black">aws</span>
-        <span className="font-mono text-[9.5px] text-muted-2">80 items</span>
+        <span className="font-mono text-[9.5px] text-muted-2">{totalServices} items</span>
       </div>
     );
   }
@@ -246,7 +247,7 @@ function Inner({
               className="flex items-center gap-2 rounded-full border border-accent/50 bg-accent/10 py-1.5 pl-3 pr-2.5 font-mono text-[11px] text-accent hover:border-accent hover:bg-accent/20"
             >
               {focus.kind === "domain"
-                ? `${pick(locale, UI.domainChip)} ${focus.n}`
+                ? `${pick(locale, UI.domainChip)} ${domainById(focus.domainId)?.number ?? ""}`
                 : pick(locale, catBySlug[focus.slug]?.cat ?? { es: "", en: "" })}
               <span aria-hidden className="text-[13px] leading-none">
                 ✕
