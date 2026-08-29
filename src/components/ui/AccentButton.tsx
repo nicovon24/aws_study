@@ -1,8 +1,8 @@
 "use client";
 
-import type { ButtonHTMLAttributes } from "react";
+import { motion, type HTMLMotionProps } from "framer-motion";
 
-type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
+type Props = HTMLMotionProps<"button"> & {
   size?: "sm" | "md";
 };
 
@@ -18,10 +18,14 @@ const CLIP = {
 
 /** Primary CTA: solid accent background with a cut corner notch, used for every
  * "start/confirm/next" action (start deck, next card, study a domain, ...). */
-export default function AccentButton({ size = "md", className = "", style, ...rest }: Props) {
+export default function AccentButton({ size = "md", className = "", style, disabled, ...rest }: Props) {
   return (
-    <button
+    <motion.button
       type="button"
+      disabled={disabled}
+      whileHover={disabled ? undefined : { scale: 1.03 }}
+      whileTap={disabled ? undefined : { scale: 0.97 }}
+      transition={{ duration: 0.15, ease: "easeOut" }}
       className={`bg-accent font-sans font-bold text-[#111827] disabled:cursor-not-allowed disabled:opacity-40 ${SIZE[size]} ${className}`}
       style={{ clipPath: CLIP[size], ...style }}
       {...rest}
