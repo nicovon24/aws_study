@@ -1,6 +1,8 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import {
+  ChevronDown,
   Cloud,
   Dumbbell,
   LayoutGrid,
@@ -19,7 +21,8 @@ import { LocaleToggle } from "@/components/ui";
 import { useExam, useFavorites, useLocale } from "@/hooks";
 import { pick } from "@/lib/locale";
 import { UI } from "@/lib/uiStrings";
-import type { View } from "@/lib/types";
+import type { Locale, View } from "@/lib/types";
+import NavGroupDropdown from "./NavGroupDropdown";
 
 type Props = {
   view: View;
@@ -38,16 +41,37 @@ const TABS: { key: View; label: keyof typeof UI; icon: typeof House }[] = [
   { key: "favorites", label: "navFavorites", icon: Star },
 ];
 
+// Home and Practicar are frequent single actions and stay as direct tabs (no dropdown).
+// Estudiar groups the content-browsing views; Mi progreso groups review/tracking views.
+// Order: Home, Estudiar, Mi progreso, Practicar (last).
+const STUDY_KEYS: View[] = ["catalog", "map", "architectures"];
+const MY_PROGRESS_KEYS: View[] = ["progress", "favorites"];
+const HOME_TAB = TABS.find((t) => t.key === "dashboard")!;
+const PRACTICE_TAB = TABS.find((t) => t.key === "practice")!;
+const STUDY_TABS = TABS.filter((t) => STUDY_KEYS.includes(t.key));
+const MY_PROGRESS_TABS = TABS.filter((t) => MY_PROGRESS_KEYS.includes(t.key));
+
+const NAV_GROUPS: { labelKey: keyof typeof UI; tabs: typeof TABS }[] = [
+  { labelKey: "navGroupStudy", tabs: STUDY_TABS },
+  { labelKey: "navGroupMyProgress", tabs: MY_PROGRESS_TABS },
+];
+
 export default function Header({ view, onNavigate, children }: Props) {
   const { locale } = useLocale();
   const { exam, setExam } = useExam();
   const { data: session, status } = useSession();
   const { favorites, signedIn } = useFavorites();
   const [open, setOpen] = useState(false);
+  const [openGroup, setOpenGroup] = useState<keyof typeof UI | null>(() =>
+    MY_PROGRESS_KEYS.includes(view) ? "navGroupMyProgress" : "navGroupStudy",
+  );
 
   // Close the drawer whenever the view changes (nav tap, or programmatic navigation).
   useEffect(() => {
     setOpen(false);
+    if (STUDY_KEYS.includes(view) || MY_PROGRESS_KEYS.includes(view)) {
+      setOpenGroup(MY_PROGRESS_KEYS.includes(view) ? "navGroupMyProgress" : "navGroupStudy");
+    }
   }, [view]);
 
   useEffect(() => {
@@ -78,23 +102,17 @@ export default function Header({ view, onNavigate, children }: Props) {
       </div>
 
       <nav className="ml-4 hidden gap-1.5 lg:flex">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => onNavigate(t.key)}
-            className={`rounded-t-[3px] border-0 border-b-2 px-3.5 pb-1.75 pt-2.25 font-sans text-sm font-semibold whitespace-nowrap ${
-              view === t.key
-                ? "border-accent bg-[#1f2d47] text-white"
-                : "border-transparent text-muted-2 hover:text-ink-2"
-            }`}
-          >
-            {pick(locale, UI[t.label])}
-            {t.key === "favorites" && signedIn && favorites.size > 0 && (
-              <span className="ml-1.5 text-muted-2">({favorites.size})</span>
-            )}
-          </button>
+        <StandaloneTab tab={HOME_TAB} view={view} onNavigate={onNavigate} locale={locale} />
+        {NAV_GROUPS.map((g) => (
+          <NavGroupDropdown
+            key={g.labelKey}
+            groupLabel={pick(locale, UI[g.labelKey])}
+            tabs={g.tabs}
+            view={view}
+            onNavigate={onNavigate}
+          />
         ))}
+        <StandaloneTab tab={PRACTICE_TAB} view={view} onNavigate={onNavigate} locale={locale} />
       </nav>
 
       {status !== "loading" && (
@@ -192,23 +210,57 @@ export default function Header({ view, onNavigate, children }: Props) {
           />
         </div>
 
-        <nav className="flex flex-col gap-1 px-4 pt-2 sm:pt-4">
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              type="button"
-              onClick={() => onNavigate(t.key)}
-              className={`flex items-center gap-2.5 rounded-md px-4 py-3 text-left font-sans text-[15px] font-semibold ${
-                view === t.key ? "bg-[#1f2d47] text-white" : "text-muted-2 hover:bg-[#1b2740]/60 hover:text-ink-2"
-              }`}
-            >
-              <t.icon size={17} strokeWidth={2.2} />
-              {pick(locale, UI[t.label])}
-              {t.key === "favorites" && signedIn && favorites.size > 0 && (
-                <span className="text-muted-2">({favorites.size})</span>
-              )}
-            </button>
-          ))}
+        <nav className="flex flex-col gap-2 px-4 pt-2 sm:pt-4">
+          <StandaloneMobileTab tab={HOME_TAB} view={view} onNavigate={onNavigate} locale={locale} />
+          {NAV_GROUPS.map((g) => {
+            const isOpen = openGroup === g.labelKey;
+            return (
+              <div key={g.labelKey}>
+                <button
+                  type="button"
+                  aria-expanded={isOpen}
+                  onClick={() => setOpenGroup(isOpen ? null : g.labelKey)}
+                  className="flex w-full items-center justify-between rounded-md px-4 py-2.5 text-left font-sans text-[13px] font-bold uppercase tracking-wide text-muted-2"
+                >
+                  {pick(locale, UI[g.labelKey])}
+                  <ChevronDown size={16} className={`transition-transform duration-150 ${isOpen ? "rotate-180" : ""}`} />
+                </button>
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.15, ease: "easeOut" }}
+                      className="overflow-hidden"
+                    >
+                      <div className="flex flex-col gap-1 pb-1">
+                        {g.tabs.map((t) => (
+                          <button
+                            key={t.key}
+                            type="button"
+                            onClick={() => onNavigate(t.key)}
+                            className={`flex items-center gap-2.5 rounded-md px-4 py-3 text-left font-sans text-[15px] font-semibold ${
+                              view === t.key
+                                ? "bg-[#1f2d47] text-white"
+                                : "text-muted-2 hover:bg-[#1b2740]/60 hover:text-ink-2"
+                            }`}
+                          >
+                            <t.icon size={17} strokeWidth={2.2} />
+                            {pick(locale, UI[t.label])}
+                            {t.key === "favorites" && signedIn && favorites.size > 0 && (
+                              <span className="text-muted-2">({favorites.size})</span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
+          <StandaloneMobileTab tab={PRACTICE_TAB} view={view} onNavigate={onNavigate} locale={locale} />
         </nav>
 
         {status !== "loading" && (
@@ -245,6 +297,44 @@ export default function Header({ view, onNavigate, children }: Props) {
         )}
       </div>
     </header>
+  );
+}
+
+type StandaloneTabProps = {
+  tab: (typeof TABS)[number];
+  view: View;
+  onNavigate: (v: View) => void;
+  locale: Locale;
+};
+
+function StandaloneTab({ tab, view, onNavigate, locale }: StandaloneTabProps) {
+  return (
+    <button
+      type="button"
+      onClick={() => onNavigate(tab.key)}
+      className={`rounded-t-[3px] border-0 border-b-2 px-3.5 pb-1.75 pt-2.25 font-sans text-sm font-semibold whitespace-nowrap ${
+        view === tab.key
+          ? "border-accent bg-[#1f2d47] text-white"
+          : "border-transparent text-muted-2 hover:text-ink-2"
+      }`}
+    >
+      {pick(locale, UI[tab.label])}
+    </button>
+  );
+}
+
+function StandaloneMobileTab({ tab, view, onNavigate, locale }: StandaloneTabProps) {
+  return (
+    <button
+      type="button"
+      onClick={() => onNavigate(tab.key)}
+      className={`flex items-center gap-2.5 rounded-md px-4 py-3 text-left font-sans text-[15px] font-semibold ${
+        view === tab.key ? "bg-[#1f2d47] text-white" : "text-muted-2 hover:bg-[#1b2740]/60 hover:text-ink-2"
+      }`}
+    >
+      <tab.icon size={17} strokeWidth={2.2} />
+      {pick(locale, UI[tab.label])}
+    </button>
   );
 }
 

@@ -1,8 +1,8 @@
 "use client";
 
-import type { ButtonHTMLAttributes } from "react";
+import { motion, type HTMLMotionProps } from "framer-motion";
 
-type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
+type Props = HTMLMotionProps<"button"> & {
   size?: "sm" | "md";
 };
 
@@ -13,15 +13,19 @@ const SIZE = {
 
 /** Square/circular icon-only button: border + panel background, accent on hover.
  * Used for back arrows, close/toggle controls, and the mobile menu button. */
-export default function IconButton({ size = "md", className = "", children, ...rest }: Props) {
+export default function IconButton({ size = "md", className = "", children, disabled, ...rest }: Props) {
   return (
-    <button
+    <motion.button
       type="button"
+      disabled={disabled}
+      whileHover={disabled ? undefined : { scale: 1.03 }}
+      whileTap={disabled ? undefined : { scale: 0.97 }}
+      transition={{ duration: 0.15, ease: "easeOut" }}
       className={`flex shrink-0 items-center justify-center rounded-full border border-line bg-panel-2 text-ink-2 transition-colors hover:border-accent hover:text-accent ${SIZE[size]} ${className}`}
       {...rest}
     >
       {children}
-    </button>
+    </motion.button>
   );
 }
 
