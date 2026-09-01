@@ -21,9 +21,9 @@ import { AnimatedFilterSidebar, DetailPanel } from "@/components/shared";
 import { MindMapSkeleton } from "@/components/skeletons";
 import { getExamDomain } from "@/data/exams";
 import { useExam, useLocale, useMindMapLayout } from "@/hooks";
-import { byId, catBySlug } from "@/lib/graph";
-import { pick } from "@/lib/locale";
-import { UI } from "@/lib/uiStrings";
+import { byId, catBySlug } from "@/lib/study/graph";
+import { pick } from "@/lib/ui/locale";
+import { UI } from "@/lib/ui/uiStrings";
 import type { MapFocus } from "@/lib/types";
 import MapSearch from "./MapSearch";
 

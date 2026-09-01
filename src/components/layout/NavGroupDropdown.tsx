@@ -4,8 +4,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, type House } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useFavorites, useLocale } from "@/hooks";
-import { pick } from "@/lib/locale";
-import { UI } from "@/lib/uiStrings";
+import { pick } from "@/lib/ui/locale";
+import { UI } from "@/lib/ui/uiStrings";
 import type { View } from "@/lib/types";
 
 type Tab = { key: View; label: keyof typeof UI; icon: typeof House };

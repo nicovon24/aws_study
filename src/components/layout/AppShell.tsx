@@ -2,9 +2,9 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useExam, useLocale } from "@/hooks";
-import { pick } from "@/lib/locale";
+import { pick } from "@/lib/ui/locale";
 import { VIEW_PATH, viewFromPathname } from "@/lib/routes";
-import { UI } from "@/lib/uiStrings";
+import { UI } from "@/lib/ui/uiStrings";
 import Header from "./Header";
 
 type Props = {

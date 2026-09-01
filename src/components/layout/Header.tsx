@@ -19,8 +19,8 @@ import { useEffect, useState } from "react";
 import { EXAMS } from "@/data/exams";
 import { LocaleToggle } from "@/components/ui";
 import { useExam, useFavorites, useLocale } from "@/hooks";
-import { pick } from "@/lib/locale";
-import { UI } from "@/lib/uiStrings";
+import { pick } from "@/lib/ui/locale";
+import { UI } from "@/lib/ui/uiStrings";
 import type { Locale, View } from "@/lib/types";
 import NavGroupDropdown from "./NavGroupDropdown";
 

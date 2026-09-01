@@ -1,4 +1,4 @@
-import { byKey } from "@/lib/graph";
+import { byKey } from "@/lib/study/graph";
 import type { StudyItemMetadata } from "@/lib/types";
 
 const EMPTY_METADATA: StudyItemMetadata = {

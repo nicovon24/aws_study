@@ -2,8 +2,8 @@
 
 import { Star } from "lucide-react";
 import { useFavorites, useLocale } from "@/hooks";
-import { pick } from "@/lib/locale";
-import { UI } from "@/lib/uiStrings";
+import { pick } from "@/lib/ui/locale";
+import { UI } from "@/lib/ui/uiStrings";
 
 /** Small clickable star toggle for a service's favorite status. Disabled (not hidden) when signed out. */
 export default function FavoriteStar({ serviceKey, size = 14 }: { serviceKey: string; size?: number }) {

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { auth } from "@/lib/server/auth";
+import { getDb } from "@/lib/server/db";
 
 type Params = { params: Promise<{ serviceKey: string }> };
 

@@ -1,7 +1,7 @@
 import DATA from "@/data/services";
 import { DEFAULT_EXAM_ID, getExamItem, getExamItems } from "@/data/exams";
 import { byId } from "./graph";
-import type { MapFocus, Node } from "./types";
+import type { MapFocus, Node } from "@/lib/types";
 
 export type FlashcardMode = "guess-description" | "guess-service";
 

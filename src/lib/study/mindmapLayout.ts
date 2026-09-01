@@ -6,8 +6,8 @@ import type { ElkNode } from "elkjs/lib/elk-api";
 import { getExamItem } from "@/data/exams";
 import DATA from "@/data/services";
 import { byId } from "./graph";
-import { pick, type Locale } from "./locale";
-import type { MapFocus } from "./types";
+import { pick, type Locale } from "@/lib/ui/locale";
+import type { MapFocus } from "@/lib/types";
 
 const elk = new ELK();
 

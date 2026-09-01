@@ -5,9 +5,9 @@ import { signIn, useSession } from "next-auth/react";
 import { useMemo, useState } from "react";
 import { getExamItem, getItemPriority } from "@/data/exams";
 import { useExam, useFavorites, useLocale } from "@/hooks";
-import { byId, byKey, catBySlug } from "@/lib/graph";
-import { pick } from "@/lib/locale";
-import { UI } from "@/lib/uiStrings";
+import { byId, byKey, catBySlug } from "@/lib/study/graph";
+import { pick } from "@/lib/ui/locale";
+import { UI } from "@/lib/ui/uiStrings";
 import { AccentButton, PriorityBadge } from "@/components/ui";
 import { DetailPanel, FavoriteStar, PriorityFilter } from "@/components/shared";
 

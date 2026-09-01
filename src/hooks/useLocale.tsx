@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { LOCALE_KEY, type Locale } from "@/lib/locale";
+import { LOCALE_KEY, type Locale } from "@/lib/ui/locale";
 
 const LocaleCtx = createContext<{ locale: Locale; setLocale: (l: Locale) => void } | null>(null);
 

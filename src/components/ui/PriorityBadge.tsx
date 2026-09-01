@@ -1,6 +1,6 @@
 import { useLocale } from "@/hooks";
-import { pick } from "@/lib/locale";
-import { UI } from "@/lib/uiStrings";
+import { pick } from "@/lib/ui/locale";
+import { UI } from "@/lib/ui/uiStrings";
 
 const LEVELS: Record<1 | 2 | 3, { label: typeof UI.priorityHigh; color: string }> = {
   1: { label: UI.priorityHigh, color: "#ff6b6b" },

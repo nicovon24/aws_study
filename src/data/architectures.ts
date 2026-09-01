@@ -431,6 +431,112 @@ export const ARCHITECTURES: Architecture[] = [
     OS --> DASH[Dashboard - search and alerts]`,
     },
   },
+  {
+    id: "rag-bedrock-knowledge-bases",
+    title: { es: "RAG con Bedrock Knowledge Bases", en: "RAG with Bedrock Knowledge Bases" },
+    description: {
+      es: "Los documentos propios se dividen en chunks, se convierten en embeddings y se indexan en una base vectorial. En cada consulta, se recuperan los fragmentos más relevantes y se agregan al prompt para que el FM responda con contexto actualizado, sin reentrenar el modelo.",
+      en: "Your own documents are split into chunks, converted to embeddings, and indexed in a vector store. On each query, the most relevant chunks are retrieved and added to the prompt so the FM answers with up-to-date context, without retraining the model.",
+    },
+    services: ["bedrock", "opensearch", "s3"],
+    mermaid: {
+      es: `flowchart LR
+    DOC[(S3 - documentos)] -- chunking + embeddings --> VDB[(OpenSearch - base vectorial)]
+    U[Usuario] -- pregunta --> KB[Bedrock Knowledge Bases]
+    KB -- busca similitud --> VDB
+    VDB -- fragmentos relevantes --> KB
+    KB -- prompt + contexto --> FM[Bedrock - Foundation Model]
+    FM -- respuesta con grounding --> U`,
+      en: `flowchart LR
+    DOC[(S3 - documents)] -- chunking + embeddings --> VDB[(OpenSearch - vector store)]
+    U[User] -- question --> KB[Bedrock Knowledge Bases]
+    KB -- similarity search --> VDB
+    VDB -- relevant chunks --> KB
+    KB -- prompt + context --> FM[Bedrock - Foundation Model]
+    FM -- grounded response --> U`,
+    },
+  },
+  {
+    id: "sagemaker-training-inference",
+    title: { es: "Entrenamiento y despliegue de un modelo propio con SageMaker", en: "Training and deploying a custom model with SageMaker" },
+    description: {
+      es: "Los datos etiquetados en S3 alimentan un training job de SageMaker, que produce un artefacto de modelo versionado en el Model Registry. Desde ahí se despliega a un endpoint en tiempo real que sirve inferencias, con CloudWatch monitoreando drift y performance.",
+      en: "Labeled data in S3 feeds a SageMaker training job, which produces a versioned model artifact in the Model Registry. From there it deploys to a real-time endpoint serving inferences, with CloudWatch monitoring drift and performance.",
+    },
+    services: ["sagemaker", "s3", "cloudwatch"],
+    mermaid: {
+      es: `flowchart LR
+    S3D[(S3 - datos etiquetados)] --> TRAIN[SageMaker - training job]
+    TRAIN --> REG[SageMaker - Model Registry]
+    REG --> EP[SageMaker - endpoint tiempo real]
+    APP[Aplicación] -- inferencia --> EP
+    EP --> CW[CloudWatch - monitoreo y drift]`,
+      en: `flowchart LR
+    S3D[(S3 - labeled data)] --> TRAIN[SageMaker - training job]
+    TRAIN --> REG[SageMaker - Model Registry]
+    REG --> EP[SageMaker - real-time endpoint]
+    APP[Application] -- inference --> EP
+    EP --> CW[CloudWatch - monitoring and drift]`,
+    },
+  },
+  {
+    id: "multi-agent-orchestration-agentcore",
+    title: { es: "Orquestación multi-agente con Bedrock AgentCore", en: "Multi-agent orchestration with Bedrock AgentCore" },
+    description: {
+      es: "Un agente orquestador recibe la solicitud del usuario y decide a qué agentes especializados delegar cada sub-tarea; cada uno usa su propio FM y sus herramientas (APIs, bases de datos). AgentCore gestiona identidad, memoria y ejecución en producción.",
+      en: "An orchestrator agent receives the user request and decides which specialized agents to delegate each sub-task to; each one uses its own FM and tools (APIs, databases). AgentCore manages identity, memory, and production execution.",
+    },
+    services: ["bedrock-agentcore", "bedrock", "lambda"],
+    mermaid: {
+      es: `flowchart TB
+    U[Usuario] --> ORC[Agente orquestador - Bedrock AgentCore]
+    ORC --> A1[Agente especializado 1]
+    ORC --> A2[Agente especializado 2]
+    ORC --> A3[Agente especializado 3]
+    A1 -- tool call --> T1[Lambda / API externa]
+    A2 -- tool call --> T2[Base de datos]
+    A3 -- tool call --> T3[Bedrock Knowledge Base]
+    ORC --> MEM[(AgentCore - memoria compartida)]
+    A1 & A2 & A3 --> ORC
+    ORC --> U`,
+      en: `flowchart TB
+    U[User] --> ORC[Orchestrator agent - Bedrock AgentCore]
+    ORC --> A1[Specialized agent 1]
+    ORC --> A2[Specialized agent 2]
+    ORC --> A3[Specialized agent 3]
+    A1 -- tool call --> T1[Lambda / external API]
+    A2 -- tool call --> T2[Database]
+    A3 -- tool call --> T3[Bedrock Knowledge Base]
+    ORC --> MEM[(AgentCore - shared memory)]
+    A1 & A2 & A3 --> ORC
+    ORC --> U`,
+    },
+  },
+  {
+    id: "responsible-ai-guardrails",
+    title: { es: "AI responsable con Bedrock Guardrails", en: "Responsible AI with Bedrock Guardrails" },
+    description: {
+      es: "Guardrails inspecciona tanto el prompt de entrada como la respuesta generada, filtrando PII, contenido dañino y temas prohibidos antes de que lleguen al usuario. No elimina alucinaciones, las reduce.",
+      en: "Guardrails inspects both the input prompt and the generated response, filtering PII, harmful content, and off-limits topics before they reach the user. It doesn't eliminate hallucinations, it reduces them.",
+    },
+    services: ["bedrock", "bedrock-guardrails"],
+    mermaid: {
+      es: `flowchart LR
+    U[Usuario] -- prompt --> GR1[Guardrails - filtro de entrada]
+    GR1 -- bloqueado --> BLK1[Respuesta rechazada]
+    GR1 -- permitido --> FM[Bedrock - Foundation Model]
+    FM --> GR2[Guardrails - filtro de salida]
+    GR2 -- PII / contenido dañino --> BLK2[Respuesta filtrada]
+    GR2 -- limpio --> U`,
+      en: `flowchart LR
+    U[User] -- prompt --> GR1[Guardrails - input filter]
+    GR1 -- blocked --> BLK1[Rejected response]
+    GR1 -- allowed --> FM[Bedrock - Foundation Model]
+    FM --> GR2[Guardrails - output filter]
+    GR2 -- PII / harmful content --> BLK2[Filtered response]
+    GR2 -- clean --> U`,
+    },
+  },
 ];
 
 export function architecturesUsing(serviceKey: string): Architecture[] {

@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useExam, useLocale } from "@/hooks";
-import { buildDeck, nodesInScope, type Flashcard, type FlashcardMode } from "@/lib/flashcards";
-import { pick } from "@/lib/locale";
-import { buildMockExam, buildQuestionBank, QUESTION_BANK_VERSION, seededShuffle } from "@/lib/practice";
-import { UI } from "@/lib/uiStrings";
+import { buildDeck, nodesInScope, type Flashcard, type FlashcardMode } from "@/lib/study/flashcards";
+import { pick } from "@/lib/ui/locale";
+import { buildMockExam, buildQuestionBank, QUESTION_BANK_VERSION, seededShuffle } from "@/lib/study/practice";
+import { UI } from "@/lib/ui/uiStrings";
 import type { MapFocus, PracticeQuestion, PracticeSessionResult, View } from "@/lib/types";
 import { AccentButton, BackIcon, IconButton, Input, Pill } from "@/components/ui";
 

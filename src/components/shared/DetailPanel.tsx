@@ -5,9 +5,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { architecturesUsing } from "@/data/architectures";
 import { useFavorites, useLocale, useNote } from "@/hooks";
-import { byId, relatedIds } from "@/lib/graph";
-import { pick } from "@/lib/locale";
-import { UI } from "@/lib/uiStrings";
+import { byId, relatedIds } from "@/lib/study/graph";
+import { pick } from "@/lib/ui/locale";
+import { UI } from "@/lib/ui/uiStrings";
 import type { Node } from "@/lib/types";
 
 type Props = {

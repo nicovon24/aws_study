@@ -1,4 +1,4 @@
-import type { Localized } from "./types";
+import type { Localized } from "@/lib/types";
 
 /** Every hardcoded chrome string in the app (nav, buttons, headings, placeholders), keyed by usage. */
 export const UI: Record<string, Localized> = {
@@ -115,6 +115,9 @@ export const UI: Record<string, Localized> = {
     es: "Diagramas de los patrones más comunes del examen: cómo se conectan los servicios entre sí en una arquitectura real.",
     en: "Diagrams of the exam's most common patterns: how services connect to each other in a real architecture.",
   },
+  archZoomIn: { es: "acercar", en: "zoom in" },
+  archZoomOut: { es: "alejar", en: "zoom out" },
+  archZoomReset: { es: "restablecer zoom", en: "reset zoom" },
   close: { es: "cerrar", en: "close" },
 
   // DetailPanel

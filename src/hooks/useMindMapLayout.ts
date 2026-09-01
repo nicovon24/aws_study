@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useReactFlow } from "reactflow";
-import { computeMindLayout, type MindLayout } from "@/lib/mindmapLayout";
+import { computeMindLayout, type MindLayout } from "@/lib/study/mindmapLayout";
 import type { MapFocus } from "@/lib/types";
 import { useExam } from "./useExam";
 import { useLocale } from "./useLocale";

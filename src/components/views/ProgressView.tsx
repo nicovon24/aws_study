@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useExam, useLocale } from "@/hooks";
-import { pick } from "@/lib/locale";
+import { pick } from "@/lib/ui/locale";
 
 type ProgressData = { sessions: { sessionId: string; completedAt: string; mode: string; correctCount: number; questionCount: number }[]; domains: { domainId: string; correct: number; total: number }[] };
 

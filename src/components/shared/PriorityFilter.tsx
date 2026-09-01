@@ -1,8 +1,8 @@
 "use client";
 
 import { useLocale } from "@/hooks";
-import { pick } from "@/lib/locale";
-import { UI } from "@/lib/uiStrings";
+import { pick } from "@/lib/ui/locale";
+import { UI } from "@/lib/ui/uiStrings";
 import { Pill } from "@/components/ui";
 
 const LEVELS: { value: 1 | 2 | 3; label: typeof UI.priorityHigh; tooltip: typeof UI.priorityHighTooltip; color: string }[] = [

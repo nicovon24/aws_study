@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { getDb } from "@/lib/db";
-import { buildQuestionBank, QUESTION_BANK_VERSION } from "@/lib/practice";
+import { auth } from "@/lib/server/auth";
+import { getDb } from "@/lib/server/db";
+import { buildQuestionBank, QUESTION_BANK_VERSION } from "@/lib/study/practice";
 import { findExam } from "@/data/exams";
 import type { PracticeSessionResult } from "@/lib/types";
 

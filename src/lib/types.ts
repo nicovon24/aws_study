@@ -1,4 +1,4 @@
-import type { Locale } from "./locale";
+import type { Locale } from "@/lib/ui/locale";
 
 export type Localized = { es: string; en: string };
 

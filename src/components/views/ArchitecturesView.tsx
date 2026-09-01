@@ -5,9 +5,9 @@ import { useEffect } from "react";
 import { ARCHITECTURES } from "@/data/architectures";
 import { getExamItemKeys } from "@/data/exams";
 import { useExam, useLocale } from "@/hooks";
-import { pick } from "@/lib/locale";
-import { UI } from "@/lib/uiStrings";
-import { MermaidDiagram } from "@/components/diagrams";
+import { pick } from "@/lib/ui/locale";
+import { UI } from "@/lib/ui/uiStrings";
+import { DiagramViewer, MermaidDiagram } from "@/components/diagrams";
 
 type Props = {
   selectedId: string | null;
@@ -57,7 +57,10 @@ export default function ArchitecturesView({ selectedId, onSelect }: Props) {
             >
               <div className="text-[17px] font-bold leading-[1.3]">{pick(locale, a.title)}</div>
               <p className="text-[13px] leading-[1.5] text-muted">{pick(locale, a.description)}</p>
-              <MermaidDiagram chart={pick(locale, a.mermaid)} className="h-32 w-full overflow-hidden [&_svg]:h-full [&_svg]:w-full" />
+              <MermaidDiagram
+                chart={pick(locale, a.mermaid)}
+                className="flex h-32 w-full items-center justify-center overflow-hidden [&_svg]:max-h-32 [&_svg]:w-full"
+              />
             </button>
           ))}
         </div>
@@ -82,23 +85,27 @@ export default function ArchitecturesView({ selectedId, onSelect }: Props) {
               exit={{ opacity: 0, scale: 0.96, y: 8 }}
               transition={{ duration: 0.18, ease: "easeOut" }}
               onClick={(e) => e.stopPropagation()}
-              className="fixed left-1/2 top-1/2 z-95 max-h-[85vh] w-[min(880px,92vw)] -translate-x-1/2 -translate-y-1/2 overflow-auto rounded-lg border border-line bg-panel-2 px-6 py-5 shadow-[0_20px_60px_rgba(5,8,15,.6)]"
+              className="fixed left-1/2 top-1/2 z-95 flex max-h-[90vh] w-[min(1100px,94vw)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg border border-line bg-panel-2 px-4 py-5 shadow-[0_20px_60px_rgba(5,8,15,.6)] sm:px-6"
             >
               <button
                 type="button"
                 onClick={() => onSelect(null)}
                 aria-label={pick(locale, UI.close)}
-                className="absolute right-4 top-4 text-[1.1rem] text-muted hover:text-ink"
+                className="absolute right-4 top-4 z-20 text-[1.1rem] text-muted hover:text-ink"
               >
                 ✕
               </button>
               {active && (
                 <>
-                  <h2 className="mb-1 pr-8 text-xl font-bold">{pick(locale, active.title)}</h2>
-                  <p className="mb-5 max-w-[720px] text-sm text-muted">{pick(locale, active.description)}</p>
-                  <MermaidDiagram
+                  <h2 className="mb-1 shrink-0 pr-8 text-xl font-bold">{pick(locale, active.title)}</h2>
+                  <p className="mb-4 shrink-0 max-w-[720px] text-sm text-muted">{pick(locale, active.description)}</p>
+                  <DiagramViewer
                     chart={pick(locale, active.mermaid)}
-                    className="min-h-64 w-full [&_svg]:mx-auto [&_svg]:max-w-full"
+                    labels={{
+                      zoomIn: pick(locale, UI.archZoomIn),
+                      zoomOut: pick(locale, UI.archZoomOut),
+                      reset: pick(locale, UI.archZoomReset),
+                    }}
                   />
                 </>
               )}

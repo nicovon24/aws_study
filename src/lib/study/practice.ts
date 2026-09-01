@@ -1,6 +1,6 @@
 import { getExam, getExamItem, getExamItems } from "@/data/exams";
 import { distractorCandidates, similarItemKeys, studyMetadataFor } from "@/data/studyMetadata";
-import { byKey } from "@/lib/graph";
+import { byKey } from "./graph";
 import type { ExamId, PracticeQuestion } from "@/lib/types";
 
 export const QUESTION_BANK_VERSION = "2026-08-28.1";

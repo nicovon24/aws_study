@@ -1,6 +1,6 @@
 import DATA from "@/data/services";
 import RELATIONS from "@/data/relations";
-import type { Category, Node } from "./types";
+import type { Category, Node } from "@/lib/types";
 
 /** Every service flattened, indexed by `${categoryIndex}-${serviceIndex}`. */
 export const byId: Record<string, Node> = {};

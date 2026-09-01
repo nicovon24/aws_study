@@ -28,6 +28,20 @@ function ensureInit() {
   initialized = true;
 }
 
+/**
+ * Mermaid hardcodes `width`/`height` (plus a `max-width` style) onto the SVG,
+ * which pins the diagram to its intrinsic size — small charts render tiny and
+ * large ones overflow. Stripping those leaves the `viewBox`, so the SVG scales
+ * to whatever box the caller gives it.
+ */
+function makeResponsive(svg: string): string {
+  return svg
+    .replace(/<svg([^>]*?)\swidth="[^"]*"/, "<svg$1")
+    .replace(/<svg([^>]*?)\sheight="[^"]*"/, "<svg$1")
+    .replace(/<svg([^>]*?)\sstyle="[^"]*"/, "<svg$1")
+    .replace(/<svg/, '<svg preserveAspectRatio="xMidYMid meet"');
+}
+
 type Props = {
   chart: string;
   className?: string;
@@ -43,7 +57,7 @@ export default function MermaidDiagram({ chart, className }: Props) {
     cancelled.current = false;
     ensureInit();
     mermaid.render(`mmd-${id}`, chart).then(({ svg }) => {
-      if (!cancelled.current) setSvg(svg);
+      if (!cancelled.current) setSvg(makeResponsive(svg));
     });
     return () => {
       cancelled.current = true;

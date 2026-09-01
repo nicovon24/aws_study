@@ -1934,6 +1934,40 @@ export const DATA: Category[] = [
         { t: { es: "Construido sobre Bedrock", en: "Built on Bedrock" }, d: { es: "Usa modelos fundacionales de Bedrock, con detección automática de abuso.", en: "Uses Bedrock foundation models, with automated abuse detection." } },
         { t: { es: "Respuestas con permisos", en: "Permissions-aware answers" }, d: { es: "Q Business nunca muestra contenido que el usuario no tenga permiso de ver.", en: "Q Business never surfaces content the user doesn't have permission to see." } },
       ] },
+    { key: "kendra", priority: 3, name: { es: "Kendra", en: "Kendra" }, d: { es: "Búsqueda empresarial inteligente con NLP sobre fuentes de datos internas.", en: "Intelligent enterprise search with NLP over internal data sources." }, link: "https://aws.amazon.com/kendra/",
+      long: { es: "Servicio de <strong>búsqueda empresarial</strong> potenciado por NLP: en vez de devolver una lista de documentos con la palabra buscada (como un buscador por keywords), entiende la <strong>pregunta en lenguaje natural</strong> y devuelve la respuesta puntual o el pasaje más relevante. Se conecta a conectores prearmados para fuentes como S3, SharePoint, Salesforce o Confluence, indexando su contenido para consultarlo desde una sola caja de búsqueda.", en: "An <strong>enterprise search</strong> service powered by NLP: instead of returning a list of documents containing the searched word (like a keyword search engine), it understands the <strong>natural-language question</strong> and returns the precise answer or the most relevant passage. It connects via prebuilt connectors to sources like S3, SharePoint, Salesforce or Confluence, indexing their content to query from a single search box." },
+      use: [
+        { es: "Buscador interno que responde preguntas sobre documentación de la empresa.", en: "An internal search engine that answers questions over company documentation." },
+        { es: "Indexar múltiples fuentes (S3, SharePoint, wikis) bajo un solo motor de búsqueda.", en: "Indexing multiple sources (S3, SharePoint, wikis) under a single search engine." },
+        { es: "Dar contexto recuperado (RAG) a una aplicación que usa un modelo fundacional.", en: "Supplying retrieved context (RAG) to an application that uses a foundation model." },
+      ],
+      avoid: [
+        { es: "Un asistente conversacional que además genera texto y código &rarr; <strong>Amazon Q</strong>.", en: "A conversational assistant that also generates text and code &rarr; <strong>Amazon Q</strong>." },
+        { es: "Confundirlo con búsqueda de texto simple por keywords: Kendra entiende intención, no solo coincidencia exacta.", en: "Don't confuse it with plain keyword text search: Kendra understands intent, not just exact matches." },
+      ],
+      concepts: [
+        { t: { es: "Conectores", en: "Connectors" }, d: { es: "Integraciones prearmadas con fuentes de datos empresariales comunes.", en: "Prebuilt integrations with common enterprise data sources." } },
+        { t: { es: "Búsqueda semántica", en: "Semantic search" }, d: { es: "Entiende la intención de la pregunta, no solo las palabras exactas.", en: "Understands the question's intent, not just the exact words." } },
+      ] },
+    { key: "fraud-detector", priority: 3, name: { es: "Fraud Detector", en: "Fraud Detector" }, d: { es: "Detección de fraude con ML, sin experiencia previa en ML.", en: "ML-based fraud detection, no prior ML experience needed." }, link: "https://aws.amazon.com/fraud-detector/",
+      long: { es: "Servicio administrado que detecta <strong>actividad fraudulenta</strong> (cuentas falsas, pagos robados) entrenando un modelo de ML con tus propios datos históricos, sin necesidad de saber ciencia de datos. Devuelve un <strong>score de riesgo</strong> en tiempo real que tu aplicación usa para aprobar, bloquear o mandar a revisión manual una transacción.", en: "A managed service that detects <strong>fraudulent activity</strong> (fake accounts, stolen payments) by training an ML model on your own historical data, with no data science expertise required. It returns a real-time <strong>risk score</strong> that your application uses to approve, block or send a transaction to manual review." },
+      use: [
+        { es: "Marcar transacciones de pago sospechosas antes de aprobarlas.", en: "Flagging suspicious payment transactions before approving them." },
+        { es: "Detectar registros de cuentas falsas en un formulario de alta.", en: "Detecting fake account signups in a registration form." },
+      ],
+      avoid: [
+        { es: "Análisis de sentimiento o intención en texto &rarr; <strong>Comprehend</strong>.", en: "Sentiment or intent analysis in text &rarr; <strong>Comprehend</strong>." },
+        { es: "Necesitás control total sobre el modelo y sus features &rarr; <strong>SageMaker</strong>.", en: "You need full control over the model and its features &rarr; <strong>SageMaker</strong>." },
+      ] },
+    { key: "amazon-a2i", priority: 3, name: { es: "Amazon A2I", en: "Amazon A2I" }, d: { es: "Revisión humana de predicciones de ML con baja confianza.", en: "Human review of low-confidence ML predictions." }, link: "https://aws.amazon.com/augmented-ai/",
+      long: { es: "<strong>Amazon Augmented AI (A2I)</strong> arma el flujo de trabajo para que una persona revise las predicciones de un modelo de ML cuando la <strong>confianza es baja</strong> o el caso lo requiere por norma. Se integra directo con Rekognition y Textract, o con cualquier modelo propio, sin que tengas que construir la interfaz de revisión ni la cola de trabajo desde cero.", en: "<strong>Amazon Augmented AI (A2I)</strong> sets up the workflow for a person to review an ML model's predictions when <strong>confidence is low</strong> or the case requires it by policy. It plugs directly into Rekognition and Textract, or into any custom model, without you having to build the review interface or work queue from scratch." },
+      use: [
+        { es: "Mandar a revisión humana los datos que Textract extrajo con baja confianza.", en: "Sending Textract's low-confidence extracted data to human review." },
+        { es: "Auditar manualmente un porcentaje de las decisiones automáticas de un modelo.", en: "Manually auditing a percentage of a model's automated decisions." },
+      ],
+      avoid: [
+        { es: "No es un servicio de ML en sí: es la capa de revisión humana alrededor de otro modelo.", en: "It's not an ML service itself: it's the human-review layer around another model." },
+      ] },
     { key: "polly", priority: 3, name: { es: "Polly", en: "Polly" }, d: { es: "Convierte texto a voz natural con IA.", en: "Converts text to natural speech with AI." }, link: "https://aws.amazon.com/polly/",
       long: { es: "Servicio de <strong>texto a voz (TTS)</strong> que genera audio con <strong>voces neuronales</strong> realistas en decenas de idiomas. Aceptás texto plano o <strong>SSML</strong> para controlar pausas, énfasis y pronunciación con precisión. No hay entrenamiento ni modelo que gestionar: llamás a la API y recibís el audio.", en: "A <strong>text-to-speech (TTS)</strong> service that generates realistic audio using <strong>neural voices</strong> across dozens of languages. You feed it plain text or <strong>SSML</strong> to precisely control pauses, emphasis and pronunciation. No training or model to manage: you call the API and get the audio back." },
       use: [

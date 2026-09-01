@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { getDb } from "@/lib/db";
-import { byKey } from "@/lib/graph";
+import { auth } from "@/lib/server/auth";
+import { getDb } from "@/lib/server/db";
+import { byKey } from "@/lib/study/graph";
 
 export async function GET() {
   const session = await auth();

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { EXAMS, validateExamRegistry } from "@/data/exams";
-import { allocateWeightedQuestions, buildMockExam, buildQuestionBank, seededShuffle, validateQuestionBank } from "@/lib/practice";
+import { allocateWeightedQuestions, buildMockExam, buildQuestionBank, seededShuffle, validateQuestionBank } from "@/lib/study/practice";
 import { distractorCandidates, studyMetadataFor } from "@/data/studyMetadata";
 
 describe("exam content", () => {

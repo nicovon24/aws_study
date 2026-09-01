@@ -2,8 +2,8 @@
 
 import { getCategoriesForDomain } from "@/data/exams";
 import { useExam, useLocale } from "@/hooks";
-import { pick } from "@/lib/locale";
-import { UI } from "@/lib/uiStrings";
+import { pick } from "@/lib/ui/locale";
+import { UI } from "@/lib/ui/uiStrings";
 import type { MapFocus, View } from "@/lib/types";
 import { AccentButton } from "@/components/ui";
 

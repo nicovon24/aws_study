@@ -4,9 +4,9 @@ import { useMemo, useRef, useState } from "react";
 import { Input } from "@/components/ui";
 import { getExamItem } from "@/data/exams";
 import { useDebouncedValue, useExam, useLocale } from "@/hooks";
-import { byId } from "@/lib/graph";
-import { pick as pickLocale } from "@/lib/locale";
-import { UI } from "@/lib/uiStrings";
+import { byId } from "@/lib/study/graph";
+import { pick as pickLocale } from "@/lib/ui/locale";
+import { UI } from "@/lib/ui/uiStrings";
 import type { Node } from "@/lib/types";
 
 type Props = {
