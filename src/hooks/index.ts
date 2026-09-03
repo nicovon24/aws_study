@@ -1,7 +1,10 @@
 export { useDebouncedValue } from "./useDebouncedValue";
+export { usePersistedState } from "./usePersistedState";
+export { useStudyFilters } from "./useStudyFilters";
 export { LocaleProvider, useLocale } from "./useLocale";
 export { useMindMapLayout } from "./useMindMapLayout";
 export { useUrlFocus, focusToParams } from "./useUrlFocus";
 export { useFavorites, FavoritesProvider } from "./useFavorites";
+export { useReviewed, ReviewedProvider } from "./useReviewed";
 export { useNote } from "./useNote";
 export { ExamProvider, useExam } from "./useExam";

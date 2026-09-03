@@ -163,7 +163,7 @@ export default function DiagramViewer({ chart, labels }: Props) {
   const isDefaultView = view.zoom === 1 && view.x === 0 && view.y === 0;
 
   return (
-    <div className="relative min-h-[45vh] flex-1 overflow-hidden rounded-md border border-line/60 bg-panel/40">
+    <div className="relative min-h-[52vh] flex-1 overflow-hidden rounded-md border border-line/60 bg-panel/40 pt-12">
       <div className="absolute right-3 top-3 z-10 flex gap-1.5">
         <button
           type="button"

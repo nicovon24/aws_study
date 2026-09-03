@@ -17,10 +17,11 @@ import ReactFlow, {
   ReactFlowProvider,
   useReactFlow,
 } from "reactflow";
-import { AnimatedFilterSidebar, DetailPanel } from "@/components/shared";
+import { AnimatedFilterSidebar, DetailPanel, StudyFilterBar } from "@/components/shared";
 import { MindMapSkeleton } from "@/components/skeletons";
 import { getExamDomain } from "@/data/exams";
-import { useExam, useLocale, useMindMapLayout } from "@/hooks";
+import { useExam, useLocale, useMindMapLayout, usePersistedState, useStudyFilters } from "@/hooks";
+import type { StudyFilters } from "@/hooks/useStudyFilters";
 import { byId, catBySlug } from "@/lib/study/graph";
 import { pick } from "@/lib/ui/locale";
 import { UI } from "@/lib/ui/uiStrings";
@@ -129,8 +130,9 @@ function Inner({
   onSelect,
   showFilters,
   onToggleFilters,
-}: Props & { showFilters: boolean; onToggleFilters: () => void }) {
-  const { layout, recenter } = useMindMapLayout(focus);
+  filters,
+}: Props & { showFilters: boolean; onToggleFilters: () => void; filters: StudyFilters }) {
+  const { layout, recenter } = useMindMapLayout(focus, filters.matches);
   const { setCenter } = useReactFlow();
   const { locale } = useLocale();
   const { exam } = useExam();
@@ -245,6 +247,7 @@ function Inner({
               setCenterOnId(node.id);
             }}
           />
+          <StudyFilterBar filters={filters} className="ml-auto shadow-lg shadow-black/30" />
         </div>
 
         {focus.kind !== "all" && (
@@ -269,7 +272,8 @@ function Inner({
 }
 
 export default function MindMapView({ focus, onFocusChange, selectedId, onSelect }: Props) {
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = usePersistedState("filters:map:sidebar", true);
+  const filters = useStudyFilters("map");
   return (
     <main className="flex min-h-0 flex-1">
       <ReactFlowProvider>
@@ -280,6 +284,7 @@ export default function MindMapView({ focus, onFocusChange, selectedId, onSelect
           onSelect={onSelect}
           showFilters={showFilters}
           onToggleFilters={() => setShowFilters((v) => !v)}
+          filters={filters}
         />
       </ReactFlowProvider>
       <DetailPanel node={selectedId ? byId[selectedId] : null} onSelect={onSelect} onClose={() => onSelect(null)} />

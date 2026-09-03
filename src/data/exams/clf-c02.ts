@@ -31,6 +31,22 @@ export const CLF_C02_CATEGORY_DOMAINS: Record<string, ExamDomainId> = Object.fro
   Object.entries(CATEGORY_DOMAIN_NUMBER).map(([slug, number]) => [slug, DOMAIN_IDS[number]]),
 );
 
+// La guía oficial de CLF-C02 solo reconoce estos 10 servicios de IA/ML;
+// el resto de la categoría (Bedrock, A2I, Nova, AgentCore, Personalize,
+// Fraud Detector) queda fuera del examen.
+const ML_CATEGORY_ITEM_KEYS = new Set([
+  "sagemaker",
+  "comprehend",
+  "kendra",
+  "polly",
+  "transcribe",
+  "translate",
+  "textract",
+  "rekognition",
+  "lex",
+  "amazon-q",
+]);
+
 export const CLF_C02: ExamDefinition = {
   id: "clf-c02",
   code: "CLF-C02",
@@ -49,6 +65,10 @@ export const CLF_C02: ExamDefinition = {
   items: DATA.flatMap((category) => {
     const domainId = CLF_C02_CATEGORY_DOMAINS[category.slug];
     if (!domainId) return [];
-    return category.items.map((item) => ({ itemKey: item.key, domainId, priority: item.priority ?? 2 }));
+    const items =
+      category.slug === "machine-learning"
+        ? category.items.filter((item) => ML_CATEGORY_ITEM_KEYS.has(item.key))
+        : category.items;
+    return items.map((item) => ({ itemKey: item.key, domainId, priority: item.priority ?? 2 }));
   }),
 };

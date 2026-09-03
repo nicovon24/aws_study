@@ -3,11 +3,14 @@
 // runs synchronously with no worker setup, which is fine at this graph size.
 import ELK from "elkjs/lib/elk.bundled";
 import type { ElkNode } from "elkjs/lib/elk-api";
-import { getExamItem } from "@/data/exams";
+import { getExamItem, getItemPriority } from "@/data/exams";
 import DATA from "@/data/services";
 import { byId } from "./graph";
 import { pick, type Locale } from "@/lib/ui/locale";
-import type { MapFocus } from "@/lib/types";
+import type { MapFocus, StudyPriority } from "@/lib/types";
+
+/** Extra per-item predicate (favorites/reviewed/priority), applied on top of the focus. */
+export type LayoutFilter = (itemKey: string, priority: StudyPriority) => boolean;
 
 const elk = new ELK();
 
@@ -90,7 +93,12 @@ function buildElkTree(cats: ActiveCategory[]): ElkNode {
  * to the left and right (alternating), each with its services laid out by elk
  * in a horizontal tree, then the left half is mirrored back onto the root.
  */
-export async function computeMindLayout(focus: MapFocus, locale: Locale, examId: string): Promise<MindLayout> {
+export async function computeMindLayout(
+  focus: MapFocus,
+  locale: Locale,
+  examId: string,
+  matches?: LayoutFilter,
+): Promise<MindLayout> {
   const activeCats = DATA.map((cat, ci) => ({
     ci,
     cat,
@@ -99,9 +107,9 @@ export async function computeMindLayout(focus: MapFocus, locale: Locale, examId:
       .filter(({ svc }) => {
         const examItem = getExamItem(examId, svc.key);
         if (!examItem) return false;
-        if (focus.kind === "domain") return examItem.domainId === focus.domainId;
-        if (focus.kind === "category") return cat.slug === focus.slug;
-        return true;
+        if (focus.kind === "domain" && examItem.domainId !== focus.domainId) return false;
+        if (focus.kind === "category" && cat.slug !== focus.slug) return false;
+        return !matches || matches(svc.key, getItemPriority(examId, svc.key) ?? svc.priority ?? 2);
       }),
   })).filter(({ items }) => items.length > 0);
 

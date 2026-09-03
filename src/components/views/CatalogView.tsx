@@ -1,16 +1,22 @@
 "use client";
 
-import { PanelLeftClose, PanelLeftOpen, Star } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { PanelLeftClose, PanelLeftOpen, Workflow } from "lucide-react";
+import { useMemo } from "react";
 import { getExamDomain, getExamItem, getItemPriority } from "@/data/exams";
 import DATA from "@/data/services";
-import { useExam, useFavorites, useLocale } from "@/hooks";
+import { useExam, useLocale, usePersistedState, useStudyFilters } from "@/hooks";
 import { byId, catBySlug } from "@/lib/study/graph";
 import { pick } from "@/lib/ui/locale";
 import { UI } from "@/lib/ui/uiStrings";
 import type { MapFocus } from "@/lib/types";
-import { AnimatedFilterSidebar, DetailPanel, FavoriteStar, PriorityFilter } from "@/components/shared";
-import { IconButton, Input, Pill, PriorityBadge } from "@/components/ui";
+import {
+  AnimatedFilterSidebar,
+  DetailPanel,
+  FavoriteStar,
+  ReviewedCheck,
+  StudyFilterBar,
+} from "@/components/shared";
+import { IconButton, Input, PriorityBadge } from "@/components/ui";
 
 type Props = {
   focus: MapFocus;
@@ -30,51 +36,43 @@ function itemMatchesFocus(focus: MapFocus, examId: string, catSlug: string, item
 export default function CatalogView({ focus, onFocusChange, selectedId, onSelect }: Props) {
   const { locale } = useLocale();
   const { exam } = useExam();
-  const [q, setQ] = useState("");
-  const [showFilters, setShowFilters] = useState(true);
-  const [onlyFavorites, setOnlyFavorites] = useState(false);
-  const [priorities, setPriorities] = useState<Set<1 | 2 | 3>>(new Set([1, 2, 3]));
+  const [q, setQ] = usePersistedState("filters:catalog:query", "");
+  const [showFilters, setShowFilters] = usePersistedState("filters:catalog:sidebar", true);
+  const filters = useStudyFilters("catalog");
   const query = q.trim().toLowerCase();
-  const { isFavorite, signedIn: favSignedIn } = useFavorites();
-
-  useEffect(() => {
-    if (!favSignedIn) setOnlyFavorites(false);
-  }, [favSignedIn]);
+  const { matches } = filters;
 
   const columns = useMemo(() => {
     let shown = 0;
     const cols = DATA.map((cat) => {
-        const ci = DATA.indexOf(cat);
-        const items = cat.items
-          .map((svc, si) => ({ id: `${ci}-${si}`, svc }))
-          .filter(({ svc }) => itemMatchesFocus(focus, exam.id, cat.slug, svc.key))
-          .filter(
-            ({ svc }) =>
-              !query ||
-              svc.name.es.toLowerCase().includes(query) ||
-              svc.name.en.toLowerCase().includes(query) ||
-              pick(locale, svc.d).toLowerCase().includes(query),
-          )
-          .filter(({ svc }) => !onlyFavorites || isFavorite(svc.key))
-          .filter(({ svc }) => priorities.has(getItemPriority(exam.id, svc.key) ?? svc.priority ?? 2))
-          .sort(
-            (a, b) =>
-              (getItemPriority(exam.id, a.svc.key) ?? a.svc.priority ?? 2) -
-              (getItemPriority(exam.id, b.svc.key) ?? b.svc.priority ?? 2),
-          );
-        shown += items.length;
-        return { cat, items };
-      })
-      .filter((col) => col.items.length > 0);
+      const ci = DATA.indexOf(cat);
+      const items = cat.items
+        .map((svc, si) => ({ id: `${ci}-${si}`, svc }))
+        .filter(({ svc }) => itemMatchesFocus(focus, exam.id, cat.slug, svc.key))
+        .filter(
+          ({ svc }) =>
+            !query ||
+            svc.name.es.toLowerCase().includes(query) ||
+            svc.name.en.toLowerCase().includes(query) ||
+            pick(locale, svc.d).toLowerCase().includes(query),
+        )
+        .filter(({ svc }) => matches(svc.key, getItemPriority(exam.id, svc.key) ?? svc.priority ?? 2))
+        .sort(
+          (a, b) =>
+            (getItemPriority(exam.id, a.svc.key) ?? a.svc.priority ?? 2) -
+            (getItemPriority(exam.id, b.svc.key) ?? b.svc.priority ?? 2),
+        );
+      shown += items.length;
+      return { cat, items };
+    }).filter((col) => col.items.length > 0);
     return { cols, shown };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, focus, exam.id, locale, onlyFavorites, isFavorite, priorities]);
+  }, [query, focus, exam.id, locale, matches]);
 
   const focusLabel =
     focus.kind === "domain"
       ? pick(locale, getExamDomain(exam.id, focus.domainId)?.name ?? { es: "", en: "" })
       : focus.kind === "category"
-        ? (catBySlug[focus.slug] && pick(locale, catBySlug[focus.slug].cat))
+        ? catBySlug[focus.slug] && pick(locale, catBySlug[focus.slug].cat)
         : null;
 
   return (
@@ -82,7 +80,7 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
       <AnimatedFilterSidebar focus={focus} onFocusChange={onFocusChange} show={showFilters} />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="flex shrink-0 flex-wrap items-center gap-3.5 border-b border-line bg-panel px-4 py-3.5 sm:px-6">
+        <div className="flex shrink-0 flex-wrap items-center gap-3 border-b border-line bg-panel px-4 py-3.5 sm:px-6">
           <IconButton
             size="sm"
             onClick={() => setShowFilters((v) => !v)}
@@ -95,21 +93,9 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={pick(locale, UI.searchServiceOrConcept)}
-            className="w-full sm:w-70"
+            className="w-full sm:w-64"
           />
-          {favSignedIn && (
-            <Pill
-              active={onlyFavorites}
-              color="#e0c341"
-              title={pick(locale, UI.onlyFavoritesTooltip)}
-              onClick={() => setOnlyFavorites((v) => !v)}
-              className="flex items-center gap-1.5"
-            >
-              <Star size={11} fill={onlyFavorites ? "#e0c341" : "none"} />
-              {pick(locale, UI.onlyFavorites)}
-            </Pill>
-          )}
-          <PriorityFilter value={priorities} onChange={setPriorities} />
+          <StudyFilterBar filters={filters} />
           {focusLabel && (
             <button
               type="button"
@@ -131,49 +117,76 @@ export default function CatalogView({ focus, onFocusChange, selectedId, onSelect
             <p className="font-semibold text-white">{pick(locale, UI.examContentPreparing)}</p>
             <p className="mt-1 text-muted-2">{pick(locale, UI.examContentPreparingDetail)}</p>
           </div>
+        ) : columns.shown === 0 ? (
+          <div className="m-4 rounded-xl border border-line bg-panel-2 p-6 text-center text-sm text-muted-2 sm:m-6">
+            <p>{pick(locale, UI.noResults)}</p>
+            {filters.anyActive && (
+              <button
+                type="button"
+                onClick={filters.reset}
+                className="mt-3 rounded-md border border-accent/50 bg-accent/10 px-3 py-1.5 font-mono text-xs text-accent hover:border-accent"
+              >
+                {pick(locale, UI.clearFilters)}
+              </button>
+            )}
+          </div>
         ) : (
-          <div className="flex-1 overflow-auto px-4 pb-10 pt-4 sm:px-6 sm:pt-5.5">
-            <div className="flex flex-col items-stretch gap-3.5 sm:flex-row sm:items-start">
+          <div className="flex-1 overflow-auto px-4 pb-10 pt-4 sm:px-6 sm:pt-6">
+            <div className="flex flex-col gap-7">
               {columns.cols.map(({ cat, items }) => (
-                <div key={cat.slug} className="flex flex-col gap-1.5 sm:w-53 sm:shrink-0">
-                  <div
-                    className="mb-0.5 rounded border px-1.5 py-1.75 text-center font-mono text-[11px] uppercase tracking-[.08em]"
-                    style={{ color: cat.accent, borderColor: `${cat.accent}55`, background: `${cat.accent}12` }}
-                  >
-                    {pick(locale, cat.cat)}
+                <section key={cat.slug}>
+                  <div className="mb-2.5 flex items-center gap-2.5">
+                    <h2
+                      className="font-mono text-[11.5px] uppercase tracking-[.1em]"
+                      style={{ color: cat.accent }}
+                    >
+                      {pick(locale, cat.cat)}
+                    </h2>
+                    <span className="h-px flex-1" style={{ background: `${cat.accent}33` }} />
+                    <span className="font-mono text-[10.5px] text-muted-2">{items.length}</span>
                   </div>
-                  {items.map(({ id, svc }) => {
-                    const active = id === selectedId;
-                    const d = pick(locale, svc.d);
-                    return (
-                      <div
-                        key={id}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => onSelect(id)}
-                        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onSelect(id)}
-                        title={d}
-                        style={{
-                          borderLeftColor: active ? cat.accent : `${cat.accent}88`,
-                          background: active ? `${cat.accent}14` : undefined,
-                          boxShadow: active ? `0 0 0 1px ${cat.accent}66` : undefined,
-                        }}
-                        className={`flex w-full cursor-pointer flex-col gap-1 rounded border border-l-[3px] px-2.75 py-2.25 text-left font-sans transition-all duration-150 hover:border-muted-2/60 hover:bg-[#1b2740] ${
-                          active ? "border-transparent" : "border-line bg-panel-2"
-                        }`}
-                      >
-                        <span className="flex items-center gap-1.5">
-                          <span className="min-w-0 flex-1 truncate text-sm font-bold text-white">{pick(locale, svc.name)}</span>
-                          <FavoriteStar serviceKey={svc.key} />
-                        </span>
-                        <span className="text-[11.5px] leading-[1.45] text-muted-2">
-                          {d.length > 74 ? `${d.slice(0, 74)}…` : d}
-                        </span>
-                        <PriorityBadge priority={getItemPriority(exam.id, svc.key) ?? svc.priority ?? 2} />
-                      </div>
-                    );
-                  })}
-                </div>
+
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-2.5">
+                    {items.map(({ id, svc }) => {
+                      const active = id === selectedId;
+                      const d = pick(locale, svc.d);
+                      return (
+                        <div
+                          key={id}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => onSelect(id)}
+                          onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onSelect(id)}
+                          style={{
+                            borderLeftColor: active ? cat.accent : `${cat.accent}88`,
+                            background: active ? `${cat.accent}14` : undefined,
+                            boxShadow: active ? `0 0 0 1px ${cat.accent}66` : undefined,
+                          }}
+                          className={`flex cursor-pointer flex-col gap-2 rounded-lg border border-l-[3px] px-3.5 py-3 text-left font-sans transition-all duration-150 hover:border-muted-2/60 hover:bg-[#1b2740] ${
+                            active ? "border-transparent" : "border-line bg-panel-2"
+                          }`}
+                        >
+                          <span className="flex items-start gap-1.5">
+                            <span className="min-w-0 flex-1 text-sm font-bold leading-snug text-white">
+                              {pick(locale, svc.name)}
+                            </span>
+                            {svc.diagram && (
+                              <Workflow
+                                size={13}
+                                className="mt-0.5 shrink-0 text-muted-2"
+                                aria-label={pick(locale, UI.hasDiagram)}
+                              />
+                            )}
+                            <ReviewedCheck itemKey={svc.key} />
+                            <FavoriteStar serviceKey={svc.key} />
+                          </span>
+                          <span className="text-[12px] leading-[1.5] text-muted-2">{d}</span>
+                          <PriorityBadge priority={getItemPriority(exam.id, svc.key) ?? svc.priority ?? 2} />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
               ))}
             </div>
           </div>

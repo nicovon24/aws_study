@@ -103,6 +103,8 @@ export type Service = {
   d: Localized;
   link: string;
   long?: Localized;
+  /** Mermaid flowchart string per language — same shape as `Architecture.mermaid`. */
+  diagram?: Localized;
   list?: Concept[];
   use?: Localized[];
   avoid?: Localized[];

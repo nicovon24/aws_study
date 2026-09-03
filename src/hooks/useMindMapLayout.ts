@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useReactFlow } from "reactflow";
-import { computeMindLayout, type MindLayout } from "@/lib/study/mindmapLayout";
+import { computeMindLayout, type LayoutFilter, type MindLayout } from "@/lib/study/mindmapLayout";
 import type { MapFocus } from "@/lib/types";
 import { useExam } from "./useExam";
 import { useLocale } from "./useLocale";
@@ -13,7 +13,7 @@ import { useLocale } from "./useLocale";
  * always on the root, since filtering down to one category should bring that
  * category's own branch to the middle of the view.
  */
-export function useMindMapLayout(focus: MapFocus) {
+export function useMindMapLayout(focus: MapFocus, matches?: LayoutFilter) {
   const [layout, setLayout] = useState<MindLayout | null>(null);
   const { setCenter } = useReactFlow();
   const { locale } = useLocale();
@@ -22,13 +22,13 @@ export function useMindMapLayout(focus: MapFocus) {
   useEffect(() => {
     let cancelled = false;
     setLayout(null);
-    computeMindLayout(focus, locale, exam.id).then((l) => {
+    computeMindLayout(focus, locale, exam.id, matches).then((l) => {
       if (!cancelled) setLayout(l);
     });
     return () => {
       cancelled = true;
     };
-  }, [exam.id, focus, locale]);
+  }, [exam.id, focus, locale, matches]);
 
   const recenter = useCallback(() => {
     if (!layout || layout.nodes.length === 0) return;

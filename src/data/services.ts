@@ -1813,6 +1813,18 @@ export const DATA: Category[] = [
   ]},
   { slug: "machine-learning", cat: { es: "Machine Learning", en: "Machine Learning" }, accent: "#35C2E8", items: [
     { key: "sagemaker", priority: 2, name: { es: "SageMaker", en: "SageMaker" }, d: { es: "Plataforma end-to-end para construir, entrenar y desplegar modelos.", en: "End-to-end platform for building, training and deploying models." }, link: "https://aws.amazon.com/sagemaker/",
+      diagram: {
+        es: `flowchart LR
+    A["Preparar datos\\nGround Truth"] --> B["Construir / entrenar\\nAutopilot · JumpStart"]
+    B --> C["Desplegar / inferir\\nEndpoints RT/async/batch/serverless"]
+    C --> D["Gobernar / auditar\\nClarify · Model Cards · Model Monitor"]
+    D -.->|"drift detectado\\nreentrenar"| A`,
+        en: `flowchart LR
+    A["Prepare data\\nGround Truth"] --> B["Build / train\\nAutopilot · JumpStart"]
+    B --> C["Deploy / infer\\nEndpoints RT/async/batch/serverless"]
+    C --> D["Govern / audit\\nClarify · Model Cards · Model Monitor"]
+    D -.->|"drift detected\\nretrain"| A`,
+      },
       long: { es: "Plataforma completa de <strong>machine learning</strong>: cubre todo el ciclo, desde preparar los datos y experimentar en <strong>notebooks</strong>, hasta <strong>entrenar</strong> en instancias con GPU y <strong>desplegar</strong> el modelo como endpoint con escalado automático. Sirve tanto para quien entrena modelos propios desde cero como para quien ajusta uno preexistente. Es la opción de <strong>máximo control</strong> del catálogo de ML de AWS, y a cambio exige saber de machine learning.", en: "A complete <strong>machine learning</strong> platform: it covers the whole cycle, from prepping data and experimenting in <strong>notebooks</strong>, to <strong>training</strong> on GPU instances and <strong>deploying</strong> the model as an endpoint with autoscaling. It works both for training models from scratch and for fine-tuning an existing one. It's AWS's ML catalog's <strong>maximum-control</strong> option, and in exchange it demands actual machine learning knowledge." },
       use: [
         { es: "Entrenar un modelo propio sobre datos de tu negocio.", en: "Training your own model on your business's data." },
@@ -1866,6 +1878,9 @@ export const DATA: Category[] = [
         { es: "Clasificación muy específica de tu dominio: conviene un clasificador propio.", en: "Classification very specific to your domain: a custom classifier is better." },
         { es: "Traducir texto &rarr; Amazon Translate.", en: "Translating text &rarr; Amazon Translate." },
         { es: "Volúmenes enormes de texto: el costo por carácter se acumula rápido.", en: "Huge text volumes: cost per character adds up fast." },
+        { es: "El input es una <strong>imagen</strong> (aunque tenga texto manuscrito): no extrae texto de imágenes &rarr; <strong>Textract</strong>.", en: "The input is an <strong>image</strong> (even with handwritten text): it doesn't extract text from images &rarr; <strong>Textract</strong>." },
+        { es: "Medir sesgo, equidad o explicabilidad de un modelo &rarr; <strong>SageMaker Clarify</strong>.", en: "Measuring a model's bias, fairness, or explainability &rarr; <strong>SageMaker Clarify</strong>." },
+        { es: "Elegir el mejor modelo fundacional para una tarea &rarr; <strong>Bedrock Model Evaluation</strong>.", en: "Choosing the best foundation model for a task &rarr; <strong>Bedrock Model Evaluation</strong>." },
       ],
       concepts: [
         { t: { es: "Sentiment analysis", en: "Sentiment analysis" }, d: { es: "Clasifica el texto como positivo, negativo, neutro o mixto.", en: "Classifies text as positive, negative, neutral or mixed." } },
@@ -1895,6 +1910,18 @@ export const DATA: Category[] = [
         { t: { es: "Guardrails", en: "Guardrails" }, d: { es: "Filtros de contenido y temas vedados aplicados a las respuestas.", en: "Content filters and off-limits topics applied to responses." } },
       ] },
     { key: "textract", priority: 3, name: { es: "Textract", en: "Textract" }, d: { es: "Extrae texto y datos estructurados de documentos escaneados.", en: "Extracts text and structured data from scanned documents." }, link: "https://aws.amazon.com/textract/",
+      diagram: {
+        es: `flowchart LR
+    A["Imagen / documento\\n(factura, manuscrito)"] --> B["Amazon Textract\\nOCR + estructura"]
+    B --> C["Amazon Polly\\ntexto a voz"]
+    C --> D(["Audio"])
+    B -.->|"NO Comprehend:\\nno extrae texto de imagen"| X["✕"]`,
+        en: `flowchart LR
+    A["Image / document\\n(invoice, handwriting)"] --> B["Amazon Textract\\nOCR + structure"]
+    B --> C["Amazon Polly\\ntext to speech"]
+    C --> D(["Audio"])
+    B -.->|"NOT Comprehend:\\ndoesn't extract text from images"| X["✕"]`,
+      },
       long: { es: "Extrae <strong>texto, formularios y tablas</strong> de documentos escaneados y PDFs. Va más allá del OCR clásico: no solo lee las letras, sino que <strong>entiende la estructura</strong> — reconoce que un campo es una etiqueta y el texto de al lado su valor, y preserva filas y columnas de una tabla. Devuelve pares clave-valor listos para cargar en una base, sin escribir reglas de parseo. Cada dato viene con su <strong>nivel de confianza</strong>, lo que permite enviar a revisión humana solo lo dudoso.", en: "Extracts <strong>text, forms and tables</strong> from scanned documents and PDFs. It goes beyond classic OCR: it doesn't just read the letters, it <strong>understands the structure</strong> — recognizing that a field is a label and the text next to it its value, and preserving a table's rows and columns. It returns key-value pairs ready to load into a database, with no parsing rules to write. Each piece of data comes with its <strong>confidence level</strong>, letting you send only the doubtful ones to human review." },
       use: [
         { es: "Digitalizar facturas, recibos o formularios en papel.", en: "Digitizing paper invoices, receipts or forms." },
@@ -1967,6 +1994,49 @@ export const DATA: Category[] = [
       ],
       avoid: [
         { es: "No es un servicio de ML en sí: es la capa de revisión humana alrededor de otro modelo.", en: "It's not an ML service itself: it's the human-review layer around another model." },
+      ] },
+    { key: "sagemaker-clarify", kind: "concept", priority: 2, name: { es: "SageMaker Clarify", en: "SageMaker Clarify" }, d: { es: "Detecta sesgo en datos/modelo y explica predicciones individuales.", en: "Detects bias in data/model and explains individual predictions." }, link: "https://aws.amazon.com/sagemaker/clarify/", sourceIds: ["aws-aif-c01-exam-guide"],
+      long: { es: "Analiza el <strong>sesgo</strong> en los datos de entrenamiento y en las predicciones del modelo, y genera <strong>explicabilidad</strong>: por qué el modelo llegó a una decisión puntual.", en: "Analyzes <strong>bias</strong> in the training data and in the model's predictions, and generates <strong>explainability</strong>: why the model reached a particular decision." },
+      use: [
+        { es: "Auditar si un modelo trata distinto a ciertos grupos demográficos.", en: "Auditing whether a model treats certain demographic groups differently." },
+        { es: "La pregunta pide \"explicabilidad\" o \"por qué el modelo decidió X\".", en: "The question asks for \"explainability\" or \"why the model decided X\"." },
+      ],
+      avoid: [
+        { es: "No documenta el modelo (propósito, datos, límites) &rarr; eso es <strong>SageMaker Model Cards</strong>.", en: "It doesn't document the model (purpose, data, limitations) &rarr; that's <strong>SageMaker Model Cards</strong>." },
+        { es: "No automatiza el entrenamiento &rarr; eso es <strong>SageMaker Autopilot</strong>.", en: "It doesn't automate training &rarr; that's <strong>SageMaker Autopilot</strong>." },
+      ] },
+    { key: "sagemaker-model-cards", kind: "concept", priority: 2, name: { es: "SageMaker Model Cards", en: "SageMaker Model Cards" }, d: { es: "Documentación estructurada de un modelo: propósito, datos de entrenamiento, métricas y límites.", en: "Structured documentation of a model: purpose, training data, metrics, and limitations." }, link: "https://docs.aws.amazon.com/sagemaker/latest/dg/model-cards.html", sourceIds: ["aws-aif-c01-exam-guide"],
+      long: { es: "Documentación centralizada y estructurada de <strong>tu</strong> modelo propio &mdash; propósito, datos de entrenamiento, métricas de performance y consideraciones éticas &mdash; pensada para auditorías y transparencia regulatoria.", en: "Centralized, structured documentation of <strong>your own</strong> model &mdash; purpose, training data, performance metrics, and ethical considerations &mdash; built for audits and regulatory transparency." },
+      use: [
+        { es: "La pregunta pide \"documentar\" el modelo para una auditoría de cumplimiento.", en: "The question asks to \"document\" the model for a compliance audit." },
+        { es: "Combo típico: \"documentación + explicabilidad\" &rarr; Model Cards + Clarify juntos.", en: "Typical combo: \"documentation + explainability\" &rarr; Model Cards + Clarify together." },
+      ],
+      avoid: [
+        { es: "No detecta sesgo ni explica predicciones individuales &rarr; eso es <strong>SageMaker Clarify</strong>.", en: "It doesn't detect bias or explain individual predictions &rarr; that's <strong>SageMaker Clarify</strong>." },
+        { es: "No es documentación de los servicios de AWS en sí &rarr; eso son las <strong>AWS AI Service Cards</strong>.", en: "It's not documentation of AWS's own services &rarr; that's <strong>AWS AI Service Cards</strong>." },
+      ] },
+    { key: "sagemaker-ground-truth", priority: 2, name: { es: "SageMaker Ground Truth", en: "SageMaker Ground Truth" }, d: { es: "Etiquetado de datos con revisión humana, incluye RLHF.", en: "Data labeling with human review, including RLHF." }, link: "https://aws.amazon.com/sagemaker/groundtruth/",
+      long: { es: "Servicio <strong>human-in-the-loop</strong> completo: etiquetado inicial de datos, revisión de las predicciones del modelo, personalización del flujo, y específicamente <strong>RLHF</strong> (reinforcement learning from human feedback).", en: "A complete <strong>human-in-the-loop</strong> service: initial data labeling, review of the model's predictions, custom workflows, and specifically <strong>RLHF</strong> (reinforcement learning from human feedback)." },
+      use: [
+        { es: "El enunciado menciona <strong>RLHF</strong> explícitamente.", en: "The question explicitly mentions <strong>RLHF</strong>." },
+        { es: "Etiquetar datos y además incorporar feedback humano iterativo al modelo.", en: "Labeling data and also feeding iterative human feedback back into the model." },
+      ],
+      avoid: [
+        { es: "Rekognition Custom Labels solo entrena con etiquetas ya dadas &rarr; no cubre RLHF ni feedback iterativo.", en: "Rekognition Custom Labels only trains on labels already provided &rarr; it doesn't cover RLHF or iterative feedback." },
+      ] },
+    { key: "sagemaker-autopilot", priority: 3, name: { es: "SageMaker Autopilot", en: "SageMaker Autopilot" }, d: { es: "AutoML: automatiza selección de algoritmo y entrenamiento.", en: "AutoML: automates algorithm selection and training." }, link: "https://aws.amazon.com/sagemaker/autopilot/",
+      long: { es: "<strong>AutoML</strong> de SageMaker: prueba automáticamente distintos algoritmos e hiperparámetros y entrega el mejor modelo entrenado, sin que tengas que elegirlos a mano.", en: "SageMaker's <strong>AutoML</strong>: automatically tries different algorithms and hyperparameters and delivers the best trained model, without you having to pick them by hand." },
+      avoid: [
+        { es: "No documenta el modelo ni genera explicabilidad &rarr; no reemplaza a <strong>Model Cards</strong> ni a <strong>Clarify</strong>.", en: "It doesn't document the model or generate explainability &rarr; it doesn't replace <strong>Model Cards</strong> or <strong>Clarify</strong>." },
+      ] },
+    { key: "sagemaker-model-monitor", kind: "concept", priority: 2, name: { es: "SageMaker Model Monitor", en: "SageMaker Model Monitor" }, d: { es: "Detecta drift y desviaciones de calidad en modelos ya desplegados en producción.", en: "Detects drift and quality deviations in models already deployed to production." }, link: "https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor.html", sourceIds: ["aws-aif-c01-exam-guide"],
+      long: { es: "Vigila un endpoint <strong>ya en producción</strong>: compara las predicciones y los datos de entrada actuales contra una línea base del entrenamiento, y alerta cuando detecta <strong>drift</strong> (los datos reales se alejan de los que vio el modelo al entrenar) o caída de calidad.", en: "Watches an endpoint <strong>already in production</strong>: compares current predictions and input data against a training baseline, and alerts when it detects <strong>drift</strong> (real-world data straying from what the model saw during training) or a quality drop." },
+      use: [
+        { es: "El enunciado dice \"modelo en producción\" + \"detectar degradación/drift\".", en: "The question says \"model in production\" + \"detect degradation/drift\"." },
+      ],
+      avoid: [
+        { es: "No documenta el histórico de entrenamiento &rarr; eso es <strong>Model Cards</strong>. Model Monitor solo vigila el presente.", en: "It doesn't document training history &rarr; that's <strong>Model Cards</strong>. Model Monitor only watches the present." },
+        { es: "No detecta sesgo en el modelo original &rarr; eso es <strong>Clarify</strong> (aunque Clarify también puede monitorear sesgo en producción vía Model Monitor).", en: "It doesn't detect bias in the original model &rarr; that's <strong>Clarify</strong> (though Clarify can also monitor production bias through Model Monitor)." },
       ] },
     { key: "polly", priority: 3, name: { es: "Polly", en: "Polly" }, d: { es: "Convierte texto a voz natural con IA.", en: "Converts text to natural speech with AI." }, link: "https://aws.amazon.com/polly/",
       long: { es: "Servicio de <strong>texto a voz (TTS)</strong> que genera audio con <strong>voces neuronales</strong> realistas en decenas de idiomas. Aceptás texto plano o <strong>SSML</strong> para controlar pausas, énfasis y pronunciación con precisión. No hay entrenamiento ni modelo que gestionar: llamás a la API y recibís el audio.", en: "A <strong>text-to-speech (TTS)</strong> service that generates realistic audio using <strong>neural voices</strong> across dozens of languages. You feed it plain text or <strong>SSML</strong> to precisely control pauses, emphasis and pronunciation. No training or model to manage: you call the API and get the audio back." },
@@ -2655,6 +2725,18 @@ export const DATA: Category[] = [
   ]},
   { slug: "ai-concepts", cat: { es: "Conceptos de IA", en: "AI concepts" }, accent: "#C084FC", items: [
     { key: "ai-ml-genai", kind: "comparison", priority: 1, name: { es: "IA, ML y GenAI", en: "AI, ML, and GenAI" }, d: { es: "IA es el campo amplio; ML aprende patrones y GenAI crea contenido nuevo.", en: "AI is the broad field; ML learns patterns and GenAI creates new content." }, link: "https://docs.aws.amazon.com/aws-certification/latest/ai-practitioner-01/ai-practitioner-01-domain1.html", sourceIds: ["aws-aif-c01-exam-guide"],
+      diagram: {
+        es: `flowchart TD
+    AI["AI — campo general"] --> ML["ML — aprende de datos"]
+    ML --> DL["Deep Learning — redes multicapa"]
+    DL --> GEN["GenAI — genera contenido nuevo"]
+    GEN --> AG["Agentic AI — razona y actúa con herramientas"]`,
+        en: `flowchart TD
+    AI["AI — general field"] --> ML["ML — learns from data"]
+    ML --> DL["Deep Learning — multi-layer networks"]
+    DL --> GEN["GenAI — generates new content"]
+    GEN --> AG["Agentic AI — reasons and acts with tools"]`,
+      },
       long: { es: "Son capas <strong>anidadas</strong>, no alternativas: cada una es un subconjunto de la anterior.", en: "These are <strong>nested</strong> layers, not alternatives: each is a subset of the one before it." },
       list: [
         { t: { es: "AI", en: "AI" }, d: { es: "El campo general: cualquier sistema que imita comportamiento inteligente.", en: "The general field: any system that mimics intelligent behavior." } },
@@ -2668,6 +2750,18 @@ export const DATA: Category[] = [
         { t: { es: "Tipos de inferencia", en: "Inference types" }, d: { es: "Batch, real-time, asíncrona y serverless, según latencia y volumen requeridos.", en: "Batch, real-time, asynchronous, and serverless, depending on the latency and volume needed." } },
       ] },
     { key: "supervised-unsupervised-reinforcement", kind: "comparison", priority: 1, name: { es: "Tipos de aprendizaje", en: "Learning types" }, d: { es: "Supervisado usa etiquetas, no supervisado descubre estructura y reinforcement aprende mediante recompensas.", en: "Supervised learning uses labels, unsupervised learning discovers structure, and reinforcement learns from rewards." }, link: "https://docs.aws.amazon.com/aws-certification/latest/ai-practitioner-01/ai-practitioner-01-domain1.html", sourceIds: ["aws-aif-c01-exam-guide"],
+      diagram: {
+        es: `flowchart LR
+    D["Datos de entrenamiento"] --> Q{"¿Traen\\nrespuesta correcta?"}
+    Q -->|"Sí, etiquetados"| SUP["Supervisado\\nclasificación, regresión"]
+    Q -->|"No, sin etiquetar"| UNS["No supervisado\\nclustering, anomalías"]
+    Q -->|"No hay dataset fijo"| RL["Por refuerzo\\nagente + recompensa"]`,
+        en: `flowchart LR
+    D["Training data"] --> Q{"Carries the\\ncorrect answer?"}
+    Q -->|"Yes, labeled"| SUP["Supervised\\nclassification, regression"]
+    Q -->|"No, unlabeled"| UNS["Unsupervised\\nclustering, anomalies"]
+    Q -->|"No fixed dataset"| RL["Reinforcement\\nagent + reward"]`,
+      },
       long: { es: "Los tres se distinguen por qué información traen los datos de entrenamiento.", en: "The three differ in what information the training data carries." },
       list: [
         { t: { es: "Supervisado", en: "Supervised" }, d: { es: "Entrena con datos etiquetados (cada ejemplo trae la respuesta correcta). Clasificación, regresión.", en: "Trains on labeled data (each example carries the correct answer). Classification, regression." } },
@@ -2680,6 +2774,22 @@ export const DATA: Category[] = [
         { es: "Un agente debe aprender una secuencia de decisiones optimizando una recompensa &rarr; refuerzo.", en: "An agent needs to learn a sequence of decisions optimizing a reward &rarr; reinforcement." },
       ] },
     { key: "ml-lifecycle", kind: "concept", priority: 1, name: { es: "Ciclo de vida de ML", en: "ML lifecycle" }, d: { es: "Datos, entrenamiento, evaluación, despliegue, monitoreo y reentrenamiento.", en: "Data, training, evaluation, deployment, monitoring, and retraining." }, link: "https://docs.aws.amazon.com/aws-certification/latest/ai-practitioner-01/ai-practitioner-01-domain1.html", sourceIds: ["aws-aif-c01-exam-guide"],
+      diagram: {
+        es: `flowchart LR
+    A["Recolección\\nde datos"] --> B["Preparación"]
+    B --> C["Entrenamiento"]
+    C --> D["Evaluación"]
+    D --> E["Despliegue"]
+    E --> F["Monitoreo"]
+    F -->|"drift detectado"| C`,
+        en: `flowchart LR
+    A["Data\\ncollection"] --> B["Preparation"]
+    B --> C["Training"]
+    C --> D["Evaluation"]
+    D --> E["Deployment"]
+    E --> F["Monitoring"]
+    F -->|"drift detected"| C`,
+      },
       long: { es: "Pipeline típico, y vuelta a empezar cuando el modelo se degrada:", en: "Typical pipeline, and back to the start once the model degrades:" },
       list: [
         { t: { es: "1. Recolección de datos", en: "1. Data collection" }, d: { es: "Reunir los datos crudos que va a usar el modelo.", en: "Gathering the raw data the model will use." } },
@@ -2694,7 +2804,67 @@ export const DATA: Category[] = [
         { t: { es: "MLOps", en: "MLOps" }, d: { es: "Procesos repetibles, escalabilidad y production readiness aplicados al ciclo de vida de ML.", en: "Repeatable processes, scalability, and production readiness applied to the ML lifecycle." } },
         { t: { es: "Accuracy, precision, recall, F1", en: "Accuracy, precision, recall, F1" }, d: { es: "Métricas estándar de performance de un modelo de clasificación.", en: "Standard performance metrics for a classification model." } },
       ] },
+    { key: "ml-algorithm-types", kind: "comparison", priority: 2, name: { es: "Tipos de algoritmo de ML", en: "ML algorithm types" }, d: { es: "Qué hace el algoritmo con los datos, antes de medir qué tan bien lo hizo.", en: "What the algorithm does with the data, before measuring how well it did it." }, link: "https://docs.aws.amazon.com/aws-certification/latest/ai-practitioner-01/ai-practitioner-01-domain1.html", sourceIds: ["aws-aif-c01-exam-guide"],
+      diagram: {
+        es: `flowchart LR
+    subgraph LR2["Regresión lineal"]
+      direction TB
+      P1["puntos de datos"] --> L1["recta que minimiza\\nel error"]
+    end
+    subgraph CL["Clustering"]
+      direction TB
+      P2["puntos sin\\netiquetar"] --> G2["grupos por\\nsimilitud"]
+    end
+    subgraph FC["Forecasting"]
+      direction TB
+      H3["serie histórica"] -.-> F3["proyección\\nfutura"]
+    end
+    subgraph GN["GAN"]
+      direction TB
+      GE["Generador\\ncrea datos"] --> DI["Discriminador\\njuzga real/falso"]
+      DI -.->|"feedback"| GE
+    end`,
+        en: `flowchart LR
+    subgraph LR2["Linear regression"]
+      direction TB
+      P1["data points"] --> L1["line minimizing\\nthe error"]
+    end
+    subgraph CL["Clustering"]
+      direction TB
+      P2["unlabeled\\npoints"] --> G2["groups by\\nsimilarity"]
+    end
+    subgraph FC["Forecasting"]
+      direction TB
+      H3["historical series"] -.-> F3["future\\nprojection"]
+    end
+    subgraph GN["GAN"]
+      direction TB
+      GE["Generator\\ncreates data"] --> DI["Discriminator\\njudges real/fake"]
+      DI -.->|"feedback"| GE
+    end`,
+      },
+      long: { es: "Distinto de la métrica de evaluación: acá es qué hace el algoritmo con los datos, antes de medir qué tan bien lo hizo.", en: "Different from the evaluation metric: this is what the algorithm does with the data, before measuring how well it did it." },
+      list: [
+        { t: { es: "Regresión lineal", en: "Linear regression" }, d: { es: "Ajusta una recta que minimiza el error a los puntos de datos. Predice un valor continuo a partir de una o más variables. Supervisado.", en: "Fits a line that minimizes the error to the data points. Predicts a continuous value from one or more variables. Supervised." } },
+        { t: { es: "Clustering", en: "Clustering" }, d: { es: "Agrupa puntos de datos similares sin etiquetas previas. Descubre estructura oculta — segmentación de clientes, detección de grupos. No supervisado.", en: "Groups similar data points with no prior labels. Discovers hidden structure — customer segmentation, group detection. Unsupervised." } },
+        { t: { es: "Forecasting", en: "Forecasting" }, d: { es: "Extiende una serie temporal hacia el futuro a partir de patrones históricos. Amazon Forecast, DeepAR.", en: "Extends a time series into the future based on historical patterns. Amazon Forecast, DeepAR." } },
+        { t: { es: "GAN", en: "GAN" }, d: { es: "Dos redes compiten: el generador crea datos sintéticos, el discriminador intenta detectarlos. Produce imágenes, audio o texto realistas. Generativo.", en: "Two networks compete: the generator creates synthetic data, the discriminator tries to detect it. Produces realistic images, audio, or text. Generative." } },
+      ] },
     { key: "tokens-embeddings-vectors", kind: "concept", priority: 1, name: { es: "Tokens, embeddings y vectores", en: "Tokens, embeddings, and vectors" }, d: { es: "Los tokens son unidades de entrada; los embeddings los representan como vectores semánticos.", en: "Tokens are input units; embeddings represent them as semantic vectors." }, link: "https://docs.aws.amazon.com/aws-certification/latest/ai-practitioner-01/ai-practitioner-01-domain2.html", sourceIds: ["aws-aif-c01-exam-guide"],
+      diagram: {
+        es: `flowchart LR
+    A["Texto\\n(documento largo)"] --> B["Chunking\\nfragmentos manejables"]
+    B --> C["Tokenización\\ndivide en unidades"]
+    C --> D["Embedding\\nvector numérico"]
+    D --> E[("Base vectorial\\nOpenSearch, etc.")]
+    E -.->|"similitud = distancia\\nentre vectores"| E`,
+        en: `flowchart LR
+    A["Text\\n(long document)"] --> B["Chunking\\nmanageable pieces"]
+    B --> C["Tokenization\\nsplits into units"]
+    C --> D["Embedding\\nnumeric vector"]
+    D --> E[("Vector store\\nOpenSearch, etc.")]
+    E -.->|"similarity = distance\\nbetween vectors"| E`,
+      },
       long: { es: "Esta cadena — tokenizar, dividir en chunks, generar embeddings — es la base técnica de RAG y de la búsqueda semántica.", en: "This chain — tokenize, chunk, embed — is the technical foundation of RAG and semantic search." },
       list: [
         { t: { es: "Token", en: "Token" }, d: { es: "Unidad mínima de texto que procesa el modelo (palabra, subpalabra o carácter); también unidad de facturación en Bedrock.", en: "The smallest text unit the model processes (word, subword, or character); also the billing unit on Bedrock." } },
@@ -2729,6 +2899,26 @@ export const DATA: Category[] = [
         { es: "El caso exige explicabilidad total de cada decisión &rarr; evaluar un modelo más simple e interpretable.", en: "The use case demands full explainability for every decision &rarr; consider a simpler, interpretable model." },
       ] },
     { key: "rag-vs-fine-tuning", kind: "comparison", priority: 1, name: { es: "RAG vs fine-tuning", en: "RAG vs fine-tuning" }, d: { es: "RAG aporta contexto recuperado sin cambiar pesos; fine-tuning adapta el comportamiento del modelo.", en: "RAG supplies retrieved context without changing weights; fine-tuning adapts model behavior." }, link: "https://docs.aws.amazon.com/aws-certification/latest/ai-practitioner-01/ai-practitioner-01-domain3.html", sourceIds: ["aws-aif-c01-exam-guide"],
+      diagram: {
+        es: `flowchart LR
+    A["1. In-context\\nlearning"] --> B["2. RAG\\ncontexto externo"]
+    B --> C["3. Fine-tuning\\najusta pesos"]
+    C --> D["4. Pre-training\\ndesde cero"]
+    D --> E["5. Model\\ndistillation"]
+    subgraph S[" "]
+      direction LR
+      L["menor costo/esfuerzo"] -.-> R["mayor costo/esfuerzo"]
+    end`,
+        en: `flowchart LR
+    A["1. In-context\\nlearning"] --> B["2. RAG\\nexternal context"]
+    B --> C["3. Fine-tuning\\nadjusts weights"]
+    C --> D["4. Pre-training\\nfrom scratch"]
+    D --> E["5. Model\\ndistillation"]
+    subgraph S[" "]
+      direction LR
+      L["lower cost/effort"] -.-> R["higher cost/effort"]
+    end`,
+      },
       long: { es: "Las dos formas más comunes de adaptar un foundation model, en la escala de costo/esfuerzo de customización de menor a mayor:", en: "The two most common ways to adapt a foundation model, on the customization cost/effort scale from lowest to highest:" },
       list: [
         { t: { es: "1. In-context learning", en: "1. In-context learning" }, d: { es: "Ejemplos directo en el prompt, sin tocar el modelo.", en: "Examples directly in the prompt, with no touch to the model." } },
@@ -2762,18 +2952,63 @@ export const DATA: Category[] = [
         { t: { es: "Prompt template", en: "Prompt template" }, d: { es: "Plantilla reutilizable con variables, versionable en Bedrock Prompt Management.", en: "A reusable template with variables, versionable in Bedrock Prompt Management." } },
         { t: { es: "Riesgos: exposure, poisoning, hijacking, jailbreaking", en: "Risks: exposure, poisoning, hijacking, jailbreaking" }, d: { es: "Filtración del system prompt, contenido malicioso inyectado, redirección del propósito, elusión de restricciones.", en: "System prompt leaking, injected malicious content, purpose redirection, bypassing restrictions." } },
       ] },
-    { key: "fm-evaluation", kind: "concept", priority: 1, name: { es: "Evaluación de FMs", en: "FM evaluation" }, d: { es: "Métricas automáticas y evaluación humana de calidad, seguridad, costo y latencia.", en: "Automated metrics and human evaluation of quality, safety, cost, and latency." }, link: "https://docs.aws.amazon.com/aws-certification/latest/ai-practitioner-01/ai-practitioner-01-domain3.html", sourceIds: ["aws-aif-c01-exam-guide"],
-      long: { es: "Combina enfoques human-in-the-loop con benchmark datasets y herramientas administradas como <strong>Amazon Bedrock Model Evaluation</strong>. Métricas específicas de generación de texto:", en: "Combines human-in-the-loop approaches with benchmark datasets and managed tools like <strong>Amazon Bedrock Model Evaluation</strong>. Text-generation-specific metrics:" },
+    { key: "fm-evaluation", kind: "concept", priority: 1, name: { es: "Qué métrica, para qué tarea", en: "Which metric, for which task" }, d: { es: "Elegí la métrica mirando primero qué predice el modelo — categoría, número o texto — no el nombre más sofisticado.", en: "Pick the metric by looking first at what the model predicts — category, number, or text — not the fanciest-sounding name." }, link: "https://docs.aws.amazon.com/aws-certification/latest/ai-practitioner-01/ai-practitioner-01-domain3.html", sourceIds: ["aws-aif-c01-exam-guide"],
+      diagram: {
+        es: `flowchart TD
+    Q{"¿Qué predice\\nel modelo?"}
+    Q -->|"Categoría"| C1{"¿Falso+ o falso−\\ncuesta más caro?"}
+    Q -->|"Número continuo"| C2{"¿Outliers deben\\npesar más?"}
+    Q -->|"Texto generado"| C3{"¿Pide significado\\no semántica?"}
+    Q -->|"FM completo"| C4["Clarify · benchmarks\\ntoxicidad/sesgo · Model Evaluation"]
+    C1 -->|"Sin señal"| ACC["Accuracy"]
+    C1 -->|"Sí"| PR["Precision / Recall / F1"]
+    C2 -->|"Sin señal"| MAE["MAE / MAPE"]
+    C2 -->|"Sí"| RMSE["RMSE / MSE"]
+    C3 -->|"Sin señal"| ROUGE["ROUGE / METEOR"]
+    C3 -->|"Sí"| BERT["BERTScore"]`,
+        en: `flowchart TD
+    Q{"What does the\\nmodel predict?"}
+    Q -->|"Category"| C1{"Is false+ or false−\\nmore costly?"}
+    Q -->|"Continuous number"| C2{"Should outliers\\nweigh more?"}
+    Q -->|"Generated text"| C3{"Asks for meaning\\nor semantics?"}
+    Q -->|"Whole FM"| C4["Clarify · toxicity/bias\\nbenchmarks · Model Evaluation"]
+    C1 -->|"No signal"| ACC["Accuracy"]
+    C1 -->|"Yes"| PR["Precision / Recall / F1"]
+    C2 -->|"No signal"| MAE["MAE / MAPE"]
+    C2 -->|"Yes"| RMSE["RMSE / MSE"]
+    C3 -->|"No signal"| ROUGE["ROUGE / METEOR"]
+    C3 -->|"Yes"| BERT["BERTScore"]`,
+      },
+      long: { es: "La pregunta trampa del examen casi siempre es la misma: te dan un escenario y una lista de métricas, y la mitad no aplican al tipo de salida del modelo. Cuatro familias de tarea, cada una con sus métricas propias:", en: "The exam's trick question is almost always the same: they give you a scenario and a list of metrics, and half of them don't apply to the model's output type. Four task families, each with its own metrics:" },
       list: [
-        { t: { es: "ROUGE", en: "ROUGE" }, d: { es: "Calidad de resúmenes: mide overlap con un resumen de referencia.", en: "Summary quality: measures overlap with a reference summary." } },
-        { t: { es: "BLEU", en: "BLEU" }, d: { es: "Calidad de traducción automática.", en: "Machine translation quality." } },
-        { t: { es: "BERTScore", en: "BERTScore" }, d: { es: "Similitud semántica usando embeddings.", en: "Semantic similarity using embeddings." } },
-        { t: { es: "LLM-as-a-judge", en: "LLM-as-a-judge" }, d: { es: "Usar otro LLM para evaluar las respuestas del modelo.", en: "Using another LLM to evaluate the model's responses." } },
+        { t: { es: "Clasificación (categoría)", en: "Classification (category)" }, d: { es: "Accuracy por defecto sin señal de asimetría; Precision si el falso positivo sale caro; Recall si el falso negativo sale caro; F1 si ambos importan.", en: "Accuracy by default with no asymmetry signal; Precision if a false positive is costly; Recall if a false negative is costly; F1 if both matter." } },
+        { t: { es: "Regresión / forecasting (número)", en: "Regression / forecasting (number)" }, d: { es: "MAE/MAPE para error interpretable o comparable entre escalas; RMSE/MSE cuando los errores grandes deben pesar mucho más.", en: "MAE/MAPE for interpretable error or comparing across scales; RMSE/MSE when large errors should weigh much more." } },
+        { t: { es: "Generación de texto (comparar contra referencia)", en: "Text generation (compare to reference)" }, d: { es: "ROUGE es el default AWS para resumen/traducción; METEOR es similar, más flexible; BERTScore cuando piden \"significado\" o \"semántica\" explícitamente.", en: "ROUGE is AWS's default for summarization/translation; METEOR is similar, more flexible; BERTScore when the question explicitly asks for \"meaning\" or \"semantics\"." } },
+        { t: { es: "Modelo fundacional completo", en: "Whole foundation model" }, d: { es: "No es una sola métrica numérica: combina Clarify (sesgo/explicabilidad), benchmarks de toxicidad y sesgo, y Bedrock Model Evaluation (compara varios FMs).", en: "Not a single numeric metric: combines Clarify (bias/explainability), toxicity and bias benchmarks, and Bedrock Model Evaluation (compares multiple FMs)." } },
       ],
       concepts: [
+        { t: { es: "Nunca en clasificación", en: "Never in classification" }, d: { es: "MAE, MAPE, RMSE, ROUGE, BERTScore — son de otras tareas.", en: "MAE, MAPE, RMSE, ROUGE, BERTScore — those belong to other tasks." } },
+        { t: { es: "Nunca en regresión", en: "Never in regression" }, d: { es: "Accuracy, F1, Precision, Recall — no hay \"clases\" que acertar.", en: "Accuracy, F1, Precision, Recall — there are no \"classes\" to get right." } },
+        { t: { es: "Nunca en generación de texto", en: "Never in text generation" }, d: { es: "MSE, Accuracy, F1 — no comparan texto contra texto.", en: "MSE, Accuracy, F1 — they don't compare text against text." } },
         { t: { es: "Evaluar la aplicación completa", en: "Evaluating the whole application" }, d: { es: "No alcanza con evaluar el modelo: hay que medir RAG, agentes y workflows completos.", en: "Evaluating the model alone isn't enough: you need to measure RAG, agents, and whole workflows." } },
       ] },
     { key: "responsible-ai", kind: "concept", priority: 1, name: { es: "IA responsable", en: "Responsible AI" }, d: { es: "Equidad, explicabilidad, privacidad, seguridad, transparencia y control humano.", en: "Fairness, explainability, privacy, safety, transparency, and human oversight." }, link: "https://docs.aws.amazon.com/aws-certification/latest/ai-practitioner-01/ai-practitioner-01-domain4.html", sourceIds: ["aws-aif-c01-exam-guide"],
+      diagram: {
+        es: `flowchart TD
+    Q{"¿Qué necesitás\\nde tu modelo?"}
+    Q -->|"detectar sesgo,\\nexplicar predicciones"| CL["SageMaker Clarify"]
+    Q -->|"documentar propósito,\\ndatos, métricas"| MC["SageMaker Model Cards"]
+    Q -->|"automatizar\\nentrenamiento (AutoML)"| AP["SageMaker Autopilot"]
+    Q -->|"etiquetado +\\nRLHF"| GT["SageMaker Ground Truth"]
+    Q -->|"entender ética de un\\nservicio de AWS ya existente"| SC["AWS AI Service Cards"]`,
+        en: `flowchart TD
+    Q{"What do you need\\nfrom your model?"}
+    Q -->|"detect bias,\\nexplain predictions"| CL["SageMaker Clarify"]
+    Q -->|"document purpose,\\ndata, metrics"| MC["SageMaker Model Cards"]
+    Q -->|"automate\\ntraining (AutoML)"| AP["SageMaker Autopilot"]
+    Q -->|"labeling +\\nRLHF"| GT["SageMaker Ground Truth"]
+    Q -->|"understand ethics of an\\nexisting AWS service"| SC["AWS AI Service Cards"]`,
+      },
       long: { es: "Un sistema de IA responsable busca:", en: "A responsible AI system aims for:" },
       list: [
         { t: { es: "Fairness", en: "Fairness" }, d: { es: "Trato equitativo entre distintos grupos.", en: "Equitable treatment across different groups." } },
@@ -2783,9 +3018,32 @@ export const DATA: Category[] = [
       ],
       concepts: [
         { t: { es: "Bedrock Guardrails", en: "Bedrock Guardrails" }, d: { es: "Filtra contenido dañino, PII y temas prohibidos; reduce alucinaciones, no las elimina.", en: "Filters harmful content, PII, and off-limits topics; reduces hallucinations, doesn't eliminate them." } },
+        { t: { es: "Guardrails vs Agents", en: "Guardrails vs Agents" }, d: { es: "Guardrails impone límites sobre el contenido generado; Bedrock Agents orquesta acciones e integraciones. Una pregunta de \"cumplimiento normativo del contenido\" es Guardrails, no Agents.", en: "Guardrails enforces limits on generated content; Bedrock Agents orchestrates actions and integrations. A question about \"regulatory compliance of content\" is Guardrails, not Agents." } },
         { t: { es: "Dataset responsable", en: "Responsible dataset" }, d: { es: "Inclusivo, diverso, de fuentes curadas y balanceado.", en: "Inclusive, diverse, from curated sources, and balanced." } },
       ] },
     { key: "bias-and-fairness", kind: "comparison", priority: 1, name: { es: "Sesgo y equidad", en: "Bias and fairness" }, d: { es: "El sesgo puede producir diferencias sistemáticas; la equidad evalúa y mitiga impactos entre grupos.", en: "Bias can create systematic differences; fairness evaluates and mitigates impacts across groups." }, link: "https://docs.aws.amazon.com/aws-certification/latest/ai-practitioner-01/ai-practitioner-01-domain4.html", sourceIds: ["aws-aif-c01-exam-guide"],
+      diagram: {
+        es: `quadrantChart
+    title Desempeño en train vs test
+    x-axis "Mal en test" --> "Bien en test"
+    y-axis "Mal en train" --> "Bien en train"
+    quadrant-1 Ideal
+    quadrant-2 "No ocurre en la práctica"
+    quadrant-3 Underfitting
+    quadrant-4 Overfitting
+    "Alto sesgo, falla en todos lados": [0.25, 0.25]
+    "Memoriza el train, no generaliza": [0.8, 0.25]`,
+        en: `quadrantChart
+    title Train vs test performance
+    x-axis "Poor on test" --> "Good on test"
+    y-axis "Poor on train" --> "Good on train"
+    quadrant-1 Ideal
+    quadrant-2 "Doesn't happen in practice"
+    quadrant-3 Underfitting
+    quadrant-4 Overfitting
+    "High bias, fails everywhere": [0.25, 0.25]
+    "Memorizes train, doesn't generalize": [0.8, 0.25]`,
+      },
       long: { es: "Dos pares de conceptos relacionados pero distintos:", en: "Two related but distinct pairs of concepts:" },
       list: [
         { t: { es: "Bias", en: "Bias" }, d: { es: "El modelo favorece sistemáticamente ciertos resultados por sesgos en los datos de entrenamiento.", en: "The model systematically favors certain outcomes because of biases in the training data." } },
@@ -2798,6 +3056,28 @@ export const DATA: Category[] = [
         { es: "El modelo funciona perfecto en entrenamiento pero mal en producción &rarr; sospechar overfitting (variance).", en: "The model works perfectly in training but poorly in production &rarr; suspect overfitting (variance)." },
       ] },
     { key: "ai-security-governance", kind: "concept", priority: 1, name: { es: "Seguridad y gobierno de IA", en: "AI security and governance" }, d: { es: "Acceso mínimo, cifrado, trazabilidad, clasificación de datos y políticas durante todo el ciclo de IA.", en: "Least privilege, encryption, traceability, data classification, and policies across the AI lifecycle." }, link: "https://docs.aws.amazon.com/aws-certification/latest/ai-practitioner-01/ai-practitioner-01-domain5.html", sourceIds: ["aws-aif-c01-exam-guide"],
+      diagram: {
+        es: `flowchart TD
+    subgraph AWS["AWS asegura"]
+      I["Infraestructura del servicio\\ndatacenters, hardware, red"]
+    end
+    subgraph YOU["Vos asegurás"]
+      D["Tus datos"]
+      C["Configuración"]
+      A["IAM, cifrado, PrivateLink,\\nMacie, AgentCore Identity"]
+    end
+    AWS --> YOU`,
+        en: `flowchart TD
+    subgraph AWS["AWS secures"]
+      I["Service infrastructure\\ndatacenters, hardware, network"]
+    end
+    subgraph YOU["You secure"]
+      D["Your data"]
+      C["Configuration"]
+      A["IAM, encryption, PrivateLink,\\nMacie, AgentCore Identity"]
+    end
+    AWS --> YOU`,
+      },
       long: { es: "El <strong>Shared Responsibility Model</strong> también aplica a IA: AWS asegura la infraestructura del servicio, vos asegurás tus datos y configuración. Servicios/features que se apoyan sobre esa base:", en: "The <strong>Shared Responsibility Model</strong> applies to AI too: AWS secures the service's infrastructure, you secure your data and configuration. Services/features built on that foundation:" },
       list: [
         { t: { es: "IAM", en: "IAM" }, d: { es: "Roles y permisos de acceso.", en: "Roles and access permissions." } },
@@ -2811,6 +3091,20 @@ export const DATA: Category[] = [
         { t: { es: "Grounding", en: "Grounding" }, d: { es: "Anclar respuestas a fuentes recuperadas (RAG) para reducir alucinaciones.", en: "Anchoring responses to retrieved sources (RAG) to reduce hallucinations." } },
       ] },
     { key: "bedrock-guardrails", kind: "concept", priority: 1, name: { es: "Guardrails de Bedrock", en: "Bedrock Guardrails" }, d: { es: "Controles configurables para filtrar temas, contenido dañino e información sensible.", en: "Configurable controls for filtering topics, harmful content, and sensitive information." }, link: "https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html", sourceIds: ["aws-aif-c01-exam-guide"],
+      diagram: {
+        es: `flowchart TD
+    Q{"¿Qué necesitás\\nhacer en Bedrock?"}
+    Q -->|"filtrar contenido\\ndañino / PII"| G["Guardrails"]
+    Q -->|"ejecutar acciones,\\nllamar APIs"| AG["Agents"]
+    Q -->|"elegir el mejor\\nmodelo por métricas"| ME["Model Evaluation"]
+    Q -->|"conectar a tus\\ndocumentos (RAG)"| KB["Knowledge Bases"]`,
+        en: `flowchart TD
+    Q{"What do you need\\nto do in Bedrock?"}
+    Q -->|"filter harmful\\ncontent / PII"| G["Guardrails"]
+    Q -->|"execute actions,\\ncall APIs"| AG["Agents"]
+    Q -->|"pick the best\\nmodel by metrics"| ME["Model Evaluation"]
+    Q -->|"connect to your\\ndocuments (RAG)"| KB["Knowledge Bases"]`,
+      },
       long: { es: "Controles configurables que se aplican a la entrada del usuario y a la salida del modelo dentro de Bedrock. Se configuran una vez como política y se aplican de forma consistente a cualquier modelo, sin reescribir el prompt cada vez:", en: "Configurable controls applied to the user's input and the model's output within Bedrock. Configured once as a policy and applied consistently to any model, with no prompt rewriting each time:" },
       list: [
         { t: { es: "Filtro de contenido", en: "Content filter" }, d: { es: "Bloquea categorías de contenido dañino en entrada y salida.", en: "Blocks categories of harmful content in input and output." } },
@@ -2821,6 +3115,34 @@ export const DATA: Category[] = [
       avoid: [
         { es: "Asumir que Guardrails elimina las alucinaciones por completo: las reduce y filtra, no las erradica.", en: "Assuming Guardrails eliminates hallucinations entirely: it reduces and filters them, it doesn't eradicate them." },
         { es: "Confundirlo con curación de datos de entrenamiento: Guardrails actúa en runtime, no cambia el modelo.", en: "Confusing it with training-data curation: Guardrails acts at runtime, it doesn't change the model." },
+      ] },
+    { key: "bedrock-agents", priority: 2, name: { es: "Agentes de Amazon Bedrock", en: "Amazon Bedrock Agents" }, d: { es: "Orquesta acciones e integraciones de un FM con APIs y herramientas externas.", en: "Orchestrates an FM's actions and integrations with APIs and external tools." }, link: "https://aws.amazon.com/bedrock/agents/", sourceIds: ["aws-aif-c01-exam-guide"],
+      long: { es: "Permite que un modelo fundacional <strong>razone, planifique y ejecute acciones</strong> &mdash; llamar APIs, consultar bases de datos, invocar funciones Lambda &mdash; para cumplir una tarea de punta a punta, sin que armes vos la orquestación.", en: "Lets a foundation model <strong>reason, plan, and execute actions</strong> &mdash; calling APIs, querying databases, invoking Lambda functions &mdash; to complete an end-to-end task, without you building the orchestration yourself." },
+      use: [
+        { es: "El caso pide que el modelo ejecute acciones o llame sistemas externos, no solo responder texto.", en: "The use case needs the model to execute actions or call external systems, not just respond with text." },
+      ],
+      avoid: [
+        { es: "No filtra ni controla contenido &rarr; eso es <strong>Bedrock Guardrails</strong>.", en: "It doesn't filter or control content &rarr; that's <strong>Bedrock Guardrails</strong>." },
+        { es: "\"Cumplimiento normativo del contenido de un chatbot\" es Guardrails, no Agents.", en: "\"Regulatory compliance of a chatbot's content\" is Guardrails, not Agents." },
+      ] },
+    { key: "bedrock-model-evaluation", kind: "concept", priority: 2, name: { es: "Bedrock Model Evaluation", en: "Bedrock Model Evaluation" }, d: { es: "Compara y selecciona el FM más apto según métricas de precisión, robustez y toxicidad.", en: "Compares and selects the best-fit FM based on accuracy, robustness, and toxicity metrics." }, link: "https://docs.aws.amazon.com/bedrock/latest/userguide/model-evaluation.html", sourceIds: ["aws-aif-c01-exam-guide"],
+      long: { es: "Corre evaluaciones automáticas o con revisión humana sobre distintos modelos fundacionales para <strong>elegir el más apto</strong> para una tarea, comparando métricas como precisión, robustez y toxicidad.", en: "Runs automatic or human-review evaluations across different foundation models to <strong>pick the best fit</strong> for a task, comparing metrics like accuracy, robustness, and toxicity." },
+      use: [
+        { es: "La pregunta pide \"elegir el mejor modelo\" para una tarea según métricas.", en: "The question asks to \"choose the best model\" for a task based on metrics." },
+        { es: "Combo típico: elegir el FM más apto + eliminar info sensible &rarr; Model Evaluation + Guardrails juntos.", en: "Typical combo: pick the best-fit FM + remove sensitive info &rarr; Model Evaluation + Guardrails together." },
+      ],
+      avoid: [
+        { es: "No es NLP genérico &rarr; no es <strong>Comprehend</strong>.", en: "It's not generic NLP &rarr; it's not <strong>Comprehend</strong>." },
+        { es: "No filtra contenido en runtime &rarr; eso es <strong>Bedrock Guardrails</strong>.", en: "It doesn't filter content at runtime &rarr; that's <strong>Bedrock Guardrails</strong>." },
+      ] },
+    { key: "ai-service-cards", kind: "concept", priority: 3, name: { es: "AWS AI Service Cards", en: "AWS AI Service Cards" }, d: { es: "Documentación pública de AWS sobre uso responsable de sus servicios de IA.", en: "AWS's public documentation on the responsible use of its AI services." }, link: "https://aws.amazon.com/machine-learning/responsible-ai/resources/", sourceIds: ["aws-aif-c01-exam-guide"],
+      long: { es: "Recurso de <strong>lectura/referencia</strong> publicado por AWS: documenta el uso previsto, las limitaciones y las consideraciones éticas de servicios de IA ya existentes de AWS (Rekognition, Transcribe, etc.). No es algo que se despliega.", en: "A <strong>reference resource</strong> published by AWS: documents the intended use, limitations, and ethical considerations of AWS's existing AI services (Rekognition, Transcribe, etc). It's not something you deploy." },
+      use: [
+        { es: "La pregunta pide dónde entender las implicaciones éticas de un servicio de IA de AWS.", en: "The question asks where to understand the ethical implications of an AWS AI service." },
+      ],
+      avoid: [
+        { es: "No documenta tu modelo propio &rarr; eso es <strong>SageMaker Model Cards</strong>.", en: "It doesn't document your own model &rarr; that's <strong>SageMaker Model Cards</strong>." },
+        { es: "No es un servicio funcional (no confundir con Polly, Comprehend, etc.) &rarr; es solo documentación.", en: "It's not a functional service (don't confuse it with Polly, Comprehend, etc.) &rarr; it's documentation only." },
       ] },
   ]},
   { slug: "end-user-computing", cat: { es: "Usuario final", en: "End user computing" }, accent: "#B98FF0", items: [

@@ -3,7 +3,11 @@
     "allow": [
       "Bash(grep -n '^  \\\\]\\\\},$' src/data/services.ts)",
       "Bash(python \"C:\\\\Users\\\\Nicolas\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Nicolas-Desktop-Proyectos-Challenges-nuevos-aws-study-aws-map\\\\a12af788-16f2-4af4-82d2-a5adbd3b7db7\\\\scratchpad\\\\insert_batch2.py\")",
-      "Bash(node \"/c/Users/Nicolas/AppData/Local/Temp/claude/c--Users-Nicolas-Desktop-Proyectos-Challenges-nuevos-aws-study-aws-map/a12af788-16f2-4af4-82d2-a5adbd3b7db7/scratchpad/validate2.js\")"
+      "Bash(node \"/c/Users/Nicolas/AppData/Local/Temp/claude/c--Users-Nicolas-Desktop-Proyectos-Challenges-nuevos-aws-study-aws-map/a12af788-16f2-4af4-82d2-a5adbd3b7db7/scratchpad/validate2.js\")",
+      "Bash(npx tsx -e ' *)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\Nicolas\\.claude"
     ]
   }
 }

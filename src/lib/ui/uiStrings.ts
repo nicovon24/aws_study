@@ -127,6 +127,8 @@ export const UI: Record<string, Localized> = {
   relatedTo: { es: "Se relaciona con", en: "Related to" },
   appearsInArchitectures: { es: "Aparece en estas arquitecturas", en: "Appears in these architectures" },
   officialDoc: { es: "↗ doc oficial", en: "↗ official docs" },
+  viewFullPage: { es: "Ver vista completa", en: "Open full view" },
+  backToCatalog: { es: "Volver al catálogo", en: "Back to catalog" },
 
   // Favorites & notes
   addToFavorites: { es: "Agregar a favoritos", en: "Add to favorites" },
@@ -142,6 +144,18 @@ export const UI: Record<string, Localized> = {
     es: "Mostrar solo los servicios que marcaste como favoritos.",
     en: "Show only the services you marked as favorites.",
   },
+  markAsReviewed: { es: "Marcar como repasado", en: "Mark as reviewed" },
+  unmarkAsReviewed: { es: "Desmarcar repasado", en: "Unmark reviewed" },
+  signInToUseReviewed: { es: "Iniciá sesión para marcar repasados", en: "Sign in to mark items as reviewed" },
+  onlyUnreviewed: { es: "Solo pendientes", en: "Pending only" },
+  onlyUnreviewedTooltip: {
+    es: "Mostrar solo los servicios que todavía no marcaste como repasados.",
+    en: "Show only the services you haven't marked as reviewed yet.",
+  },
+  filtersLabel: { es: "Filtros", en: "Filters" },
+  clearFilters: { es: "Limpiar filtros", en: "Clear filters" },
+  viewDiagram: { es: "Ver diagrama en vista completa", en: "See diagram in full view" },
+  hasDiagram: { es: "Diagrama disponible", en: "Diagram available" },
   priorityFilterLabel: { es: "Prioridad:", en: "Priority:" },
   favoritesSignInPrompt: {
     es: "Iniciá sesión con Google para guardar y ver tus servicios favoritos.",
