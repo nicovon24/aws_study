@@ -40,7 +40,7 @@ export default function PracticeView({ focus, onFocusChange, onNavigate }: Props
   }
 
   return (
-    <main className="flex-1 overflow-auto px-4 py-8 pb-[60px] sm:px-10">
+    <main className="min-h-0 flex-1 overflow-y-auto px-4 py-8 pb-[60px] sm:px-10">
       <div className="mx-auto max-w-[720px]">
         <IconButton
           onClick={() => onNavigate("dashboard")}
@@ -191,7 +191,7 @@ function QuestionSession({ examId, mode, questions, onExit }: { examId: string; 
       answers,
     };
     return (
-      <main className="flex flex-1 items-center justify-center overflow-auto px-6 py-10">
+      <main className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto px-6 py-10">
         <div className="w-full max-w-[720px] rounded-xl border border-line bg-panel-2 p-7">
           <h1 className="text-2xl font-bold">{locale === "es" ? "Resumen de sesión" : "Session summary"}</h1>
           <p className="mt-2 text-muted">{correct} / {answers.length} {locale === "es" ? "respuestas correctas" : "correct answers"}</p>
@@ -207,7 +207,7 @@ function QuestionSession({ examId, mode, questions, onExit }: { examId: string; 
   const revealed = answers.some((answer) => answer.questionId === question.id);
   const isCorrect = [...selected].sort().join("|") === [...question.correctOptionIds].sort().join("|");
   return (
-    <main className="flex flex-1 flex-col items-center overflow-auto px-6 py-8">
+    <main className="flex min-h-0 flex-1 flex-col items-center overflow-y-auto px-6 py-8">
       <div className="mb-5 flex w-full max-w-[720px] items-center justify-between"><IconButton onClick={onExit} aria-label={pick(locale, UI.back)}><BackIcon /></IconButton><span className="font-mono text-xs text-muted-2">{index + 1} / {questions.length}</span></div>
       <div className="w-full max-w-[720px] rounded-xl border border-line bg-panel-2 p-6">
         <div className="mb-2 font-mono text-[11px] uppercase text-accent">{question.skill} · {question.difficulty}</div>
@@ -285,7 +285,7 @@ function FlashcardSession({
   const questionText = isDescriptionMode ? pick(locale, card.correct.name) : pick(locale, card.correct.d);
 
   return (
-    <main className="flex flex-1 flex-col items-center overflow-auto px-10 py-10">
+    <main className="flex min-h-0 flex-1 flex-col items-center overflow-y-auto px-10 py-10">
       <div className="mb-6 flex w-full max-w-[640px] items-center justify-between">
         <IconButton onClick={onExit} aria-label={pick(locale, UI.back)} title={pick(locale, UI.back)}>
           <BackIcon />

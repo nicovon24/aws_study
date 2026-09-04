@@ -23,7 +23,7 @@ export default function AppShell({ drawerContent, children }: Props) {
 
   return (
     <div
-      className="flex h-screen flex-col bg-bg bg-repeat text-ink"
+      className="flex h-dvh flex-col bg-bg bg-repeat text-ink"
       style={{
         backgroundImage:
           "linear-gradient(#1c2b4a 1px,transparent 1px),linear-gradient(90deg,#1c2b4a 1px,transparent 1px),linear-gradient(#16233c 1px,transparent 1px),linear-gradient(90deg,#16233c 1px,transparent 1px)",
